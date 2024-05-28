@@ -1,0 +1,29 @@
+[versions]
+org-jetbrains-dokka = "1.9.20"
+org-jetbrains-kotlin = "2.0.20"
+org-jetbrains-kotlinx = "1.7.3"
+
+[libraries]
+io-gitlab-arturbosch-detekt-detekt-cli = "io.gitlab.arturbosch.detekt:detekt-cli:1.23.7"
+org-apache-logging-log4j-log4j-core = "org.apache.logging.log4j:log4j-core:2.17.1"
+org-jetbrains-annotations = "org.jetbrains:annotations:13.0"
+org-jetbrains-dokka-analysis-kotlin-descriptors = { module = "org.jetbrains.dokka:analysis-kotlin-descriptors", version.ref = "org-jetbrains-dokka" }
+org-jetbrains-dokka-dokka-base = { module = "org.jetbrains.dokka:dokka-base", version.ref = "org-jetbrains-dokka" }
+org-jetbrains-dokka-dokka-core = { module = "org.jetbrains.dokka:dokka-core", version.ref = "org-jetbrains-dokka" }
+org-jetbrains-kotlin-kotlin-build-tools-impl = { module = "org.jetbrains.kotlin:kotlin-build-tools-impl", version.ref = "org-jetbrains-kotlin" }
+org-jetbrains-kotlin-kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "org-jetbrains-kotlin" }
+org-jetbrains-kotlin-kotlin-klib-commonizer-embeddable = { module = "org.jetbrains.kotlin:kotlin-klib-commonizer-embeddable", version.ref = "org-jetbrains-kotlin" }
+org-jetbrains-kotlin-kotlin-native-prebuilt = { module = "org.jetbrains.kotlin:kotlin-native-prebuilt", version.ref = "org-jetbrains-kotlin" }
+org-jetbrains-kotlin-kotlin-scripting-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable", version.ref = "org-jetbrains-kotlin" }
+org-jetbrains-kotlin-kotlin-serialization-compiler-plugin-embeddable = { module = "org.jetbrains.kotlin:kotlin-serialization-compiler-plugin-embeddable", version.ref = "org-jetbrains-kotlin" }
+org-jetbrains-kotlinx-kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.6.1"
+org-jetbrains-kotlinx-kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "org-jetbrains-kotlinx" }
+
+[plugins]
+com-github-ben-manes-versions = "com.github.ben-manes.versions:0.51.0"
+io-gitlab-arturbosch-detekt = "io.gitlab.arturbosch.detekt:1.23.7"
+nl-littlerobots-version-catalog-update = "nl.littlerobots.version-catalog-update:0.8.4"
+org-jetbrains-dokka = "org.jetbrains.dokka:1.9.20"
+org-jetbrains-kotlin-multiplatform = "org.jetbrains.kotlin.multiplatform:2.0.20"
+org-jetbrains-kotlin-plugin-serialization = "org.jetbrains.kotlin.plugin.serialization:2.0.20"
+org-jmailen-kotlinter = "org.jmailen.kotlinter:4.4.1"
