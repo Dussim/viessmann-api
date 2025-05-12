@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "serial": "0000000000000000",
+      "version": "506.2307.7.0",
+      "firmwareUpdateFailureCounter": 0,
+      "autoUpdate": false,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "producedAt": "2024-01-11T13:38:02.797Z",
+      "lastStatusChangedAt": "2020-01-01T00:00:01Z",
+      "aggregatedStatus": "Error",
+      "targetRealm": "DC",
+      "gatewayType": "SA1800019WiFi",
+      "installationId": 10000,
+      "registeredAt": "2025-03-14T12:12:10.529Z",
+      "description": null,
+      "otaOngoing": false
+    }
+  ]
+}

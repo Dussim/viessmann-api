@@ -1,0 +1,70 @@
+{
+  "data": [
+    {
+      "feature": "device.timezone",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.timezone",
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "Europe/Warsaw"
+        }
+      },
+      "commands": {
+        "setTimezone": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.timezone/commands/setTimezone",
+          "name": "setTimezone",
+          "isExecutable": true,
+          "params": {
+            "value": {
+              "type": "string",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "tcu.mode",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/tcu.mode",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "value": "wifi"
+        }
+      },
+      "commands": {
+        "setMode": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/tcu.mode/commands/setMode",
+          "name": "setMode",
+          "isExecutable": false,
+          "params": {
+            "mode": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "enum": [
+                  "ethernet",
+                  "ethernet1",
+                  "wifi"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

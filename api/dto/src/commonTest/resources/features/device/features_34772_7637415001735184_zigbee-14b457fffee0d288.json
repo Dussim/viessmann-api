@@ -1,0 +1,391 @@
+{
+  "data": [
+    {
+      "feature": "device.configuration.measurementWeight",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.configuration.measurementWeight",
+      "properties": {
+        "weight": {
+          "type": "number",
+          "value": 20,
+          "unit": ""
+        }
+      },
+      "commands": {
+        "setWeight": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.configuration.measurementWeight/commands/setWeight",
+          "name": "setWeight",
+          "isExecutable": true,
+          "params": {
+            "weight": {
+              "required": true,
+              "constraints": {
+                "min": 0,
+                "max": 100,
+                "stepping": 1
+              },
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "device.connection",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.connection",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "device.firmware.version",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.firmware.version",
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "01.18.0008 02.06"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "device.heatingCircuitId",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.heatingCircuitId",
+      "properties": {
+        "value": {
+          "type": "number",
+          "value": 0,
+          "unit": ""
+        }
+      },
+      "commands": {
+        "unassignHeatingCircuit": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.heatingCircuitId/commands/unassignHeatingCircuit",
+          "name": "unassignHeatingCircuit",
+          "isExecutable": true,
+          "params": {}
+        },
+        "assignHeatingCircuit": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.heatingCircuitId/commands/assignHeatingCircuit",
+          "name": "assignHeatingCircuit",
+          "isExecutable": true,
+          "params": {
+            "value": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 0,
+                "max": 3,
+                "stepping": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "device.identification",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.identification",
+      "properties": {
+        "triggered": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "device.name",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.name",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Fo"
+        }
+      },
+      "commands": {
+        "setName": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.name/commands/setName",
+          "name": "setName",
+          "isExecutable": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "regEx": "^[\\p{L}0-9]+( [\\p{L}0-9]+)*$",
+                "minLength": 1,
+                "maxLength": 40
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "device.power.battery",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.power.battery",
+      "properties": {
+        "level": {
+          "type": "number",
+          "value": 82,
+          "unit": "percent"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "device.sensors.temperature",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.sensors.temperature",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "value": 26.2,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "device.zigbee.lqi",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.zigbee.lqi",
+      "properties": {
+        "strength": {
+          "type": "number",
+          "value": 100,
+          "unit": "percent"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "trv.childLock",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.childLock",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "inactive"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "trv.display",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.display",
+      "properties": {
+        "orientation": {
+          "type": "string",
+          "value": "normal"
+        }
+      },
+      "commands": {
+        "setOrientation": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.display/commands/setOrientation",
+          "name": "setOrientation",
+          "isExecutable": true,
+          "params": {
+            "orientation": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "enum": [
+                  "normal",
+                  "reverted"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "trv.mountingMode",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.mountingMode",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "trv.sensors.openWindow",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.sensors.openWindow",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        },
+        "status": {
+          "type": "string",
+          "value": "connected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "trv.sensors.window.openState",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.sensors.window.openState",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        },
+        "status": {
+          "type": "string",
+          "value": "connected"
+        }
+      },
+      "commands": {},
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by trv.sensors.openWindow"
+      }
+    },
+    {
+      "feature": "trv.temperature",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.temperature",
+      "properties": {
+        "value": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTargetTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.temperature/commands/setTargetTemperature",
+          "name": "setTargetTemperature",
+          "isExecutable": true,
+          "params": {
+            "temperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "trv.valve.position",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/trv.valve.position",
+      "properties": {
+        "position": {
+          "type": "number",
+          "value": 0,
+          "unit": "percent"
+        }
+      },
+      "commands": {}
+    }
+  ]
+}

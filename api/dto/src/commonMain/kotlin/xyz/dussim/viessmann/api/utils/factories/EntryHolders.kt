@@ -13,10 +13,21 @@ import xyz.dussim.viessmann.api.enums.OwnershipType
 import xyz.dussim.viessmann.api.enums.SerialEditor
 import xyz.dussim.viessmann.api.enums.TargetRealm
 import xyz.dussim.viessmann.api.enums.TokenType
+import xyz.dussim.viessmann.api.enums.ViessmannEnum
 import xyz.dussim.viessmann.api.utils.EntryHolder
 
-private val AccessLevelValues =
-    setOf<AccessLevel.Strict>(
+private fun <T : ViessmannEnum> entryHolderOf(vararg values: T) =
+    object : EntryHolder<T> {
+        override val entries = values.toSet()
+    }
+
+private fun <T : ViessmannEnum> entryHolderOf(vararg values: EntryHolder<out T>) =
+    object : EntryHolder<T> {
+        override val entries = values.flatMap { it.entries }.toSet()
+    }
+
+internal val AccessLevelEntryHolder: EntryHolder<AccessLevel.Strict> =
+    entryHolderOf(
         AccessLevel.Owner,
         AccessLevel.FamilyMember,
         AccessLevel.Maintainer,
@@ -30,8 +41,8 @@ private val AccessLevelValues =
         AccessLevel.Consumer,
     )
 
-private val AggregatedStatusValues =
-    setOf<AggregatedStatus.Strict>(
+internal val AggregatedStatusEntryHolder: EntryHolder<AggregatedStatus.Strict> =
+    entryHolderOf(
         AggregatedStatus.Error,
         AggregatedStatus.Offline,
         AggregatedStatus.Maintenance,
@@ -40,15 +51,15 @@ private val AggregatedStatusValues =
         AggregatedStatus.NbIotConnected,
     )
 
-private val GenderValues =
-    setOf<Gender.Strict>(
+internal val GenderEntryHolder =
+    entryHolderOf(
         Gender.Male,
         Gender.Female,
         Gender.Other,
     )
 
-private val HeatingTypeValues =
-    setOf<HeatingType.Strict>(
+internal val HeatingTypeEntryHolder =
+    entryHolderOf(
         HeatingType.None,
         HeatingType.FloorHeating,
         HeatingType.Radiators,
@@ -56,14 +67,14 @@ private val HeatingTypeValues =
         HeatingType.Undefined,
     )
 
-private val GatewayStateValues =
-    setOf<GatewayState.Strict>(
+internal val GatewayStateEntryHolder =
+    entryHolderOf(
         GatewayState.Produced,
         GatewayState.Registered,
     )
 
-private val GatewayTypeValues =
-    setOf<GatewayType.Strict>(
+internal val GatewayTypeEntryHolder =
+    entryHolderOf(
         GatewayType.Tcu.V101,
         GatewayType.Tcu.V102,
         GatewayType.Tcu.V201,
@@ -83,21 +94,22 @@ private val GatewayTypeValues =
         GatewayType.OneBaseEvolveBox,
         GatewayType.VitocontrolAPro,
     )
-private val InstallationTypeValues =
-    setOf<InstallationType.Strict>(
+
+internal val InstallationTypeEntryHolder =
+    entryHolderOf(
         InstallationType.Commercial,
         InstallationType.Residential,
     )
 
-private val InvitationStatusValues =
-    setOf<InvitationStatus.Strict>(
+internal val InvitationStatusEntryHolder =
+    entryHolderOf(
         InvitationStatus.Accepted,
         InvitationStatus.Pending,
         InvitationStatus.Rejected,
     )
 
-private val OwnershipTypeValues =
-    setOf<OwnershipType.Strict>(
+internal val OwnershipTypeEntryHolder =
+    entryHolderOf(
         OwnershipType.ResidentialEndUser,
         OwnershipType.PreCommissioning,
         OwnershipType.Oma,
@@ -106,66 +118,44 @@ private val OwnershipTypeValues =
         OwnershipType.None,
     )
 
-private val TargetRealmValues =
-    setOf<TargetRealm.Strict>(
+internal val TargetRealmEntryHolder =
+    entryHolderOf(
         TargetRealm.Dc,
         TargetRealm.Genesis,
     )
 
-private val NetworkStatusValues =
-    setOf<NetworkStatus.Strict>(
+internal val NetworkStatusEntryHolder =
+    entryHolderOf(
         NetworkStatus.Offline,
         NetworkStatus.Online,
     )
 
-private val TokenTypeValues =
-    setOf<TokenType.Strict>(
+internal val TokenTypeEntryHolder =
+    entryHolderOf(
         TokenType.Invited,
         TokenType.Requested,
     )
 
-private val SerialEditorValues =
-    setOf<SerialEditor.Strict>(
+internal val SerialEditorEntryHolder =
+    entryHolderOf(
         SerialEditor.User,
         SerialEditor.DeviceCommunication,
         SerialEditor.Supporter,
     )
 
-internal val AccessLevelEntryHolder =
-    EntryHolder<AccessLevel.Strict> { AccessLevelValues }
-
-internal val AggregatedStatusEntryHolder =
-    EntryHolder<AggregatedStatus.Strict> { AggregatedStatusValues }
-
-internal val GenderEntryHolder =
-    EntryHolder<Gender.Strict> { GenderValues }
-
-internal val HeatingTypeEntryHolder =
-    EntryHolder<HeatingType.Strict> { HeatingTypeValues }
-
-internal val GatewayStateEntryHolder =
-    EntryHolder<GatewayState.Strict> { GatewayStateValues }
-
-internal val GatewayTypeEntryHolder =
-    EntryHolder<GatewayType.Strict> { GatewayTypeValues }
-
-internal val InstallationTypeEntryHolder =
-    EntryHolder<InstallationType.Strict> { InstallationTypeValues }
-
-internal val InvitationStatusEntryHolder =
-    EntryHolder<InvitationStatus.Strict> { InvitationStatusValues }
-
-internal val OwnershipTypeEntryHolder =
-    EntryHolder<OwnershipType.Strict> { OwnershipTypeValues }
-
-internal val TargetRealmEntryHolder =
-    EntryHolder<TargetRealm.Strict> { TargetRealmValues }
-
-internal val NetworkStatusEntryHolder =
-    EntryHolder<NetworkStatus.Strict> { NetworkStatusValues }
-
-internal val TokenTypeEntryHolder =
-    EntryHolder<TokenType.Strict> { TokenTypeValues }
-
-internal val SerialEditorEntryHolder =
-    EntryHolder<SerialEditor.Strict> { SerialEditorValues }
+internal val ViessmannEnumEntryHolder =
+    entryHolderOf(
+        AccessLevelEntryHolder,
+        AggregatedStatusEntryHolder,
+        GenderEntryHolder,
+        HeatingTypeEntryHolder,
+        GatewayStateEntryHolder,
+        GatewayTypeEntryHolder,
+        InstallationTypeEntryHolder,
+        InvitationStatusEntryHolder,
+        OwnershipTypeEntryHolder,
+        TargetRealmEntryHolder,
+        NetworkStatusEntryHolder,
+        TokenTypeEntryHolder,
+        SerialEditorEntryHolder,
+    )

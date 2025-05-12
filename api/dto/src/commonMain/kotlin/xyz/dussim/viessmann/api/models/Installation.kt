@@ -1,6 +1,11 @@
 package xyz.dussim.viessmann.api.models
 
+import kotlinx.datetime.Instant
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import xyz.dussim.viessmann.api.enums.AccessLevel
 import xyz.dussim.viessmann.api.enums.AggregatedStatus
 import xyz.dussim.viessmann.api.enums.HeatingType
@@ -13,10 +18,10 @@ data class Address(
     val houseNumber: String,
     val zip: String,
     val city: String,
-    val region: String,
+    val region: String?,
     val country: String,
-    val phoneNumber: String,
-    val faxNumber: String,
+    val phoneNumber: String?,
+    val faxNumber: String?,
     val geolocation: Geolocation,
 )
 
@@ -27,38 +32,73 @@ data class Geolocation(
     val timeZone: String,
 )
 
-@Serializable
-data class Installation(
-    val id: Long,
-    val description: String,
-    val address: Address,
-    val registeredAt: String, // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
-    val updatedAt: String, // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
-    val aggregatedStatus: AggregatedStatus,
-    val servicedBy: String,
-    val heatingType: HeatingType,
-    val ownedByMaintainer: Boolean,
-    val endUserWlanCommissioned: Boolean,
-    val withoutViCareUser: Boolean,
-    val installationType: InstallationType,
-    val accessLevel: AccessLevel,
-    val ownershipType: OwnershipType,
-)
+@Serializable(with = InstallationSerializer::class)
+interface Installation {
+    val id: Long
+    val description: String? // FIXME documentation says that this can NOT be null but it is for some devices :/
+    val address: Address
+    val registeredAt: Instant // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
+    val updatedAt: Instant // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
+    val aggregatedStatus: AggregatedStatus
+    val servicedBy: String?
+    val heatingType: HeatingType?
+    val ownedByMaintainer: Boolean
+    val endUserWlanCommissioned: Boolean
+    val withoutViCareUser: Boolean
+    val installationType: InstallationType
+    val accessLevel: AccessLevel?
+    val ownershipType: OwnershipType
 
-@Serializable
-data class InstallationStrict(
-    val id: Long,
-    val description: String,
-    val address: Address,
-    val registeredAt: String, // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
-    val updatedAt: String, // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
-    val aggregatedStatus: AggregatedStatus.Strict,
-    val servicedBy: String,
-    val heatingType: HeatingType.Strict,
-    val ownedByMaintainer: Boolean,
-    val endUserWlanCommissioned: Boolean,
-    val withoutViCareUser: Boolean,
-    val installationType: InstallationType.Strict,
-    val accessLevel: AccessLevel.Strict,
-    val ownershipType: OwnershipType.Strict,
-)
+    @Serializable
+    data class Impl(
+        override val id: Long,
+        override val description: String?,
+        override val address: Address,
+        override val registeredAt: Instant,
+        override val updatedAt: Instant,
+        override val aggregatedStatus: AggregatedStatus,
+        override val servicedBy: String?,
+        override val heatingType: HeatingType?,
+        override val ownedByMaintainer: Boolean,
+        override val endUserWlanCommissioned: Boolean,
+        override val withoutViCareUser: Boolean,
+        override val installationType: InstallationType,
+        override val accessLevel: AccessLevel?,
+        override val ownershipType: OwnershipType,
+    ) : Installation
+
+    @Serializable
+    data class Strict(
+        override val id: Long,
+        override val description: String?,
+        override val address: Address,
+        override val registeredAt: Instant,
+        override val updatedAt: Instant,
+        override val aggregatedStatus: AggregatedStatus.Strict,
+        override val servicedBy: String?,
+        override val heatingType: HeatingType.Strict?,
+        override val ownedByMaintainer: Boolean,
+        override val endUserWlanCommissioned: Boolean,
+        override val withoutViCareUser: Boolean,
+        override val installationType: InstallationType.Strict,
+        override val accessLevel: AccessLevel.Strict?,
+        override val ownershipType: OwnershipType.Strict,
+    ) : Installation
+}
+
+object InstallationSerializer : KSerializer<Installation> {
+    override val descriptor: SerialDescriptor = Installation.Impl.serializer().descriptor
+
+    override fun serialize(
+        encoder: Encoder,
+        value: Installation,
+    ) {
+        when (value) {
+            is Installation.Impl -> Installation.Impl.serializer().serialize(encoder, value)
+            is Installation.Strict -> Installation.Strict.serializer().serialize(encoder, value)
+            else -> throw IllegalArgumentException("Unknown Installation type")
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Installation = Installation.Impl.serializer().deserialize(decoder)
+}

@@ -1,0 +1,293 @@
+{
+  "data": [
+    {
+      "feature": "gateway.status",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.status",
+      "properties": {
+        "online": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "commands": {
+        "reboot": {
+          "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.status/commands/reboot",
+          "name": "reboot",
+          "isExecutable": true,
+          "params": {}
+        }
+      }
+    },
+    {
+      "feature": "gateway.devices",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.devices",
+      "properties": {
+        "devices": {
+          "type": "DeviceList",
+          "value": [
+            {
+              "id": "gateway",
+              "fingerprint": "gw:hb2,mj:2,mi:50,p:3",
+              "modelId": "Heatbox2_SRC",
+              "modelVersion": "TFNcY6v3N_JvI3iPA1ph_kxghWk",
+              "name": "Heatbox2_SRC",
+              "type": "vitoconnect",
+              "roles": [
+                "capability:src",
+                "type:gateway;VitoconnectOpto2/OT2",
+                "type:hb2",
+                "type:legacy"
+              ],
+              "status": "online"
+            },
+            {
+              "id": "RoomControl-1",
+              "fingerprint": "src:hb2:ext,mj:2,mi:50,p:3",
+              "modelId": "Smart_RoomControl",
+              "modelVersion": "gsEUacL9bfO23B53R2yhO3h4jUo",
+              "name": "Smart_RoomControl",
+              "type": "roomControl",
+              "roles": [
+                "capability:monetization;FTDC",
+                "capability:monetization;OWD",
+                "capability:src;FTDC",
+                "capability:src;OWD",
+                "capability:zigbeeCoordinator",
+                "type:legacy",
+                "type:virtual;smartRoomControl"
+              ],
+              "status": "online"
+            },
+            {
+              "id": "0",
+              "fingerprint": "gg:20,gk:cb,si:201,esi:11",
+              "modelId": "VScotHO1_200_11",
+              "modelVersion": "VN9o4K6X__tbm2-l4cJbu_DeZ2A",
+              "name": "VScotHO1",
+              "type": "heating",
+              "roles": [
+                "capability:consumptionReport;electric",
+                "capability:consumptionReport;thermal",
+                "capability:monetization;AdvancedReport",
+                "capability:monetization;DhwSavingsCalculator",
+                "capability:productionReport;electric",
+                "capability:service;AdvancedReport",
+                "capability:service;DhwSavingsCalculator",
+                "type:boiler",
+                "type:brand;Viessmann",
+                "type:dhw;integrated",
+                "type:heating;integrated",
+                "type:legacy",
+                "type:product;VScotHO1"
+              ],
+              "status": "online"
+            },
+            {
+              "id": "zigbee-0000000000000000",
+              "fingerprint": "zigbee:trv,mj:2,mi:50,p:3",
+              "modelId": "Smart_Device_eTRV_generic_50",
+              "modelVersion": "ryss_zsbny6eKZG3frt9O4XRuS8",
+              "name": "Smart_Device_eTRV_generic",
+              "type": "zigbee",
+              "roles": [
+                "type:actuator",
+                "type:legacy",
+                "type:radiator",
+                "type:smartRoomDevice"
+              ],
+              "status": "online"
+            },
+            {
+              "id": "zigbee-0000000000000000",
+              "fingerprint": "zigbee:trv,mj:2,mi:50,p:3",
+              "modelId": "Smart_Device_eTRV_generic_50",
+              "modelVersion": "ryss_zsbny6eKZG3frt9O4XRuS8",
+              "name": "Smart_Device_eTRV_generic",
+              "type": "zigbee",
+              "roles": [
+                "type:actuator",
+                "type:legacy",
+                "type:radiator",
+                "type:smartRoomDevice"
+              ],
+              "status": "online"
+            },
+            {
+              "id": "zigbee-0000000000000000",
+              "fingerprint": "zigbee:trv,mj:2,mi:50,p:3",
+              "modelId": "Smart_Device_eTRV_generic_50",
+              "modelVersion": "ryss_zsbny6eKZG3frt9O4XRuS8",
+              "name": "Smart_Device_eTRV_generic",
+              "type": "zigbee",
+              "roles": [
+                "type:actuator",
+                "type:legacy",
+                "type:radiator",
+                "type:smartRoomDevice"
+              ],
+              "status": "online"
+            }
+          ]
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "gateway.firmware",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.firmware",
+      "properties": {
+        "version": {
+          "type": "string",
+          "value": "2.50.3"
+        },
+        "updateStatus": {
+          "type": "string",
+          "value": "idle"
+        },
+        "libraryVersion": {
+          "type": "string",
+          "value": "1.13.1"
+        },
+        "libraryType": {
+          "type": "string",
+          "value": "DCE"
+        }
+      },
+      "commands": {
+        "update": {
+          "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.firmware/commands/update",
+          "name": "update",
+          "isExecutable": true,
+          "params": {
+            "url": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "regEx": "((ftp|https?):\\/)?\\/?([^:\\/\\s]+)(:[0-9]+)?((\\/\\w+)*\\/)([\\w\\-\\.]+[^#?\\s]+)(.*)?"
+              }
+            },
+            "version": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "regEx": "^([0-9]+)\\.([0-9]+)\\.([0-9]+)((\\.[0-9]+)?)(?:(-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-\\-.]+)?$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "gateway.bmuconnection",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.bmuconnection",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "OK"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "gateway.wifi",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.wifi",
+      "properties": {
+        "strength": {
+          "type": "number",
+          "value": -56,
+          "unit": ""
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "gateway.mode",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.mode",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "value": "wifi"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": false,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/battery.overview",
+      "feature": "battery.overview",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {}
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": false,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/photovoltaic.overview",
+      "feature": "photovoltaic.overview",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {}
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": false,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/power.limitation.overview",
+      "feature": "power.limitation.overview",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {}
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": false,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/thermal.cockpit",
+      "feature": "thermal.cockpit",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {}
+    }
+  ]
+}

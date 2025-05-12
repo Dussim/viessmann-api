@@ -1,0 +1,148 @@
+{
+  "data": [
+    {
+      "gatewaySerial": "0000000000000000",
+      "id": "gateway",
+      "boilerSerial": null,
+      "boilerSerialEditor": null,
+      "bmuSerial": null,
+      "bmuSerialEditor": null,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "editedAt": "2020-01-01T00:00:01Z",
+      "modelId": "Heatbox2_SRC",
+      "status": "Online",
+      "deviceType": "vitoconnect",
+      "roles": [
+        "capability:src",
+        "type:gateway;VitoconnectOpto2/OT2",
+        "type:hb2",
+        "type:legacy"
+      ],
+      "isBoilerSerialEditable": false,
+      "brand": null,
+      "translationKey": "Heatbox2_SRC"
+    },
+    {
+      "gatewaySerial": "0000000000000000",
+      "id": "RoomControl-1",
+      "boilerSerial": null,
+      "boilerSerialEditor": null,
+      "bmuSerial": null,
+      "bmuSerialEditor": null,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "editedAt": "2020-01-01T00:00:01Z",
+      "modelId": "Smart_RoomControl",
+      "status": "Online",
+      "deviceType": "roomControl",
+      "roles": [
+        "capability:monetization;FTDC",
+        "capability:monetization;OWD",
+        "capability:src;FTDC",
+        "capability:src;OWD",
+        "capability:zigbeeCoordinator",
+        "type:legacy",
+        "type:virtual;smartRoomControl"
+      ],
+      "isBoilerSerialEditable": false,
+      "brand": null,
+      "translationKey": "Smart_RoomControl_49"
+    },
+    {
+      "gatewaySerial": "0000000000000000",
+      "id": "zigbee-0000000000000000",
+      "boilerSerial": null,
+      "boilerSerialEditor": null,
+      "bmuSerial": null,
+      "bmuSerialEditor": null,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "editedAt": "2020-01-01T00:00:01Z",
+      "modelId": "Smart_Device_eTRV_generic_50",
+      "status": "Online",
+      "deviceType": "zigbee",
+      "roles": [
+        "type:actuator",
+        "type:legacy",
+        "type:radiator",
+        "type:smartRoomDevice"
+      ],
+      "isBoilerSerialEditable": false,
+      "brand": null,
+      "translationKey": "Smart_Device_eTRV_generic_50"
+    },
+    {
+      "gatewaySerial": "0000000000000000",
+      "id": "0",
+      "boilerSerial": null,
+      "boilerSerialEditor": null,
+      "bmuSerial": null,
+      "bmuSerialEditor": null,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "editedAt": "2020-01-01T00:00:01Z",
+      "modelId": "VScotHO1_200_11",
+      "status": "Online",
+      "deviceType": "heating",
+      "roles": [
+        "capability:consumptionReport;electric",
+        "capability:consumptionReport;thermal",
+        "capability:monetization;AdvancedReport",
+        "capability:monetization;DhwSavingsCalculator",
+        "capability:productionReport;electric",
+        "capability:service;AdvancedReport",
+        "capability:service;DhwSavingsCalculator",
+        "type:boiler",
+        "type:brand;Viessmann",
+        "type:dhw;integrated",
+        "type:heating;integrated",
+        "type:legacy",
+        "type:product;VScotHO1"
+      ],
+      "isBoilerSerialEditable": true,
+      "brand": "Viessmann",
+      "translationKey": "VScotHO1_200_11"
+    },
+    {
+      "gatewaySerial": "0000000000000000",
+      "id": "zigbee-0000000000000000",
+      "boilerSerial": null,
+      "boilerSerialEditor": null,
+      "bmuSerial": null,
+      "bmuSerialEditor": null,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "editedAt": "2020-01-01T00:00:01Z",
+      "modelId": "Smart_Device_eTRV_generic_50",
+      "status": "Online",
+      "deviceType": "zigbee",
+      "roles": [
+        "type:actuator",
+        "type:legacy",
+        "type:radiator",
+        "type:smartRoomDevice"
+      ],
+      "isBoilerSerialEditable": false,
+      "brand": null,
+      "translationKey": "Smart_Device_eTRV_generic_50"
+    },
+    {
+      "gatewaySerial": "0000000000000000",
+      "id": "zigbee-0000000000000000",
+      "boilerSerial": null,
+      "boilerSerialEditor": null,
+      "bmuSerial": null,
+      "bmuSerialEditor": null,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "editedAt": "2020-01-01T00:00:01Z",
+      "modelId": "Smart_Device_eTRV_generic_50",
+      "status": "Online",
+      "deviceType": "zigbee",
+      "roles": [
+        "type:actuator",
+        "type:legacy",
+        "type:radiator",
+        "type:smartRoomDevice"
+      ],
+      "isBoilerSerialEditable": false,
+      "brand": null,
+      "translationKey": "Smart_Device_eTRV_generic_50"
+    }
+  ]
+}

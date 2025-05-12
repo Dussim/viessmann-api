@@ -1,0 +1,55 @@
+{
+  "cursor": {
+    "next": ""
+  },
+  "data": [
+    {
+      "serial": "0000000000000000",
+      "version": "2.29.1.0",
+      "firmwareUpdateFailureCounter": 0,
+      "autoUpdate": false,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "producedAt": "2021-02-25T12:06:20.000Z",
+      "lastStatusChangedAt": "2020-01-01T00:00:01Z",
+      "aggregatedStatus": "Offline",
+      "targetRealm": "DC",
+      "gatewayType": "SA180",
+      "installationId": 10000,
+      "registeredAt": "2025-02-20T13:25:00.005Z",
+      "description": null,
+      "otaOngoing": false
+    },
+    {
+      "serial": "0000000000000000",
+      "version": "2.29.1.0",
+      "firmwareUpdateFailureCounter": 0,
+      "autoUpdate": false,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "producedAt": "2021-02-25T12:06:20.000Z",
+      "lastStatusChangedAt": "2020-01-01T00:00:01Z",
+      "aggregatedStatus": "Offline",
+      "targetRealm": "DC",
+      "gatewayType": "SA180",
+      "installationId": 10000,
+      "registeredAt": "2025-02-20T12:29:01.033Z",
+      "description": null,
+      "otaOngoing": false
+    },
+    {
+      "serial": "0000000000000000",
+      "version": "2.50.3.0",
+      "firmwareUpdateFailureCounter": 0,
+      "autoUpdate": false,
+      "createdAt": "2020-01-01T00:00:01Z",
+      "producedAt": "2021-02-25T12:06:20.000Z",
+      "lastStatusChangedAt": "2020-01-01T00:00:01Z",
+      "aggregatedStatus": "Error",
+      "targetRealm": "DC",
+      "gatewayType": "VitoconnectOPTO2",
+      "installationId": 10000,
+      "registeredAt": "2024-10-01T09:50:10.111Z",
+      "description": null,
+      "otaOngoing": false
+    }
+  ]
+}

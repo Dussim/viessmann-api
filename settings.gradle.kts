@@ -8,7 +8,7 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositoriesMode = RepositoriesMode.PREFER_PROJECT
     repositories.mavenCentral()
 }
 
@@ -16,4 +16,6 @@ rootProject.name = "viessmann-api"
 
 include(
     ":api:dto",
+    ":api:feature:annotations",
+    ":api:feature:processor",
 )

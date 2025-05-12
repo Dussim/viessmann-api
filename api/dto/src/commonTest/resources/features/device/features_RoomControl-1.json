@@ -1,0 +1,3144 @@
+{
+  "data": [
+    {
+      "feature": "rooms.0.condensationRisk",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.condensationRisk",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.17.condensationRisk",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.17.condensationRisk",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.18.condensationRisk",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.18.condensationRisk",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.19.condensationRisk",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.19.condensationRisk",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.17.opd.activity",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.17.opd.activity",
+      "properties": {
+        "value": {
+          "type": "number",
+          "value": 255,
+          "unit": "percent"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.18.opd.activity",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.18.opd.activity",
+      "properties": {
+        "value": {
+          "type": "number",
+          "value": 255,
+          "unit": "percent"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.19.opd.activity",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.19.opd.activity",
+      "properties": {
+        "value": {
+          "type": "number",
+          "value": 255,
+          "unit": "percent"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.0.operating.capability",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.operating.capability",
+      "properties": {
+        "value": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.0.sensors.co2",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.sensors.co2",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.0.sensors.humidity",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.sensors.humidity",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.0.sensors.temperature",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.sensors.temperature",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.features.supplyChannel0PumpControl",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel0PumpControl",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel0PumpControl/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel0PumpControl/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel0PumpControl/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.features.supplyChannel1PumpControl",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel1PumpControl",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel1PumpControl/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel1PumpControl/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel1PumpControl/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.features.supplyChannel2PumpControl",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel2PumpControl",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel2PumpControl/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel2PumpControl/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel2PumpControl/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.features.supplyChannel3PumpControl",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel3PumpControl",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel3PumpControl/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel3PumpControl/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.features.supplyChannel3PumpControl/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.condensationRisk",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.condensationRisk",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.condensationRisk",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.condensationRisk",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.condensationRisk",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.condensationRisk",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.operating.capability",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.capability",
+      "properties": {
+        "value": {
+          "type": "array",
+          "value": [
+            "heating"
+          ]
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.operating.capability",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.capability",
+      "properties": {
+        "value": {
+          "type": "array",
+          "value": [
+            "heating"
+          ]
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.operating.capability",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.capability",
+      "properties": {
+        "value": {
+          "type": "array",
+          "value": [
+            "heating"
+          ]
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.operating.programs.active",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.active",
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "normalEnergySaving"
+        }
+      },
+      "commands": {},
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.N.operating.state"
+      }
+    },
+    {
+      "feature": "rooms.others.1.operating.programs.active",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.active",
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "normalEnergySaving"
+        }
+      },
+      "commands": {},
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.N.operating.state"
+      }
+    },
+    {
+      "feature": "rooms.others.2.operating.programs.active",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.active",
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "normalEnergySaving"
+        }
+      },
+      "commands": {},
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.N.operating.state"
+      }
+    },
+    {
+      "feature": "rooms.others.0.operating.programs.comfortHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.comfortHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.comfortHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.operating.programs.comfortHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.comfortHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.comfortHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.operating.programs.comfortHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.comfortHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.comfortHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.operating.programs.manualTillNextScheduleHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.manualTillNextScheduleHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.manualTillNextScheduleHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": false,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          },
+          "isDeprecated": true
+        },
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.manualTillNextScheduleHeating/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {
+            "temperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          },
+          "isDeprecated": true
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.manualTillNextScheduleHeating/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {},
+          "isDeprecated": true
+        }
+      },
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.others.N.quickmodes.manualTillNextSchedule"
+      }
+    },
+    {
+      "feature": "rooms.others.1.operating.programs.manualTillNextScheduleHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.manualTillNextScheduleHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.manualTillNextScheduleHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": false,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          },
+          "isDeprecated": true
+        },
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.manualTillNextScheduleHeating/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {
+            "temperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          },
+          "isDeprecated": true
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.manualTillNextScheduleHeating/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {},
+          "isDeprecated": true
+        }
+      },
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.others.N.quickmodes.manualTillNextSchedule"
+      }
+    },
+    {
+      "feature": "rooms.others.2.operating.programs.manualTillNextScheduleHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.manualTillNextScheduleHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.manualTillNextScheduleHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": false,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          },
+          "isDeprecated": true
+        },
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.manualTillNextScheduleHeating/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {
+            "temperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          },
+          "isDeprecated": true
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.manualTillNextScheduleHeating/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {},
+          "isDeprecated": true
+        }
+      },
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.others.N.quickmodes.manualTillNextSchedule"
+      }
+    },
+    {
+      "feature": "rooms.others.0.operating.programs.normalHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.normalHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.normalHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.operating.programs.normalHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.normalHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.normalHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.operating.programs.normalHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.normalHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.normalHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.operating.programs.reducedHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.reducedHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.reducedHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.operating.programs.reducedHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.reducedHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.reducedHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.operating.programs.reducedHeating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.reducedHeating",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.reducedHeating/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.operating.programs.standby",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.programs.standby",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {},
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.others.N.operating.state"
+      }
+    },
+    {
+      "feature": "rooms.others.1.operating.programs.standby",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.programs.standby",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {},
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.others.N.operating.state"
+      }
+    },
+    {
+      "feature": "rooms.others.2.operating.programs.standby",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.programs.standby",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {},
+      "deprecated": {
+        "removalDate": "2024-09-15",
+        "info": "replaced by rooms.others.N.operating.state"
+      }
+    },
+    {
+      "feature": "rooms.others.0.operating.state",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.operating.state",
+      "properties": {
+        "level": {
+          "type": "string",
+          "value": "normal"
+        },
+        "demand": {
+          "type": "string",
+          "value": "energySaving"
+        },
+        "reason": {
+          "type": "string",
+          "value": "schedule"
+        },
+        "modifier": {
+          "type": "string",
+          "value": "none"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.operating.state",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.operating.state",
+      "properties": {
+        "level": {
+          "type": "string",
+          "value": "normal"
+        },
+        "demand": {
+          "type": "string",
+          "value": "energySaving"
+        },
+        "reason": {
+          "type": "string",
+          "value": "schedule"
+        },
+        "modifier": {
+          "type": "string",
+          "value": "none"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.operating.state",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.operating.state",
+      "properties": {
+        "level": {
+          "type": "string",
+          "value": "normal"
+        },
+        "demand": {
+          "type": "string",
+          "value": "energySaving"
+        },
+        "reason": {
+          "type": "string",
+          "value": "schedule"
+        },
+        "modifier": {
+          "type": "string",
+          "value": "none"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.quickmodes.manualTillNextSchedule",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.quickmodes.manualTillNextSchedule",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.quickmodes.manualTillNextSchedule/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {
+            "temperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.quickmodes.manualTillNextSchedule/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.quickmodes.manualTillNextSchedule/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": false,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.quickmodes.manualTillNextSchedule",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.quickmodes.manualTillNextSchedule",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.quickmodes.manualTillNextSchedule/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {
+            "temperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.quickmodes.manualTillNextSchedule/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.quickmodes.manualTillNextSchedule/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": false,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.quickmodes.manualTillNextSchedule",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.quickmodes.manualTillNextSchedule",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.quickmodes.manualTillNextSchedule/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {
+            "temperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.quickmodes.manualTillNextSchedule/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.quickmodes.manualTillNextSchedule/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": false,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.sensors.humidity",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.sensors.humidity",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.sensors.humidity",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.sensors.humidity",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.sensors.humidity",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.sensors.humidity",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.sensors.temperature",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.sensors.temperature",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.sensors.temperature",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.sensors.temperature",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.sensors.temperature",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.sensors.temperature",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "notConnected"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.temperature.levels.comfort.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.comfort.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.temperature.levels.comfort.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.comfort.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.temperature.levels.comfort.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.comfort.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.temperature.levels.comfort.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.comfort.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.comfort.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.temperature.levels.comfort.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.comfort.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.comfort.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.temperature.levels.comfort.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.comfort.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.comfort.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.temperature.levels.normal.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.normal.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.temperature.levels.normal.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.normal.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.temperature.levels.normal.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.normal.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.temperature.levels.normal.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.normal.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.normal.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.temperature.levels.normal.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.normal.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.normal.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.temperature.levels.normal.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.normal.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.normal.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.temperature.levels.reduced.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.reduced.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.1.temperature.levels.reduced.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.reduced.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.2.temperature.levels.reduced.heating",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.reduced.heating",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.others.0.temperature.levels.reduced.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.reduced.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.temperature.levels.reduced.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.temperature.levels.reduced.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.reduced.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.temperature.levels.reduced.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.temperature.levels.reduced.perceived",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.reduced.perceived",
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "value": 18,
+          "unit": "celsius"
+        }
+      },
+      "commands": {
+        "setTemperature": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.temperature.levels.reduced.perceived/commands/setTemperature",
+          "name": "setTemperature",
+          "isExecutable": true,
+          "params": {
+            "targetTemperature": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "min": 8,
+                "max": 30,
+                "stepping": 0.5
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.standaloneMode",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.standaloneMode",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "device.zigbee.coordinator",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.zigbee.coordinator",
+      "properties": {
+        "status": {
+          "type": "array",
+          "value": []
+        },
+        "timeout": {
+          "type": "number",
+          "value": 120,
+          "unit": ""
+        }
+      },
+      "commands": {
+        "addDevice": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.zigbee.coordinator/commands/addDevice",
+          "name": "addDevice",
+          "isExecutable": true,
+          "params": {
+            "id": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 16
+              }
+            },
+            "ic": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 36
+              }
+            },
+            "type": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "enum": [
+                  "cs",
+                  "fht",
+                  "repeater",
+                  "trv",
+                  "remoteController",
+                  "airQualitySensor"
+                ]
+              }
+            }
+          }
+        },
+        "removeDevice": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.zigbee.coordinator/commands/removeDevice",
+          "name": "removeDevice",
+          "isExecutable": true,
+          "params": {
+            "id": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 16
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms",
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "value": [
+            "0"
+          ]
+        }
+      },
+      "commands": {
+        "add": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms/commands/add",
+          "name": "add",
+          "isExecutable": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 40,
+                "regEx": "^[\\p{L}0-9]+( [\\p{L}0-9]+)*$"
+              }
+            },
+            "type": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "enum": [
+                  "bathroom",
+                  "bedroom",
+                  "hallway",
+                  "livingroom",
+                  "kitchen",
+                  "office",
+                  "nursery",
+                  "toilet",
+                  "other"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.0",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Bathroom"
+        },
+        "type": {
+          "type": "string",
+          "value": "bathroom"
+        },
+        "actors": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "commands": {
+        "addActor": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0/commands/addActor",
+          "name": "addActor",
+          "isExecutable": true,
+          "params": {
+            "actorDeviceId": {
+              "type": "string",
+              "constraints": {},
+              "required": true
+            },
+            "heatingCircuit": {
+              "type": "number",
+              "constraints": {
+                "min": 0,
+                "max": 3,
+                "stepping": 1
+              },
+              "required": false
+            }
+          },
+          "constraints": {
+            "enum": [
+              "cs",
+              "fht",
+              "trv",
+              "airQualitySensor",
+              "remoteControllerSensor"
+            ]
+          }
+        },
+        "moveActor": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0/commands/moveActor",
+          "name": "moveActor",
+          "isExecutable": true,
+          "params": {
+            "actorDeviceId": {
+              "type": "string",
+              "constraints": {},
+              "required": true
+            },
+            "heatingCircuit": {
+              "type": "number",
+              "constraints": {
+                "min": 0,
+                "max": 3,
+                "stepping": 1
+              },
+              "required": false
+            },
+            "newRoomId": {
+              "type": "number",
+              "constraints": {
+                "min": 0,
+                "max": 23,
+                "stepping": 1
+              },
+              "required": true
+            }
+          }
+        },
+        "setName": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0/commands/setName",
+          "name": "setName",
+          "isExecutable": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "regEx": "^[\\p{L}0-9]+( [\\p{L}0-9]+)*$",
+                "minLength": 1,
+                "maxLength": 40
+              }
+            }
+          }
+        },
+        "setType": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0/commands/setType",
+          "name": "setType",
+          "isExecutable": true,
+          "params": {
+            "type": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "enum": [
+                  "bathroom",
+                  "bedroom",
+                  "hallway",
+                  "livingroom",
+                  "kitchen",
+                  "office",
+                  "nursery",
+                  "toilet",
+                  "other"
+                ]
+              }
+            }
+          }
+        },
+        "removeActor": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0/commands/removeActor",
+          "name": "removeActor",
+          "isExecutable": true,
+          "params": {
+            "actorDeviceId": {
+              "type": "string",
+              "constraints": {},
+              "required": true
+            }
+          }
+        },
+        "remove": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0/commands/remove",
+          "name": "remove",
+          "isExecutable": true,
+          "params": {}
+        }
+      }
+    },
+    {
+      "feature": "rooms.others",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others",
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        }
+      },
+      "commands": {
+        "add": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others/commands/add",
+          "name": "add",
+          "isExecutable": false,
+          "params": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 40
+              }
+            },
+            "heatingCircuit": {
+              "type": "number",
+              "required": true,
+              "constraints": {
+                "enum": []
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "test1"
+        },
+        "heatingCircuit": {
+          "type": "number",
+          "value": 1,
+          "unit": ""
+        },
+        "active": {
+          "type": "boolean",
+          "value": true
+        },
+        "actors": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        },
+        "setName": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0/commands/setName",
+          "name": "setName",
+          "isExecutable": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 40
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "test2"
+        },
+        "heatingCircuit": {
+          "type": "number",
+          "value": 0,
+          "unit": ""
+        },
+        "active": {
+          "type": "boolean",
+          "value": true
+        },
+        "actors": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        },
+        "setName": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1/commands/setName",
+          "name": "setName",
+          "isExecutable": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 40
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "test3"
+        },
+        "heatingCircuit": {
+          "type": "number",
+          "value": 2,
+          "unit": ""
+        },
+        "active": {
+          "type": "boolean",
+          "value": true
+        },
+        "actors": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        },
+        "setName": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2/commands/setName",
+          "name": "setName",
+          "isExecutable": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "constraints": {
+                "minLength": 1,
+                "maxLength": 40
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.0.schedule",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.schedule",
+      "properties": {
+        "entries": {
+          "type": "Schedule",
+          "value": {
+            "mon": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "tue": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "wed": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "thu": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "fri": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "sat": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "sun": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ]
+          }
+        },
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "commands": {
+        "setSchedule": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.schedule/commands/setSchedule",
+          "name": "setSchedule",
+          "isExecutable": true,
+          "params": {
+            "newSchedule": {
+              "type": "Schedule",
+              "required": true,
+              "constraints": {
+                "modes": [
+                  "normal",
+                  "comfort"
+                ],
+                "maxEntries": 4,
+                "resolution": 10,
+                "defaultMode": "reduced",
+                "overlapAllowed": false
+              }
+            }
+          }
+        },
+        "resetSchedule": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.0.schedule/commands/resetSchedule",
+          "name": "resetSchedule",
+          "isExecutable": false,
+          "params": {}
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.1.schedule",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.schedule",
+      "properties": {
+        "entries": {
+          "type": "Schedule",
+          "value": {
+            "mon": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "tue": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "wed": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "thu": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "fri": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "sat": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "sun": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ]
+          }
+        },
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "commands": {
+        "setSchedule": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.schedule/commands/setSchedule",
+          "name": "setSchedule",
+          "isExecutable": true,
+          "params": {
+            "newSchedule": {
+              "type": "Schedule",
+              "required": true,
+              "constraints": {
+                "modes": [
+                  "normal",
+                  "comfort"
+                ],
+                "maxEntries": 4,
+                "resolution": 10,
+                "defaultMode": "reduced",
+                "overlapAllowed": false
+              }
+            }
+          }
+        },
+        "resetSchedule": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.1.schedule/commands/resetSchedule",
+          "name": "resetSchedule",
+          "isExecutable": false,
+          "params": {}
+        }
+      }
+    },
+    {
+      "feature": "rooms.others.2.schedule",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.schedule",
+      "properties": {
+        "entries": {
+          "type": "Schedule",
+          "value": {
+            "mon": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "tue": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "wed": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "thu": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "fri": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "sat": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ],
+            "sun": [
+              {
+                "mode": "normal",
+                "start": "06:00",
+                "end": "22:00",
+                "position": 0
+              }
+            ]
+          }
+        },
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "commands": {
+        "setSchedule": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.schedule/commands/setSchedule",
+          "name": "setSchedule",
+          "isExecutable": true,
+          "params": {
+            "newSchedule": {
+              "type": "Schedule",
+              "required": true,
+              "constraints": {
+                "modes": [
+                  "normal",
+                  "comfort"
+                ],
+                "maxEntries": 4,
+                "resolution": 10,
+                "defaultMode": "reduced",
+                "overlapAllowed": false
+              }
+            }
+          }
+        },
+        "resetSchedule": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.others.2.schedule/commands/resetSchedule",
+          "name": "resetSchedule",
+          "isExecutable": false,
+          "params": {}
+        }
+      }
+    },
+    {
+      "feature": "rooms.status",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.status",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "variant": {
+          "type": "string",
+          "value": "full"
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.status/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.status/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        }
+      }
+    },
+    {
+      "feature": "device.configuration",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/device.configuration",
+      "properties": {
+        "ttCircuitsActive": {
+          "type": "array",
+          "value": []
+        },
+        "ttCircuitsEnabled": {
+          "type": "array",
+          "value": []
+        },
+        "dhwActive": {
+          "type": "boolean",
+          "value": false
+        },
+        "dhwEnabled": {
+          "type": "boolean",
+          "value": false
+        },
+        "solarActive": {
+          "type": "boolean",
+          "value": false
+        },
+        "solarEnabled": {
+          "type": "boolean",
+          "value": false
+        },
+        "circuitsActive": {
+          "type": "array",
+          "value": []
+        },
+        "circuitsEnabled": {
+          "type": "array",
+          "value": []
+        },
+        "roomsActive": {
+          "type": "array",
+          "value": [
+            "0"
+          ]
+        },
+        "roomsOthersActive": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        "roomsEnabled": {
+          "type": "array",
+          "value": [
+            "0"
+          ]
+        },
+        "roomsOthersEnabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+        "heatingConfigurationRegulation": {
+          "type": "string",
+          "value": ""
+        }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "rooms.0.childLock",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.childLock",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "inactive"
+        },
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.childLock/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.childLock/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.childLock/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.17.childLock",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.17.childLock",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "inactive"
+        },
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.17.childLock/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.17.childLock/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.17.childLock/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.18.childLock",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.18.childLock",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "inactive"
+        },
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.18.childLock/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.18.childLock/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.18.childLock/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "feature": "rooms.19.childLock",
+      "gatewayId": "0000000000000000",
+      "deviceId": "device-0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.19.childLock",
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "inactive"
+        },
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "activate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.19.childLock/commands/activate",
+          "name": "activate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "deactivate": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.19.childLock/commands/deactivate",
+          "name": "deactivate",
+          "isExecutable": true,
+          "params": {}
+        },
+        "setActive": {
+          "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.19.childLock/commands/setActive",
+          "name": "setActive",
+          "isExecutable": true,
+          "params": {
+            "active": {
+              "type": "boolean",
+              "required": true,
+              "constraints": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": true,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/rooms.0.aggregatedStatus",
+      "feature": "rooms.0.aggregatedStatus",
+      "deviceId": "device-0000000000000000",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {
+        "status": {
+          "value": "WorksProperly",
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

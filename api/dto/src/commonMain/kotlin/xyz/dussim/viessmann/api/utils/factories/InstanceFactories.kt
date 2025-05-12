@@ -13,10 +13,11 @@ import xyz.dussim.viessmann.api.enums.OwnershipType
 import xyz.dussim.viessmann.api.enums.SerialEditor
 import xyz.dussim.viessmann.api.enums.TargetRealm
 import xyz.dussim.viessmann.api.enums.TokenType
+import xyz.dussim.viessmann.api.enums.ViessmannEnum
 import xyz.dussim.viessmann.api.utils.InstanceFactory
 
 internal val AccessLevelInstanceFactory =
-    InstanceFactory<AccessLevel> { value ->
+    InstanceFactory { value ->
         when (value) {
             "Owner" -> AccessLevel.Owner
             "FamilyMember" -> AccessLevel.FamilyMember
@@ -34,7 +35,7 @@ internal val AccessLevelInstanceFactory =
     }
 
 internal val AggregatedStatusInstanceFactory =
-    InstanceFactory<AggregatedStatus> { value ->
+    InstanceFactory { value ->
         when (value) {
             "Error" -> AggregatedStatus.Error
             "Offline" -> AggregatedStatus.Offline
@@ -47,7 +48,7 @@ internal val AggregatedStatusInstanceFactory =
     }
 
 internal val GatewayStateInstanceFactory =
-    InstanceFactory<GatewayState> { value ->
+    InstanceFactory { value ->
         when (value) {
             "Produced" -> GatewayState.Produced
             "Registered" -> GatewayState.Registered
@@ -56,7 +57,7 @@ internal val GatewayStateInstanceFactory =
     }
 
 internal val GatewayTypeInstanceFactory =
-    InstanceFactory<GatewayType> { value ->
+    InstanceFactory { value ->
         when (value) {
             "VitoconnectOPTO2" -> GatewayType.Vitoconnect.OPTO2
             "VitoconnectOPTO3" -> GatewayType.Vitoconnect.OPTO3
@@ -84,7 +85,7 @@ internal val GatewayTypeInstanceFactory =
     }
 
 internal val GenderInstanceFactory =
-    InstanceFactory<Gender> { value ->
+    InstanceFactory { value ->
         when (value) {
             "MALE" -> Gender.Male
             "FEMALE" -> Gender.Female
@@ -94,7 +95,7 @@ internal val GenderInstanceFactory =
     }
 
 internal val HeatingTypeInstanceFactory =
-    InstanceFactory<HeatingType> { value ->
+    InstanceFactory { value ->
         when (value) {
             "None" -> HeatingType.None
             "FloorHeating" -> HeatingType.FloorHeating
@@ -106,15 +107,15 @@ internal val HeatingTypeInstanceFactory =
     }
 
 internal val InstallationTypeInstanceFactory =
-    InstanceFactory<InstallationType> { value ->
+    InstanceFactory { value ->
         when (value) {
-            "RESIDENTIAL" -> InstallationType.Residential
-            "COMMERCIAL" -> InstallationType.Commercial
+            "Residential" -> InstallationType.Residential
+            "Commercial" -> InstallationType.Commercial
             else -> InstallationType.Unknown(value)
         }
     }
 
-internal val InvitationStatusInstanceFactory: InstanceFactory<InvitationStatus> =
+internal val InvitationStatusInstanceFactory =
     InstanceFactory { value ->
         when (value) {
             "Pending" -> InvitationStatus.Pending
@@ -127,7 +128,7 @@ internal val InvitationStatusInstanceFactory: InstanceFactory<InvitationStatus> 
         }
     }
 internal val OwnershipTypeInstanceFactory =
-    InstanceFactory<OwnershipType> { value ->
+    InstanceFactory { value ->
         when (value) {
             "ResidentialEndUser" -> OwnershipType.ResidentialEndUser
             "PreCommissioning" -> OwnershipType.PreCommissioning
@@ -140,7 +141,7 @@ internal val OwnershipTypeInstanceFactory =
     }
 
 internal val TargetRealmInstanceFactory =
-    InstanceFactory<TargetRealm> { value ->
+    InstanceFactory { value ->
         when (value) {
             "DC" -> TargetRealm.Dc
             "Genesis" -> TargetRealm.Genesis
@@ -149,7 +150,7 @@ internal val TargetRealmInstanceFactory =
     }
 
 internal val NetworkStatusInstanceFactory =
-    InstanceFactory<NetworkStatus> { value ->
+    InstanceFactory { value ->
         when (value) {
             "Offline" -> NetworkStatus.Offline
             "Online" -> NetworkStatus.Online
@@ -158,7 +159,7 @@ internal val NetworkStatusInstanceFactory =
     }
 
 internal val TokenTypeInstanceFactory =
-    InstanceFactory<TokenType> { value ->
+    InstanceFactory { value ->
         when (value) {
             "Invited" -> TokenType.Invited
             "Requested" -> TokenType.Requested
@@ -166,7 +167,7 @@ internal val TokenTypeInstanceFactory =
         }
     }
 
-internal val SerialEditorInstanceFactory: InstanceFactory<SerialEditor> =
+internal val SerialEditorInstanceFactory =
     InstanceFactory { value ->
         when (value) {
             "User" -> SerialEditor.User
@@ -174,4 +175,26 @@ internal val SerialEditorInstanceFactory: InstanceFactory<SerialEditor> =
             "Supporter" -> SerialEditor.Supporter
             else -> SerialEditor.Unknown(value)
         }
+    }
+
+internal val AllInstancesFactories =
+    listOf(
+        AccessLevelInstanceFactory,
+        AggregatedStatusInstanceFactory,
+        GatewayStateInstanceFactory,
+        GatewayTypeInstanceFactory,
+        GenderInstanceFactory,
+        HeatingTypeInstanceFactory,
+        InstallationTypeInstanceFactory,
+        InvitationStatusInstanceFactory,
+        OwnershipTypeInstanceFactory,
+        TargetRealmInstanceFactory,
+        NetworkStatusInstanceFactory,
+        TokenTypeInstanceFactory,
+        SerialEditorInstanceFactory,
+    )
+
+internal val ViessmannEnumInstanceFactory =
+    InstanceFactory { value ->
+        AllInstancesFactories.firstNotNullOfOrNull { it.valueOfOrNull(value) } ?: ViessmannEnum.Unknown(value)
     }

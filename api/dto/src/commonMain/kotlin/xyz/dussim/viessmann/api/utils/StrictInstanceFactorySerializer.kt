@@ -5,7 +5,6 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.serializer
-import xyz.dussim.viessmann.api.enums.AccessLevel
 import xyz.dussim.viessmann.api.enums.ViessmannEnum
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
@@ -14,7 +13,7 @@ internal class StrictInstanceFactorySerializer<Base : ViessmannEnum, Strict : Ba
     private val baseSerializer: KSerializer<Base>,
     private val strictKClass: KClass<Strict>,
 ) : KSerializer<Strict> {
-    override val descriptor: SerialDescriptor = AccessLevel.Serializer.descriptor
+    override val descriptor: SerialDescriptor = baseSerializer.descriptor
 
     override fun serialize(
         encoder: Encoder,

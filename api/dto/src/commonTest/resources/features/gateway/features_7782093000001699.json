@@ -1,0 +1,79 @@
+{
+  "data": [
+    {
+      "feature": "gateway.status",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.status",
+      "properties": {
+        "online": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "commands": {
+        "reboot": {
+          "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.status/commands/reboot",
+          "name": "reboot",
+          "isExecutable": false,
+          "params": {}
+        }
+      }
+    },
+    {
+      "feature": "gateway.devices",
+      "gatewayId": "0000000000000000",
+      "timestamp": "2020-01-01T00:00:01Z",
+      "isEnabled": true,
+      "isReady": true,
+      "apiVersion": 1,
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/gateway.devices",
+      "properties": {
+        "devices": {
+          "type": "DeviceList",
+          "value": []
+        }
+      },
+      "commands": {}
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": false,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/battery.overview",
+      "feature": "battery.overview",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {}
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": false,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/photovoltaic.overview",
+      "feature": "photovoltaic.overview",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {}
+    },
+    {
+      "apiVersion": 1,
+      "isEnabled": false,
+      "isReady": true,
+      "timestamp": "2020-01-01T00:00:01Z",
+      "uri": "https://example.com/iot/v2/features/gateways/0000000000000000/features/thermal.cockpit",
+      "feature": "thermal.cockpit",
+      "gatewayId": "0000000000000000",
+      "components": [],
+      "commands": {},
+      "properties": {}
+    }
+  ]
+}

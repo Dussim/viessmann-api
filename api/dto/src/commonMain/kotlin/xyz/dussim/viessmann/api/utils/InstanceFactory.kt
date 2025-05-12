@@ -9,6 +9,10 @@ import xyz.dussim.viessmann.api.enums.ViessmannEnum
  * @param T The type of [ViessmannEnum] that this factory creates instances of.
  */
 fun interface InstanceFactory<T : ViessmannEnum> {
+    class UnknownEnumValueException(
+        override val message: String,
+    ) : Exception()
+
     /**
      * Creates an instance of [T] based on the provided string value or if it is unknown it returns an intersection type of [UnknownEnumValue]  & [T]
      *
@@ -34,11 +38,11 @@ fun interface InstanceFactory<T : ViessmannEnum> {
      *
      * @param value The string value to convert into an instance of [T].
      * @return An instance of [T] corresponding to the provided value.
-     * @throws IllegalArgumentException if the value is unknown.
+     * @throws UnknownEnumValueException if the value is unknown.
      */
     fun valueOfOrThrow(value: String): T =
         when (val instance = valueOf(value)) {
-            is UnknownEnumValue -> throw IllegalArgumentException("Unknown value: $value")
+            is UnknownEnumValue -> throw UnknownEnumValueException("No enum constant found for value: $value")
             else -> instance
         }
 

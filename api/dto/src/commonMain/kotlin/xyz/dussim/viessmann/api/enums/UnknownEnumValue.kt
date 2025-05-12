@@ -7,4 +7,4 @@ package xyz.dussim.viessmann.api.enums
  * by the library. Implementations of this interface serve as placeholders for
  * unknown values returned by the API.
  */
-sealed interface UnknownEnumValue
+sealed interface UnknownEnumValue : ViessmannEnum

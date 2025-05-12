@@ -1,0 +1,38 @@
+{
+  "data": [
+    {
+      "id": 2886465,
+      "description": "Wien",
+      "address": {
+        "street": "Hedy-Lamarr-Wegu",
+        "houseNumber": "5",
+        "zip": "1120",
+        "city": "City",
+        "region": null,
+        "country": "XX",
+        "phoneNumber": null,
+        "faxNumber": null,
+        "geolocation": {
+          "latitude": 0.0,
+          "longitude": 0.0,
+          "timeZone": "Etc/UTC"
+        }
+      },
+      "registeredAt": "2025-03-14T12:12:10.530Z",
+      "updatedAt": "2025-03-24T11:52:54.821Z",
+      "aggregatedStatus": "Error",
+      "servicedBy": null,
+      "heatingType": null,
+      "ownedByMaintainer": false,
+      "endUserWlanCommissioned": true,
+      "withoutViCareUser": false,
+      "installationType": "Residential",
+      "buildingName": null,
+      "buildingEmail": null,
+      "buildingPhone": null,
+      "accessLevel": "Owner",
+      "ownershipType": "ResidentialEndUser",
+      "brand": "Viessmann"
+    }
+  ]
+}
