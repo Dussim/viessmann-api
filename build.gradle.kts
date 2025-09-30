@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.org.jetbrains.kotlin.jvm).apply(false)
     alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization).apply(false)
     alias(libs.plugins.com.github.ben.manes.versions)
-    alias(libs.plugins.nl.littlerobots.version.catalog.update)
 }
 
 tasks.wrapper {
