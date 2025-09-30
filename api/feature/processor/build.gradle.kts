@@ -9,12 +9,14 @@ plugins {
     alias(libs.plugins.org.jetbrains.dokka)
     alias(libs.plugins.org.jmailen.kotlinter)
     alias(libs.plugins.io.gitlab.arturbosch.detekt)
-    alias(libs.plugins.io.kotest.multiplatform)
+    alias(libs.plugins.io.kotest)
     alias(libs.plugins.com.google.devtools.ksp)
 }
 
 dependencies {
     api(projects.api.feature.annotations)
+
+    implementation(projects.api.feature.common)
 
     implementation(libs.com.google.devtools.ksp.symbol.processing.api)
     implementation(libs.com.google.auto.service.auto.service.annotations)
@@ -30,7 +32,13 @@ dependencies {
 }
 
 kotlin.compilerOptions {
-    freeCompilerArgs.add("-Xjdk-release=21")
+    freeCompilerArgs.addAll(
+        "-opt-in=kotlin.time.ExperimentalTime",
+        "-Xjdk-release=21",
+        "-Xcontext-parameters",
+        "-Xcontext-sensitive-resolution",
+        "-Xannotation-target-all",
+    )
     jvmTarget = JvmTarget.JVM_21
 }
 

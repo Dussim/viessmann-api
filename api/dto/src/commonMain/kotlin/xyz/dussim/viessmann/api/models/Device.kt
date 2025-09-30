@@ -1,6 +1,5 @@
 package xyz.dussim.viessmann.api.models
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -8,6 +7,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import xyz.dussim.viessmann.api.enums.NetworkStatus
 import xyz.dussim.viessmann.api.enums.SerialEditor
+import kotlin.time.Instant
 
 @Serializable(with = DeviceSerializer::class)
 interface Device {

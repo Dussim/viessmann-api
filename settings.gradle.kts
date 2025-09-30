@@ -18,4 +18,6 @@ include(
     ":api:dto",
     ":api:feature:annotations",
     ":api:feature:processor",
+    ":api:feature:common",
+    ":api:feature:benchmark",
 )

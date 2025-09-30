@@ -1,259 +1,368 @@
 package xyz.dussim.viessmann.api.features
 
+import xyz.dussim.viessmann.api.feature.annotations.FeatureEnum
 import xyz.dussim.viessmann.api.feature.annotations.GenerateFeatureImplementation
-import xyz.dussim.viessmann.api.features.ViessmannFeatureCommandParamConstraints.ScheduleMap
-import xyz.dussim.viessmann.api.features.ViessmannFeatureProperty.ArrayProperty.ArrayContent.ZigbeeDeviceStatus
+import xyz.dussim.viessmann.feature.api.BooleanConstraints
+import xyz.dussim.viessmann.feature.api.BooleanValue
+import xyz.dussim.viessmann.feature.api.Command0
+import xyz.dussim.viessmann.feature.api.Command1
+import xyz.dussim.viessmann.feature.api.Command2
+import xyz.dussim.viessmann.feature.api.Command3
+import xyz.dussim.viessmann.feature.api.DoubleValue
+import xyz.dussim.viessmann.feature.api.Feature
+import xyz.dussim.viessmann.feature.api.FeatureEnumFactory
+import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
+import xyz.dussim.viessmann.feature.api.ListRoomActorValue
+import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
+import xyz.dussim.viessmann.feature.api.NumberConstraints
+import xyz.dussim.viessmann.feature.api.Schedule
+import xyz.dussim.viessmann.feature.api.ScheduleConstraints
+import xyz.dussim.viessmann.feature.api.ScheduleValue
+import xyz.dussim.viessmann.feature.api.StringConstraints
+import xyz.dussim.viessmann.feature.api.StringValue
+import kotlin.jvm.JvmRecord
 
 @GenerateFeatureImplementation("device.etn")
-interface DeviceEtnFeature : ViessmannFeature.Device {
+interface DeviceEtnFeature : Feature.Device {
     companion object
 
-    val value: String
+    val value: StringValue
 }
 
 @GenerateFeatureImplementation("device.messages.errors.raw")
-interface DeviceMessagesErrorsRawFeature : ViessmannFeature.Device {
+interface DeviceMessagesErrorsRawFeature : Feature.Device {
     companion object
 
-    val entries: List<DeviceError>
+    val entries: ListDeviceErrorValue
 }
 
 @GenerateFeatureImplementation("device.serial")
-interface DeviceSerialFeature : ViessmannFeature.Device {
+interface DeviceSerialFeature : Feature.Device {
     companion object
 
-    val value: String
+    val value: StringValue
 }
 
 @GenerateFeatureImplementation("device.timeseries.monitoringIonization")
-interface DeviceTimeseriesMonitoringIonizationFeature : ViessmannFeature.Device {
+interface DeviceTimeseriesMonitoringIonizationFeature : Feature.Device {
     companion object
 
-    val countOne: Int
-    val timestampOne: String
-    val countTwo: Int
-    val timestampTwo: String
-    val countThree: Int
-    val timestampThree: String
-    val countFour: Int
-    val timestampFour: String
-    val countFive: Int
-    val timestampFive: String
-    val countSix: Int
-    val timestampSix: String
-    val countSeven: Int
-    val timestampSeven: String
+    val countOne: DoubleValue
+    val timestampOne: StringValue
+    val countTwo: DoubleValue
+    val timestampTwo: StringValue
+    val countThree: DoubleValue
+    val timestampThree: StringValue
+    val countFour: DoubleValue
+    val timestampFour: StringValue
+    val countFive: DoubleValue
+    val timestampFive: StringValue
+    val countSix: DoubleValue
+    val timestampSix: StringValue
+    val countSeven: DoubleValue
+    val timestampSeven: StringValue
+}
+
+@GenerateFeatureImplementation("test.feature")
+interface TestFeature : Feature.Device {
+    companion object
+
+    interface SetStatus : Command1<Boolean> {
+        companion object
+
+        val status: BooleanConstraints
+    }
+
+    val value: StringValue
+    val status: BooleanValue
+
+    val setStatus: SetStatus
 }
 
 @GenerateFeatureImplementation("device.zigbee.active")
-interface DeviceZigbeeActiveFeature : ViessmannFeature.Device {
+interface DeviceZigbeeActiveFeature : Feature.Device {
     companion object
 
     interface SetActive : Command1<Boolean> {
-        val active: ViessmannFeatureCommandParamConstraints<Boolean>
+        companion object
+
+        val active: BooleanConstraints
     }
 
-    val active: Boolean
+    interface Activate : Command0 {
+        companion object
+    }
 
-    val activate: Command0
-    val deactivate: Command0
+    interface Deactivate : Command0 {
+        companion object
+    }
+
+    val active: BooleanValue
+
+    val activate: Activate
+    val deactivate: Deactivate
     val setActive: SetActive
 }
 
 @GenerateFeatureImplementation("heating.boiler.pumps.internal")
-interface HeatingBoilerPumpsInternalFeature : ViessmannFeature.Device {
-    companion object
+interface HeatingBoilerPumpsInternalFeature : Feature.Device {
+    companion object;
 
-    val status: String
+    @FeatureEnum
+    sealed interface Status {
+        data object On : Status
+
+        data object Off : Status
+
+        @JvmRecord
+        data class Unknown(
+            val value: String,
+        ) : Status
+
+        @FeatureEnum.Factory
+        companion object : FeatureEnumFactory<StringValue, Status> {
+            override fun invoke(propertyValue: StringValue): Status =
+                when (propertyValue.element) {
+                    "on" -> On
+                    "off" -> Off
+                    else -> Unknown(propertyValue.element)
+                }
+        }
+    }
+
+    val status: Status
 }
 
 @GenerateFeatureImplementation("heating.boiler.pumps.internal.target")
-interface HeatingBoilerPumpsInternalTargetFeature : ViessmannFeature.Device {
+interface HeatingBoilerPumpsInternalTargetFeature : Feature.Device {
     companion object
 
-    val value: Double
+    val value: DoubleValue
 }
 
 @GenerateFeatureImplementation("heating.boiler.sensors.temperature.commonSupply")
-interface HeatingBoilerSensorsTemperatureCommonSupplyFeature : ViessmannFeature.Device {
+interface HeatingBoilerSensorsTemperatureCommonSupplyFeature : Feature.Device {
     companion object
 
-    val status: String
+    val status: StringValue
 }
 
 @GenerateFeatureImplementation("heating.boiler.serial")
-interface HeatingBoilerSerialFeature : ViessmannFeature.Device {
+interface HeatingBoilerSerialFeature : Feature.Device {
     companion object
 
-    val value: String
+    val value: StringValue
 }
 
 @GenerateFeatureImplementation("heating.boiler.temperature")
-interface HeatingBoilerTemperatureFeature : ViessmannFeature.Device {
+interface HeatingBoilerTemperatureFeature : Feature.Device {
     companion object
 
-    val value: Double
+    val value: DoubleValue
 }
 
 @GenerateFeatureImplementation("heating.bufferCylinder.sensors.temperature.main")
-interface HeatingBufferCylinderSensorsTemperatureMainFeature : ViessmannFeature.Device {
+interface HeatingBufferCylinderSensorsTemperatureMainFeature : Feature.Device {
     companion object
 
-    val status: String
+    val status: StringValue
 }
 
 @GenerateFeatureImplementation("device.configuration")
-interface DeviceConfigurationFeature : ViessmannFeature.Device {
+interface DeviceConfigurationFeature : Feature.Device {
     companion object
 
-    val ttCircuitsActive: List<String>
-    val ttCircuitsEnabled: List<String>
-    val dhwActive: Boolean
-    val dhwEnabled: Boolean
-    val solarActive: Boolean
-    val solarEnabled: Boolean
-    val circuitsActive: List<String>
-    val circuitsEnabled: List<String>
-    val heatingConfigurationRegulation: String
-    val roomsActive: List<String>
-    val roomsOthersActive: List<String>
-    val roomsEnabled: List<String>
-    val roomsOthersEnabled: List<String>
+    val ttCircuitsActive: ListStringValue
+    val ttCircuitsEnabled: ListStringValue
+    val dhwActive: BooleanValue
+    val dhwEnabled: BooleanValue
+    val solarActive: BooleanValue
+    val solarEnabled: BooleanValue
+    val circuitsActive: ListStringValue
+    val circuitsEnabled: ListStringValue
+    val heatingConfigurationRegulation: StringValue
+    val roomsActive: ListStringValue
+    val roomsOthersActive: ListStringValue
+    val roomsEnabled: ListStringValue
+    val roomsOthersEnabled: ListStringValue
 }
 
 @GenerateFeatureImplementation("device.zigbee.coordinator")
-interface DeviceZigbeeCoordinatorFeature : ViessmannFeature.Device {
+interface DeviceZigbeeCoordinatorFeature : Feature.Device {
     companion object
 
     interface AddDevice : Command3<String, String, String> {
-        val id: ViessmannFeatureCommandParamConstraints<String>
-        val ic: ViessmannFeatureCommandParamConstraints<String>
-        val type: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val id: StringConstraints
+        val ic: StringConstraints
+        val type: StringConstraints
     }
 
     interface RemoveDevice : Command1<String> {
-        val id: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val id: StringConstraints
     }
 
-    val status: List<ZigbeeDeviceStatus>
-    val timeout: Int
+    val status: ListZigbeeDeviceStatusValue
+    val timeout: DoubleValue
 
     val addDevice: AddDevice
     val removeDevice: RemoveDevice
 }
 
 @GenerateFeatureImplementation("rooms")
-interface RoomsFeature : ViessmannFeature.Device {
+interface RoomsFeature : Feature.Device {
     companion object
 
     interface Add : Command2<String, String> {
-        val name: ViessmannFeatureCommandParamConstraints<String>
-        val type: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val name: StringConstraints
+        val type: StringConstraints
     }
 
-    val enabled: List<String>
+    val enabled: ListStringValue
 
     val add: Add
 }
 
 @GenerateFeatureImplementation("rooms.{}")
-interface RoomsNFeature : ViessmannFeature.Device {
+interface RoomsNFeature : Feature.Device {
     companion object
 
     interface AddActor : Command2<String, Double> {
-        val actorDeviceId: ViessmannFeatureCommandParamConstraints<String>
-        val heatingCircuit: ViessmannFeatureCommandParamConstraints<Double>
+        companion object
+
+        val actorDeviceId: StringConstraints
+        val heatingCircuit: NumberConstraints
     }
 
     interface MoveActor : Command3<String, Double, Double> {
-        val actorDeviceId: ViessmannFeatureCommandParamConstraints<String>
-        val heatingCircuit: ViessmannFeatureCommandParamConstraints<Double>
-        val newRoomId: ViessmannFeatureCommandParamConstraints<Double>
+        companion object
+
+        val actorDeviceId: StringConstraints
+        val heatingCircuit: NumberConstraints
+        val newRoomId: NumberConstraints
     }
 
     interface SetName : Command1<String> {
-        val name: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val name: StringConstraints
     }
 
     interface SetType : Command1<String> {
-        val type: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val type: StringConstraints
     }
 
     interface RemoveActor : Command1<String> {
-        val actorDeviceId: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val actorDeviceId: StringConstraints
     }
 
-    val name: String
-    val type: String
-    val actors: Nothing // Fixme I have no idea what it is
+    interface Remove : Command0 {
+        companion object
+    }
+
+    val name: StringValue
+    val type: StringValue
+    val actors: ListRoomActorValue
 
     val addActor: AddActor
     val moveActor: MoveActor
     val setName: SetName
     val setType: SetType
     val removeActor: RemoveActor
-    val remove: Command0
+    val remove: Remove
 }
 
 @GenerateFeatureImplementation("rooms.others.{}")
-interface RoomsOthersFeature : ViessmannFeature.Device {
+interface RoomsOthersFeature : Feature.Device {
     companion object
 
     interface SetActive : Command1<Boolean> {
-        val active: ViessmannFeatureCommandParamConstraints<Boolean>
+        companion object
+
+        val active: BooleanConstraints
     }
 
     interface SetName : Command1<String> {
-        val name: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val name: StringConstraints
     }
 
-    val active: Boolean
-    val name: String
-    val heatingCircuit: Int
-    val actors: Nothing
+    interface Activate : Command0 {
+        companion object
+    }
 
-    val activate: Command0
-    val deactivate: Command0
+    interface Deactivate : Command0 {
+        companion object
+    }
+
+    val active: BooleanValue
+    val name: StringValue
+    val heatingCircuit: DoubleValue
+    val actors: ListRoomActorValue
+
+    val activate: Activate
+    val deactivate: Deactivate
     val setActive: SetActive
     val setName: SetName
 }
 
 @GenerateFeatureImplementation("device.timezone")
-interface DeviceTimezoneFeature : ViessmannFeature.Device {
+interface DeviceTimezoneFeature : Feature.Device {
     companion object
 
     interface SetTimezone : Command1<String> {
-        val value: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val value: StringConstraints
     }
 
-    val value: String
+    val value: StringValue
 
     val setTimezone: SetTimezone
 }
 
 @GenerateFeatureImplementation("tcu.mode")
-interface TcuModeFeature : ViessmannFeature.Device {
+interface TcuModeFeature : Feature.Device {
     companion object
 
     interface SetMode : Command1<String> {
-        val mode: ViessmannFeatureCommandParamConstraints<String>
+        companion object
+
+        val mode: StringConstraints
     }
 
-    val mode: String
+    val mode: StringValue
     val setMode: SetMode
 }
 
 @GenerateFeatureImplementation("heating.circuits.{}.heating.schedule")
-interface HeatingCircuitsNHeatingScheduleFeature : ViessmannFeature.Device {
+interface HeatingCircuitsNHeatingScheduleFeature : Feature.Device {
     companion object
 
-    interface SetSchedule : Command1<ScheduleMap> {
-        val newSchedule: ViessmannFeatureCommandParamConstraints<ScheduleMap>
+    interface SetSchedule : Command1<Map<String, List<Schedule>>> {
+        companion object
+
+        val newSchedule: ScheduleConstraints
     }
 
-    val entries: ScheduleMap
-    val active: Boolean
+    interface ResetSchedule : Command0 {
+        companion object
+    }
+
+    val entries: ScheduleValue
+    val active: BooleanValue
 
     val setSchedule: SetSchedule
-    val resetSchedule: Command0
+    val resetSchedule: ResetSchedule
 }

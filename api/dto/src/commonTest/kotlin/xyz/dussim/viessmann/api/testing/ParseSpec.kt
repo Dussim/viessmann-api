@@ -3,7 +3,7 @@ package xyz.dussim.viessmann.api.testing
 import io.kotest.core.spec.style.FunSpec
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import xyz.dussim.viessmann.api.features.ViessmannFeatureSerializersModule
+// import xyz.dussim.viessmann.api.features.ViessmannFeatureSerializersModule
 
 abstract class ParseSpec(
     body: FunSpec.(Json) -> Unit = {},
@@ -18,7 +18,7 @@ abstract class ParseSpec(
 
                 serializersModule =
                     SerializersModule {
-                        include(ViessmannFeatureSerializersModule)
+//                        include(ViessmannFeatureSerializersModule)
                     }
             }
 

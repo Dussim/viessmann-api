@@ -1,6 +1,5 @@
 package xyz.dussim.viessmann.api.models
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -9,6 +8,7 @@ import kotlinx.serialization.encoding.Encoder
 import xyz.dussim.viessmann.api.enums.AggregatedStatus
 import xyz.dussim.viessmann.api.enums.GatewayType
 import xyz.dussim.viessmann.api.enums.TargetRealm
+import kotlin.time.Instant
 
 @Serializable(with = GatewaySerializer::class)
 interface Gateway {
@@ -78,8 +78,5 @@ object GatewaySerializer : KSerializer<Gateway> {
         }
     }
 
-    override fun deserialize(decoder: Decoder): Gateway {
-        // Implement your custom deserialization logic here
-        return Gateway.Impl.serializer().deserialize(decoder)
-    }
+    override fun deserialize(decoder: Decoder): Gateway = Gateway.Impl.serializer().deserialize(decoder)
 }

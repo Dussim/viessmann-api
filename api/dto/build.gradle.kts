@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.org.jetbrains.dokka)
     alias(libs.plugins.org.jmailen.kotlinter)
     alias(libs.plugins.io.gitlab.arturbosch.detekt)
-    alias(libs.plugins.io.kotest.multiplatform)
+    alias(libs.plugins.io.kotest)
     alias(libs.plugins.com.google.devtools.ksp)
 }
 
@@ -21,6 +21,15 @@ dependencies {
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-opt-in=kotlin.time.ExperimentalTime",
+            "-Xcontext-parameters",
+            "-Xcontext-sensitive-resolution",
+            "-Xannotation-target-all",
+        )
+    }
+
     withSourcesJar()
     jvm {
         compilerOptions {
@@ -40,9 +49,9 @@ kotlin {
         dependencies {
             implementation(projects.api.feature.annotations)
 
-            api(libs.org.jetbrains.kotlinx.kotlinx.serialization.core)
-            api(libs.org.jetbrains.kotlinx.kotlinx.datetime)
             api(libs.org.jetbrains.kotlinx.kotlinx.serialization.json)
+
+            api(projects.api.feature.common)
         }
     }
 
@@ -87,6 +96,7 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
 }
 
 tasks.withType<FormatTask>().configureEach {
+    dependsOn("kspCommonMainKotlinMetadata")
     source = source.minus(fileTree("build/generated/ksp")).asFileTree
 }
 

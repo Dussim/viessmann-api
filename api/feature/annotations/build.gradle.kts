@@ -9,14 +9,23 @@ plugins {
     alias(libs.plugins.org.jetbrains.dokka)
     alias(libs.plugins.org.jmailen.kotlinter)
     alias(libs.plugins.io.gitlab.arturbosch.detekt)
-    alias(libs.plugins.io.kotest.multiplatform)
+    alias(libs.plugins.io.kotest)
+    alias(libs.plugins.com.google.devtools.ksp)
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-opt-in=kotlin.time.ExperimentalTime",
+        )
+    }
+
     withSourcesJar()
     jvm {
         compilerOptions {
-            freeCompilerArgs.add("-Xjdk-release=21")
+            freeCompilerArgs.addAll(
+                "-Xjdk-release=21",
+            )
             jvmTarget = JvmTarget.JVM_21
         }
     }

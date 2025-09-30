@@ -1,6 +1,5 @@
 package xyz.dussim.viessmann.api.models
 
-import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -11,6 +10,7 @@ import xyz.dussim.viessmann.api.enums.AggregatedStatus
 import xyz.dussim.viessmann.api.enums.HeatingType
 import xyz.dussim.viessmann.api.enums.InstallationType
 import xyz.dussim.viessmann.api.enums.OwnershipType
+import kotlin.time.Instant
 
 @Serializable
 data class Address(
