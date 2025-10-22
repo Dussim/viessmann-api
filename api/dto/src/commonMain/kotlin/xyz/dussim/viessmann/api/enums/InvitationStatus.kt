@@ -70,7 +70,7 @@ sealed interface InvitationStatus : ViessmannEnum {
         InstanceFactory<InvitationStatus> by InvitationStatusInstanceFactory,
         EntryHolder<Strict> by InvitationStatusEntryHolder
 
-    object Serializer : KSerializer<InvitationStatus> by instanceFactorySerializer(InvitationStatusInstanceFactory)
+    object Serializer : KSerializer<InvitationStatus> by instanceFactorySerializer(InvitationStatus)
 
     object StrictSerializer : KSerializer<Strict> by strictInstanceFactorySerializer<InvitationStatus, _>()
 }

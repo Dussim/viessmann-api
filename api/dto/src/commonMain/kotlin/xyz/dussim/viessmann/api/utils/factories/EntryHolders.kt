@@ -75,6 +75,10 @@ internal val GatewayStateEntryHolder =
 
 internal val GatewayTypeEntryHolder =
     entryHolderOf(
+        GatewayType.Vitoconnect.OPTO2,
+        GatewayType.Vitoconnect.OPTO3,
+        GatewayType.Vitoconnect.Optolink,
+        GatewayType.Vitoconnect.OpenTherm,
         GatewayType.Tcu.V101,
         GatewayType.Tcu.V102,
         GatewayType.Tcu.V201,
@@ -106,6 +110,9 @@ internal val InvitationStatusEntryHolder =
         InvitationStatus.Accepted,
         InvitationStatus.Pending,
         InvitationStatus.Rejected,
+        InvitationStatus.Canceled,
+        InvitationStatus.Expired,
+        InvitationStatus.Terminated,
     )
 
 internal val OwnershipTypeEntryHolder =

@@ -37,8 +37,8 @@ interface Installation {
     val id: Long
     val description: String? // FIXME documentation says that this can NOT be null but it is for some devices :/
     val address: Address
-    val registeredAt: Instant // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
-    val updatedAt: Instant // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
+    val registeredAt: Instant
+    val updatedAt: Instant
     val aggregatedStatus: AggregatedStatus
     val servicedBy: String?
     val heatingType: HeatingType?

@@ -50,7 +50,7 @@ sealed interface HeatingType : ViessmannEnum {
     data object Undefined : Strict("Undefined")
 
     /**
-     * Represents an unknown [AccessLevel].
+     * Represents an unknown [HeatingType].
      *
      * This is a special value used to represent an access level that is not
      * known to the library. The [name] of this value is the access level provided by

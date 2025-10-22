@@ -51,7 +51,7 @@ sealed interface OwnershipType : ViessmannEnum {
     data object None : Strict("None")
 
     /**
-     * Represents an unknown [HeatingType].
+     * Represents an unknown [OwnershipType].
      *
      * This is a special value used to represent an ownership type that is not
      * known to the library. The [name] of this value is the ownership type provided by

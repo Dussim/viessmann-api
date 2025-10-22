@@ -37,13 +37,13 @@ class LongTest :
                 ).data
                 .let(::FeatureResolver)
 
-        context("Deserializes 10000+ features").config(enabled = false) {
+        context("Deserializes 10000+ features") {
             val features = loadFeatures()
 
             features.size shouldBe 11544
         }
 
-        context("Finds and decorates all DeviceFeature's via validation").config(enabled = false) {
+        context("Finds and decorates all DeviceFeature's via validation") {
             val features = loadFeatures()
 
             featureFactoriesWithExpectedCounts.forEach { (utils, expected) ->
@@ -54,7 +54,7 @@ class LongTest :
             }
         }
 
-        context("Finds and decorates all DeviceFeature's via name").config(enabled = false) {
+        context("Finds and decorates all DeviceFeature's via name") {
             val features = loadFeatures()
 
             repeat(5096) {
@@ -85,18 +85,7 @@ class LongTest :
             }
         }
 
-        context("Finds and decorates all HeatingCircuitsNHeatingScheduleFeature's via validation").config(enabled = false) {
-            val features = loadFeatures()
-
-            repeat(10000) {
-                val factory = HeatingCircuitsNHeatingScheduleFeature.factory
-                val result = features.allOf(factory, HeatingCircuitsNHeatingScheduleFeature.matchers(0).byValidation)
-
-                result shouldHaveSize 390
-            }
-        }
-
-        context("Finds and decorates all DeviceFeature's via validation, long test") {
+        context("Finds and decorates all DeviceFeature's via validation, long test").config(enabled = false) {
             val features = loadFeatures()
 
             repeat(5096) {

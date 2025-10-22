@@ -16,14 +16,14 @@ interface Gateway {
     val version: String
     val firmwareUpdateFailureCounter: Int
     val autoUpdate: Boolean
-    val createdAt: Instant // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
-    val producedAt: Instant // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
+    val createdAt: Instant
+    val producedAt: Instant
     val lastStatusChangedAt: String
     val aggregatedStatus: AggregatedStatus
     val targetRealm: TargetRealm
     val gatewayType: GatewayType
     val installationId: Long?
-    val registeredAt: Instant? // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
+    val registeredAt: Instant?
     val description: String?
     val otaOngoing: Boolean
 

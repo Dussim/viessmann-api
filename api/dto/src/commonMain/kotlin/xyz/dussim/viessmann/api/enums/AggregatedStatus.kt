@@ -51,7 +51,7 @@ sealed interface AggregatedStatus : ViessmannEnum {
     data object NbIotConnected : Strict("NbIotConnected")
 
     /**
-     * Represents an unknown [Gender].
+     * Represents an unknown [AggregatedStatus].
      *
      * This is a special value used to represent a gender that is not
      * known to the library. The [name] of this value is the gender provided by

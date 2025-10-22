@@ -42,7 +42,7 @@ sealed interface TargetRealm : ViessmannEnum {
     data object Genesis : Strict("Genesis")
 
     /**
-     * Represents an unknown [HeatingType].
+     * Represents an unknown [TargetRealm].
      *
      * This is a special value used to represent a heating type that is not
      * known to the library. The [name] of this value is the heating type provided by

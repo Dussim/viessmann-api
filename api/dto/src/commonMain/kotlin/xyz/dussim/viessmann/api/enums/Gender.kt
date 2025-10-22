@@ -44,7 +44,7 @@ sealed interface Gender : ViessmannEnum {
     data object Other : Strict("OTHER")
 
     /**
-     * Represents an unknown [TargetRealm].
+     * Represents an unknown [Gender].
      *
      * This is a special value used to represent a target realm that is not
      * known to the library. The [name] of this value is the target realm provided by

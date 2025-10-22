@@ -80,6 +80,7 @@ internal val GatewayTypeInstanceFactory =
             "VitocomLan4" -> GatewayType.VitocomLan4
             "Lancard" -> GatewayType.Lancard
             "One_Base_Evolve_Box" -> GatewayType.OneBaseEvolveBox
+            "Vitocontrol_A_PRO" -> GatewayType.VitocontrolAPro
             else -> GatewayType.Unknown(value)
         }
     }

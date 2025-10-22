@@ -17,7 +17,7 @@ interface Device {
     val boilerSerialEditor: SerialEditor? // FIXME documentation says that this can NOT be null but it is for some devices :/
     val bmuSerial: String? // FIXME documentation says that this can NOT be null but it is for some devices :/
     val bmuSerialEditor: SerialEditor? // FIXME documentation says that this can NOT be null but it is for some devices :/
-    val createdAt: Instant // TODO Consider using kotlinx.datetime.LocalDateTime for date-time fields
+    val createdAt: Instant
     val editedAt: String
     val modelId: String
     val status: NetworkStatus
