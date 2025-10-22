@@ -17,6 +17,7 @@ import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
+import xyz.dussim.viessmann.feature.api.validation.invoke
 import java.util.concurrent.TimeUnit
 
 private const val CORRECT_FEATURE = """
