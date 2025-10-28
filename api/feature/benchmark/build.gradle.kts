@@ -57,7 +57,7 @@ jmh {
 
     // Output file for results
     resultsFile.set(layout.buildDirectory.file("reports/jmh/results.json"))
-    humanOutputFile.set(layout.buildDirectory.file("reports/jmh/human.txt"))
+//    humanOutputFile.set(layout.buildDirectory.file("reports/jmh/human.txt"))
 
     // Fail build on error
     failOnError.set(true)
