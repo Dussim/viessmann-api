@@ -59,7 +59,8 @@ fun initBlock() =
         .apply {
             context.constraintsProperties
                 .forEach {
-                    add("${it.name} = command.params[%S]!!.constraints as %T\n", it.name, it.type)
+                    val combined = combineToLong(it.name.hashCode(), it.name.length)
+                    add("${it.name} = command.params[%S, %L]!!.constraints as %T\n", it.name, combined, it.type)
                 }
         }.nextControlFlow("catch (_: Exception)")
         .add(

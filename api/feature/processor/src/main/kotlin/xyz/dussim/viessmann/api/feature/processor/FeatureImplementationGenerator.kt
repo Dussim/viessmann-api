@@ -20,13 +20,11 @@ import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Command
-import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.FeatureMatcher
 import xyz.dussim.viessmann.feature.api.FeatureMatchers
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
-import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.UnsafeFactoryCreationMethod
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
@@ -64,9 +62,11 @@ fun initBlock(): CodeBlock {
                 if (isEnumProperty) {
                     CodeBlock.of("$name = %T(%S)\n", type, name)
                 } else if (isListProperty) {
-                    CodeBlock.of("$name = delegate.properties[%1S]!!.value as? %2T ?: %2T.EMPTY\n", name, type)
+                    val combined = combineToLong(name.hashCode(), name.length)
+                    CodeBlock.of("$name = delegate.properties[%1S, %2L]!!.value as? %3T ?: %3T.EMPTY\n", name, combined, type)
                 } else {
-                    CodeBlock.of("$name = delegate.properties[%S]!!.value as %T\n", name, type)
+                    val combined = combineToLong(name.hashCode(), name.length)
+                    CodeBlock.of("$name = delegate.properties[%S, %L]!!.value as %T\n", name, combined, type)
                 }
             }
 
@@ -74,7 +74,8 @@ fun initBlock(): CodeBlock {
         context
             .commandProperties
             .map { (name, type, _) ->
-                CodeBlock.of("$name = %T.factory(delegate.commands[%S]!!)\n", type, name)
+                val combined = combineToLong(name.hashCode(), name.length)
+                CodeBlock.of("$name = %T.factory(delegate.commands[%S, %L]!!)\n", type, name, combined)
             }
 
     val assignments = commandsAssignments + parameterPropertiesAssignments
@@ -557,3 +558,9 @@ fun generateFeatureImplementation(context: SymbolContext) =
             .addImport("xyz.dussim.viessmann.feature.api.validation", "invoke")
             .build()
     }
+
+@PublishedApi
+internal inline fun combineToLong(
+    high: Int,
+    low: Int,
+): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)
