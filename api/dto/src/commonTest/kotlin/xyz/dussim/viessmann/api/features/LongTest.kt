@@ -96,8 +96,7 @@ class LongTest :
                     try {
                         result shouldHaveSize expected
                     } catch (e: AssertionError) {
-                        println("Failed for $factory")
-                        throw e
+                        throw AssertionError("Failed for $factory", e)
                     }
                 }
             }
