@@ -69,6 +69,10 @@ jmh {
 //    excludes.addAll(".*MapBenchmark.*")
 }
 
+kotlinter {
+    ktlintVersion = "1.8.0"
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     filter {
