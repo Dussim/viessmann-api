@@ -81,7 +81,10 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
         @Suppress("UNCHECKED_CAST")
         fun <T> createFrom(map: Map<String, T>): EfficientStringKeyMap<T> =
             when (map.size) {
-                0 -> EMPTY as EfficientStringKeyMap<T>
+                0 -> {
+                    EMPTY as EfficientStringKeyMap<T>
+                }
+
                 1 -> {
                     val entry = map.entries.first()
                     OneElement(
@@ -135,7 +138,9 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                     )
                 }
 
-                else -> NElements(map)
+                else -> {
+                    NElements(map)
+                }
             }
     }
 

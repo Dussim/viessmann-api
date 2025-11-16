@@ -369,9 +369,18 @@ internal data object PropertySerializer : KSerializer<Property> {
             type = type,
             value =
                 when (type) {
-                    BOOLEAN -> BooleanValue(value.jsonPrimitive.boolean)
-                    NUMBER -> DoubleValue(value.jsonPrimitive.double)
-                    STRING -> StringValue(value.jsonPrimitive.content)
+                    BOOLEAN -> {
+                        BooleanValue(value.jsonPrimitive.boolean)
+                    }
+
+                    NUMBER -> {
+                        DoubleValue(value.jsonPrimitive.double)
+                    }
+
+                    STRING -> {
+                        StringValue(value.jsonPrimitive.content)
+                    }
+
                     ARRAY -> {
                         val array = value as? JsonArray
 
@@ -404,7 +413,9 @@ internal data object PropertySerializer : KSerializer<Property> {
                             ?: UnknownValue(value)
                     }
 
-                    else -> UnknownValue(value)
+                    else -> {
+                        UnknownValue(value)
+                    }
                 },
             unit = unit,
         )

@@ -67,27 +67,32 @@ sealed interface IntToObjectMap<T> {
             previous: IntToObjectMap<T>,
         ): IntToObjectMap<T> =
             when (previous) {
-                is Empty ->
+                is Empty -> {
                     IntToObjectMap1(
                         key1 = key1,
                         value1 = value1,
                     )
+                }
 
-                is IntToObjectMap1<T> ->
+                is IntToObjectMap1<T> -> {
                     IntToObjectMap1.toTwoElements(
                         map = previous,
                         key2 = key1,
                         value2 = value1,
                     )
+                }
 
-                is IntToObjectMap2<T> ->
+                is IntToObjectMap2<T> -> {
                     IntToObjectMap2.toNElements(
                         map = previous,
                         key3 = key1,
                         value3 = value1,
                     )
+                }
 
-                is IntToObjectMapN<T> -> previous.also { it[key1] = value1 }
+                is IntToObjectMapN<T> -> {
+                    previous.also { it[key1] = value1 }
+                }
             }
     }
 }

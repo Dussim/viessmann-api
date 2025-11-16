@@ -28,7 +28,9 @@ value class ValidationResult<out T>
         inline fun forEach(crossinline action: (T) -> Unit) {
             when (value) {
                 null -> Unit
+
                 !is Array<*> -> action(value as T)
+
                 else -> for (i in 0..<value.size) {
                     action(value[i] as T)
                 }
@@ -966,7 +968,7 @@ fun interface ValidationRule<T, E> {
                 rules.fold(rule(value)) { acc, rule ->
                     val next = rule(value)
                     when {
-                        acc.isInvalid ->
+                        acc.isInvalid -> {
                             when {
                                 next.isInvalid -> {
                                     var index = 0
@@ -976,10 +978,15 @@ fun interface ValidationRule<T, E> {
                                     Invalid(values = array as Array<E>)
                                 }
 
-                                else -> acc
+                                else -> {
+                                    acc
+                                }
                             }
+                        }
 
-                        else -> next
+                        else -> {
+                            next
+                        }
                     }
                 }
             }
@@ -1004,7 +1011,9 @@ fun interface ValidationRule<T, E> {
                             Invalid(values = array as Array<E>)
                         }
 
-                        else -> return@ValidationRule Valid()
+                        else -> {
+                            return@ValidationRule Valid()
+                        }
                     }
                 }
             }
@@ -1023,7 +1032,7 @@ inline fun <T, E> ValidationRule<T, E>.validateAll(values: Iterable<T>): Validat
     values.fold(Valid()) { acc, value ->
         val next = invoke(value)
         when {
-            acc.isInvalid ->
+            acc.isInvalid -> {
                 when {
                     next.isInvalid -> {
                         var index = 0
@@ -1033,10 +1042,15 @@ inline fun <T, E> ValidationRule<T, E>.validateAll(values: Iterable<T>): Validat
                         Invalid(values = array as Array<E>)
                     }
 
-                    else -> acc
+                    else -> {
+                        acc
+                    }
                 }
+            }
 
-            else -> next
+            else -> {
+                next
+            }
         }
     }
 
