@@ -21,8 +21,13 @@ import java.util.concurrent.TimeUnit
 @Fork(value = 1)
 @Suppress("unused")
 open class OneElementMapBenchmark {
+    companion object {
+        val key1Combined = combineToLong("key1".hashCode(), "key1".length)
+        val nonexistentCombined = combineToLong("nonexistent".hashCode(), "nonexistent".length)
+    }
+
     private lateinit var standardMap: Map<String, String>
-    private lateinit var efficientMap: Map<String, String>
+    private lateinit var efficientMap: EfficientStringKeyMap<String>
 
     @Setup
     fun setup() {
@@ -35,11 +40,11 @@ open class OneElementMapBenchmark {
     fun standardMapLookupHit(): String? = standardMap["key1"]
 
     @Benchmark
-    fun efficientMapLookupHit(): String? = efficientMap["key1"]
+    fun efficientMapLookupHit(): String? = efficientMap["key1", key1Combined]
 
     @Benchmark
     fun standardMapLookupMiss(): String? = standardMap["nonexistent"]
 
     @Benchmark
-    fun efficientMapLookupMiss(): String? = efficientMap["nonexistent"]
+    fun efficientMapLookupMiss(): String? = efficientMap["nonexistent", nonexistentCombined]
 }
