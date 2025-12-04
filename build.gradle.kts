@@ -6,6 +6,7 @@ plugins {
 }
 
 tasks.wrapper {
+    group = "gradle"
     distributionType = Wrapper.DistributionType.ALL
     gradleVersion = "latest"
 }
