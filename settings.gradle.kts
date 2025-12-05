@@ -10,7 +10,16 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.PREFER_PROJECT
-    repositories.mavenCentral()
+    repositories{
+        mavenCentral()
+        google()
+        gradlePluginPortal()
+    }
+    versionCatalogs {
+        create("conventions") {
+            from(files("gradle/conventions.versions.toml"))
+        }
+    }
 }
 
 rootProject.name = "viessmann-api"

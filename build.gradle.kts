@@ -1,8 +1,5 @@
 plugins {
-    alias(libs.plugins.org.jetbrains.kotlin.multiplatform).apply(false)
-    alias(libs.plugins.org.jetbrains.kotlin.jvm).apply(false)
-    alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization).apply(false)
-    alias(libs.plugins.com.github.ben.manes.versions)
+    alias(libs.plugins.ben.manes.versions)
 }
 
 tasks.wrapper {

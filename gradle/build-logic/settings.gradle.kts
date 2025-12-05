@@ -1,3 +1,10 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 dependencyResolutionManagement {
     repositories {
         google()
@@ -7,9 +14,6 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             from(files("../libs.versions.toml"))
-        }
-        create("conventions") {
-            from(files("gradle/conventions.versions.toml"))
         }
     }
 }

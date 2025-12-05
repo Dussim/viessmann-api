@@ -1,15 +1,22 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     `kotlin-dsl`
+    alias(libs.plugins.kotlinter)
+    alias(libs.plugins.ben.manes.versions)
 }
 
 dependencies {
-    implementation("androidx.lint:lint-gradle:1.0.0-alpha05")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21")
-    implementation("org.jetbrains.kotlin:kotlin-serialization:2.2.21")
-    implementation("org.jetbrains.dokka:dokka-gradle-plugin:2.1.0")
-    implementation("org.jmailen.gradle:kotlinter-gradle:5.3.0")
-    implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.8")
-    implementation("io.kotest:kotest-framework-multiplatform-plugin-gradle:6.0.7")
+    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+
+    implementation(libs.plugins.kotest)
+    implementation(libs.plugins.kotlinter)
+    implementation(libs.plugins.detekt)
+    implementation(libs.plugins.dokka)
+    implementation(libs.plugins.kotlin.jvm)
+    implementation(libs.plugins.kotlin.multiplatform)
+    implementation(libs.plugins.kotlin.serialization)
+    implementation(libs.plugins.ksp)
 }
 
 gradlePlugin {
@@ -18,5 +25,36 @@ gradlePlugin {
             id = "xyz.dussim.kotlin.common"
             implementationClass = "xyz.dussim.buildlogic.KotlinCommonPlugin"
         }
+        register("kotlinJvmCommon") {
+            id = "xyz.dussim.kotlin.jvm.common"
+            implementationClass = "xyz.dussim.buildlogic.KotlinJvmCommonPlugin"
+        }
+        register("anonymizeJson") {
+            id = "xyz.dussim.anonymize.json"
+            implementationClass = "xyz.dussim.buildlogic.AnonymizeJsonPlugin"
+        }
     }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+kotlinter {
+    ktlintVersion = "1.8.0"
+}
+
+fun DependencyHandler.implementation(
+    plugin: Provider<PluginDependency>
+): Dependency? = implementation(plugin.map { idToMavenCoordinate(it.pluginId, it.version.requiredVersion) })
+
+fun idToMavenCoordinate(id: String, version: String): String {
+    return "$id:$id.gradle.plugin:$version"
 }
