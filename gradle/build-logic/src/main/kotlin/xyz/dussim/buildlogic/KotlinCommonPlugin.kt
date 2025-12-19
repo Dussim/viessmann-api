@@ -22,6 +22,8 @@ class KotlinCommonPlugin : Plugin<Project> {
                         "-Xcontext-parameters",
                         "-Xcontext-sensitive-resolution",
                         "-Xannotation-target-all",
+                        "-Xreturn-value-checker=check",
+                        "-Xexplicit-backing-fields"
                     )
                 }
 
