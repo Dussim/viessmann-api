@@ -63,7 +63,7 @@ fun interface FeatureMatcher {
             override fun matches(feature: Feature): Boolean = feature.feature == name
         }
 
-        fun byName(name: String) = FeatureMatcher { ByNameImpl(name).matches(it) }
+        fun byName(name: String): FeatureMatcher = ByNameImpl(name)
 
         fun byValidation(rule: ValidationRule<Feature, *>): FeatureMatcher = ByValidationImpl(rule)
 
