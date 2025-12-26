@@ -4,6 +4,7 @@ plugins {
     `kotlin-dsl`
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.ben.manes.versions)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
@@ -17,6 +18,13 @@ dependencies {
     implementation(libs.plugins.kotlin.multiplatform)
     implementation(libs.plugins.kotlin.serialization)
     implementation(libs.plugins.ksp)
+
+    implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.kotlinpoet.ksp)
+
+    implementation("xyz.dussim:dto:0.0.2")
+    implementation("xyz.dussim:annotations:0.0.2")
 }
 
 gradlePlugin {
@@ -33,12 +41,19 @@ gradlePlugin {
             id = "xyz.dussim.anonymize.json"
             implementationClass = "xyz.dussim.buildlogic.AnonymizeJsonPlugin"
         }
+        register("generateFeatureInterfaces") {
+            id = "xyz.dussim.generate.features"
+            implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromParsedFeaturePlugin"
+        }
     }
 }
 
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_21
+        freeCompilerArgs.addAll(
+            "-Xskip-prerelease-check",
+        )
     }
 }
 
@@ -51,10 +66,9 @@ kotlinter {
     ktlintVersion = "1.8.0"
 }
 
-fun DependencyHandler.implementation(
-    plugin: Provider<PluginDependency>
-): Dependency? = implementation(plugin.map { idToMavenCoordinate(it.pluginId, it.version.requiredVersion) })
+fun DependencyHandler.implementation(plugin: Provider<PluginDependency>): Dependency? = implementation(plugin.map { idToMavenCoordinate(it.pluginId, it.version.requiredVersion) })
 
-fun idToMavenCoordinate(id: String, version: String): String {
-    return "$id:$id.gradle.plugin:$version"
-}
+fun idToMavenCoordinate(
+    id: String,
+    version: String,
+): String = "$id:$id.gradle.plugin:$version"
