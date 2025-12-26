@@ -160,7 +160,7 @@ class DeviceFeaturesTest :
         }
 
         context("Decorates with RoomsOthersFeature") {
-            val feature = featuresRoomControl[RoomsOthersFeature.factory, RoomsOthersFeature.matchers(0).byName]
+            val feature = featuresRoomControl[RoomsOthersNFeature.factory, RoomsOthersNFeature.matchers(0).byName]
             assertSoftly {
                 feature.active shouldBeValue true
                 feature.name shouldBeValue "OR 2"

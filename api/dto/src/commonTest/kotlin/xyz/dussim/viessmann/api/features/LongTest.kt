@@ -2,6 +2,7 @@ package xyz.dussim.viessmann.api.features
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import xyz.dussim.viessmann.api.features.utils
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.testing.ParseSpec
 import xyz.dussim.viessmann.feature.api.DeviceFeature
@@ -23,7 +24,7 @@ class LongTest :
                 HeatingBufferCylinderSensorsTemperatureMainFeature.utils to 1794,
                 DeviceZigbeeCoordinatorFeature.utils to 0,
                 RoomsFeature.utils to 0,
-                RoomsOthersFeature.utils(0) to 0,
+                RoomsOthersNFeature.utils(0) to 0,
                 DeviceTimezoneFeature.utils to 0,
                 TcuModeFeature.utils to 78,
                 HeatingCircuitsNHeatingScheduleFeature.utils(0) to 390,
@@ -71,7 +72,7 @@ class LongTest :
                     HeatingBufferCylinderSensorsTemperatureMainFeature.utils to 78,
                     DeviceZigbeeCoordinatorFeature.utils to 0,
                     RoomsFeature.utils to 0,
-                    RoomsOthersFeature.utils(0) to 0,
+                    RoomsOthersNFeature.utils(0) to 0,
                     DeviceTimezoneFeature.utils to 0,
                     TcuModeFeature.utils to 0,
                     HeatingCircuitsNHeatingScheduleFeature.utils(0) to 78,
@@ -87,8 +88,7 @@ class LongTest :
 
         context("Finds and decorates all DeviceFeature's via validation, long test").config(enabled = false) {
             val features = loadFeatures()
-
-            repeat(5096) {
+            repeat(5096) { repeatIndex ->
                 featureFactoriesWithExpectedCounts.forEach { (utils, expected) ->
                     val (factory, matchers, _) = utils
                     val result = features.allOf(factory, matchers.byValidation)
@@ -98,6 +98,9 @@ class LongTest :
                     } catch (e: AssertionError) {
                         throw AssertionError("Failed for $factory", e)
                     }
+                }
+                if (repeatIndex % 100 == 0) {
+                    println("Finished $repeatIndex/5096")
                 }
             }
         }
