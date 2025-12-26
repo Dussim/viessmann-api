@@ -77,18 +77,18 @@ class FeatureImplementationProcessor(
         }
 
         private val isInterface: SymbolRule =
-            ValidationRule<KSClassDeclaration, SymbolErrorMetadata> {
+            ValidationRule {
                 when (it.classKind == ClassKind.INTERFACE) {
-                    true -> Valid<SymbolErrorMetadata>()
-                    false -> ValidationResult.of<SymbolErrorMetadata>(NotInterface(it))
+                    true -> Valid()
+                    false -> ValidationResult.of(NotInterface(it))
                 }
             }
 
         private val hasPublicCompanionObject: SymbolRule =
-            ValidationRule<KSClassDeclaration, SymbolErrorMetadata> { symbol ->
-                when (symbol.declarations.any<KSDeclaration> { it is KSClassDeclaration && it.isCompanionObject && it.isPublic() }) {
-                    true -> Valid<SymbolErrorMetadata>()
-                    false -> ValidationResult.of<SymbolErrorMetadata>(MissingPublicCompanionObject(symbol))
+            ValidationRule { symbol ->
+                when (symbol.declarations.any { it is KSClassDeclaration && it.isCompanionObject && it.isPublic() }) {
+                    true -> Valid()
+                    false -> ValidationResult.of(MissingPublicCompanionObject(symbol))
                 }
             }
 
