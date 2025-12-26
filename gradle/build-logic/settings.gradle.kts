@@ -1,18 +1,28 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        mavenCentral()
+        gradlePluginPortal {
+            content { excludeGroup("xyz.dussim") }
+        }
     }
 }
 
 dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
+        gradlePluginPortal {
+            content { excludeGroup("xyz.dussim") }
+        }
+        exclusiveContent {
+            forRepository {
+                maven("https://maven.dussim.xyz/snapshots")
+            }
+            filter {
+                includeGroupAndSubgroups("xyz.dussim")
+            }
+        }
     }
     versionCatalogs {
-        create("libs") {
+        register("libs") {
             from(files("../libs.versions.toml"))
         }
     }

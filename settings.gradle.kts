@@ -5,18 +5,26 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
+        exclusiveContent {
+            forRepository {
+                maven("https://maven.dussim.xyz/snapshots")
+            }
+            filter {
+                includeGroupAndSubgroups("xyz.dussim")
+            }
+        }
     }
 }
 
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.PREFER_PROJECT
-    repositories{
+    repositories {
         mavenCentral()
         google()
         gradlePluginPortal()
     }
     versionCatalogs {
-        create("conventions") {
+        register("conventions") {
             from(files("gradle/conventions.versions.toml"))
         }
     }
