@@ -64,22 +64,6 @@ interface DeviceTimeseriesMonitoringIonizationFeature : Feature.Device {
     val timestampSeven: StringValue
 }
 
-@GenerateFeatureImplementation("test.feature")
-interface TestFeature : Feature.Device {
-    companion object
-
-    interface SetStatus : Command1<Boolean> {
-        companion object
-
-        val status: BooleanConstraints
-    }
-
-    val value: StringValue
-    val status: BooleanValue
-
-    val setStatus: SetStatus
-}
-
 @GenerateFeatureImplementation("device.zigbee.active")
 interface DeviceZigbeeActiveFeature : Feature.Device {
     companion object
@@ -283,7 +267,7 @@ interface RoomsNFeature : Feature.Device {
 }
 
 @GenerateFeatureImplementation("rooms.others.{}")
-interface RoomsOthersFeature : Feature.Device {
+interface RoomsOthersNFeature : Feature.Device {
     companion object
 
     interface SetActive : Command1<Boolean> {
