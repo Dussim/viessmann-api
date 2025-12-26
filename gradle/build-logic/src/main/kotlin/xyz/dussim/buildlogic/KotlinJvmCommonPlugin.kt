@@ -16,6 +16,7 @@ class KotlinJvmCommonPlugin : Plugin<Project> {
                 apply(libs.plugins.kotlin.jvm)
             }
             configureCommonPlugins()
+            configurePublishing()
 
             extensions.configure<KotlinJvmProjectExtension> {
                 compilerOptions {
