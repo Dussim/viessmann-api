@@ -76,6 +76,10 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                     key: String,
                     combined: Long,
                 ): Nothing? = null
+
+                override fun equals(other: Any?): Boolean = other === this
+
+                override fun hashCode() = 0
             }
 
         @Suppress("UNCHECKED_CAST")
@@ -148,6 +152,15 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
         private val key1: String,
         private val value1: T,
     ) : EfficientStringKeyMap<T>() {
+        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
+            var result = hash1
+            result = 31 * result + length1
+            result = 31 * result + combined.hashCode()
+            result = 31 * result + key1.hashCode()
+            result = 31 * result + value1.hashCode()
+            result
+        }
+
         private val hash1 = key1.hashCode()
         private val length1 = key1.length
         private val combined = combineToLong(hash1, length1)
@@ -180,6 +193,22 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 this.combined if (key1.compareTo(key) == 0) -> value1
                 else -> null
             }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as OneElement<*>
+
+            if (hash1 != other.hash1) return false
+            if (length1 != other.length1) return false
+            if (combined != other.combined) return false
+            if (key1 != other.key1) return false
+            if (value1 != other.value1) return false
+            return true
+        }
+
+        override fun hashCode() = hashCode
     }
 
     private class TwoElements<T>(
@@ -188,6 +217,16 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
         private val key2: String,
         private val value2: T,
     ) : EfficientStringKeyMap<T>() {
+        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
+            var result = combined1.hashCode()
+            result = 31 * result + combined2.hashCode()
+            result = 31 * result + key1.hashCode()
+            result = 31 * result + (value1?.hashCode() ?: 0)
+            result = 31 * result + key2.hashCode()
+            result = 31 * result + (value2?.hashCode() ?: 0)
+            result
+        }
+
         private val combined1 = combineToLong(key1.hashCode(), key1.length)
         private val combined2 = combineToLong(key2.hashCode(), key2.length)
 
@@ -224,6 +263,23 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 combined2 if (key2.compareTo(key) == 0) -> value2
                 else -> null
             }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as TwoElements<*>
+
+            if (combined1 != other.combined1) return false
+            if (combined2 != other.combined2) return false
+            if (key1 != other.key1) return false
+            if (value1 != other.value1) return false
+            if (key2 != other.key2) return false
+            if (value2 != other.value2) return false
+            return true
+        }
+
+        override fun hashCode() = hashCode
     }
 
     private class ThreeElements<T>(
@@ -234,6 +290,19 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
         private val key3: String,
         private val value3: T,
     ) : EfficientStringKeyMap<T>() {
+        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
+            var result = combined1.hashCode()
+            result = 31 * result + combined2.hashCode()
+            result = 31 * result + combined3.hashCode()
+            result = 31 * result + key1.hashCode()
+            result = 31 * result + (value1?.hashCode() ?: 0)
+            result = 31 * result + key2.hashCode()
+            result = 31 * result + (value2?.hashCode() ?: 0)
+            result = 31 * result + key3.hashCode()
+            result = 31 * result + (value3?.hashCode() ?: 0)
+            result
+        }
+
         private val combined1 = combineToLong(key1.hashCode(), key1.length)
         private val combined2 = combineToLong(key2.hashCode(), key2.length)
         private val combined3 = combineToLong(key3.hashCode(), key3.length)
@@ -276,6 +345,27 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 combined3 if (key3.compareTo(key) == 0) -> value3
                 else -> null
             }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as ThreeElements<*>
+
+            if (combined1 != other.combined1) return false
+            if (combined2 != other.combined2) return false
+            if (combined3 != other.combined3) return false
+            if (key1 != other.key1) return false
+            if (value1 != other.value1) return false
+            if (key2 != other.key2) return false
+            if (value2 != other.value2) return false
+            if (key3 != other.key3) return false
+            if (value3 != other.value3) return false
+
+            return true
+        }
+
+        override fun hashCode() = hashCode
     }
 
     private class FourElements<T>(
@@ -288,6 +378,22 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
         private val key4: String,
         private val value4: T,
     ) : EfficientStringKeyMap<T>() {
+        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
+            var result = combined1.hashCode()
+            result = 31 * result + combined2.hashCode()
+            result = 31 * result + combined3.hashCode()
+            result = 31 * result + combined4.hashCode()
+            result = 31 * result + key1.hashCode()
+            result = 31 * result + (value1?.hashCode() ?: 0)
+            result = 31 * result + key2.hashCode()
+            result = 31 * result + (value2?.hashCode() ?: 0)
+            result = 31 * result + key3.hashCode()
+            result = 31 * result + (value3?.hashCode() ?: 0)
+            result = 31 * result + key4.hashCode()
+            result = 31 * result + (value4?.hashCode() ?: 0)
+            result
+        }
+
         private val combined1 = combineToLong(key1.hashCode(), key1.length)
         private val combined2 = combineToLong(key2.hashCode(), key2.length)
         private val combined3 = combineToLong(key3.hashCode(), key3.length)
@@ -336,11 +442,37 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 combined4 if (key4.compareTo(key) == 0) -> value4
                 else -> null
             }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as FourElements<*>
+
+            if (combined1 != other.combined1) return false
+            if (combined2 != other.combined2) return false
+            if (combined3 != other.combined3) return false
+            if (combined4 != other.combined4) return false
+            if (key1 != other.key1) return false
+            if (value1 != other.value1) return false
+            if (key2 != other.key2) return false
+            if (value2 != other.value2) return false
+            if (key3 != other.key3) return false
+            if (value3 != other.value3) return false
+            if (key4 != other.key4) return false
+            if (value4 != other.value4) return false
+
+            return true
+        }
+
+        override fun hashCode() = hashCode
     }
 
     class NElements<T>(
         private val map: Map<String, T>,
     ) : EfficientStringKeyMap<T>() {
+        private val hashCode by lazy { map.hashCode() }
+
         private val keyArray = map.keys.sortedBy { it.length }.toTypedArray()
         private val combinedArray = keyArray.map { combineToLong(it.hashCode(), it.length) }.toLongArray()
         private val valuesArray = keyArray.map { map[it] }.toTypedArray<Any?>()
@@ -400,5 +532,15 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
             } while (current < end)
             return null
         }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null) return false
+            if (other is NElements<*>) return map == other.map
+            if (other is Map<*, *>) return map == other
+            return false
+        }
+
+        override fun hashCode() = hashCode
     }
 }
