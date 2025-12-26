@@ -24,6 +24,7 @@ kotlin {
 }
 
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
+    dependsOn(tasks.anonymizeJsonVerify)
     if (name != "kspCommonMainKotlinMetadata") {
         dependsOn("kspCommonMainKotlinMetadata")
     }
@@ -34,6 +35,14 @@ tasks.withType<FormatTask>().configureEach {
     source = source.minus(fileTree("build/generated/ksp")).asFileTree
 }
 
-tasks.withType<KotlinCompilationTask<*>>().configureEach {
-    dependsOn(tasks.anonymizeJsonVerify)
+tasks.sourcesJar {
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+
+tasks.jvmSourcesJar {
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+
+tasks.jsSourcesJar {
+    dependsOn("kspCommonMainKotlinMetadata")
 }

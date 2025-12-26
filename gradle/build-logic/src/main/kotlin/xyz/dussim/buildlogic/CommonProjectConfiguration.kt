@@ -3,6 +3,8 @@ package xyz.dussim.buildlogic
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Project
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
@@ -55,7 +57,47 @@ fun Project.configureDetekt() {
 
 fun Project.configureGroupAndVersion() {
     group = "xyz.dussim"
-    version = "0.0.1"
+    version = "0.0.2"
+}
+
+fun Project.configurePublishing() {
+    pluginManager.apply("maven-publish")
+
+    extensions.configure<PublishingExtension> {
+        repositories {
+            maven {
+                name = "reposiliteRepositorySnapshots"
+                url = uri("https://maven.dussim.xyz/snapshots")
+
+                credentials {
+                    username = providers.gradleProperty("repoUsername").get()
+                    password = providers.gradleProperty("repoPassword").get()
+                }
+            }
+        }
+
+        publications.withType<MavenPublication>().configureEach {
+            pom {
+                name.set(project.name)
+                description.set(project.description ?: project.name)
+                url.set("https://github.com/Dussim/viessmann-api")
+
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("dussim")
+                        name.set("Artur Tuzim")
+                    }
+                }
+            }
+        }
+    }
 }
 
 fun Project.configureCommon() {

@@ -14,6 +14,7 @@ class KotlinCommonPlugin : Plugin<Project> {
                 apply(libs.plugins.kotlin.serialization)
             }
             configureCommonPlugins()
+            configurePublishing()
 
             extensions.configure<KotlinMultiplatformExtension> {
                 compilerOptions {
