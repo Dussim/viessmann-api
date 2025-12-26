@@ -46,6 +46,14 @@ value class ValidationResult<out T>
             }
 
         @Suppress("UNCHECKED_CAST")
+        inline fun asIterable(): Iterable<T> =
+            when (value) {
+                null -> emptyList()
+                is Array<*> -> value.asIterable() as Iterable<T>
+                else -> listOf(value as T)
+            }
+
+        @Suppress("UNCHECKED_CAST")
         companion object {
             val Valid = ValidationResult<Nothing>(null)
 
