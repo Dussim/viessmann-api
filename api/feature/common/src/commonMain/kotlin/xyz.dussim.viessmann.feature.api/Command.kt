@@ -16,6 +16,11 @@ import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import xyz.dussim.viessmann.feature.api.validation.booleanConstraintsClassIndex
+import xyz.dussim.viessmann.feature.api.validation.numberConstraintsClassIndex
+import xyz.dussim.viessmann.feature.api.validation.scheduleConstraintsClassIndex
+import xyz.dussim.viessmann.feature.api.validation.stringConstraintsClassIndex
+import xyz.dussim.viessmann.feature.api.validation.unknownConstraintsClassIndex
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
@@ -66,14 +71,14 @@ sealed interface Constraints<T> {
     }
 }
 
-inline val Constraints<*>.constraintsClass
+inline val Constraints<*>.constraintsClassIndex: Int
     get() =
         when (this) {
-            BooleanConstraints -> Constraints.booleanConstraintsClass
-            is NumberConstraints -> Constraints.numberConstraintsClass
-            is ScheduleConstraints -> Constraints.scheduleConstraintsClass
-            is StringConstraints -> Constraints.stringConstraintsClass
-            is UnknownConstraints -> Constraints.unknownConstraintsClass
+            BooleanConstraints -> booleanConstraintsClassIndex
+            is NumberConstraints -> numberConstraintsClassIndex
+            is ScheduleConstraints -> scheduleConstraintsClassIndex
+            is StringConstraints -> stringConstraintsClassIndex
+            is UnknownConstraints -> unknownConstraintsClassIndex
         }
 
 @JvmInline

@@ -2,8 +2,6 @@ package xyz.dussim.viessmann.feature.api.validation
 
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.BooleanValue
-import xyz.dussim.viessmann.feature.api.Command
-import xyz.dussim.viessmann.feature.api.Constraints
 import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
@@ -15,150 +13,175 @@ import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
-import xyz.dussim.viessmann.feature.api.PropertyValue
 import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
 import xyz.dussim.viessmann.feature.api.UnknownValue
-import xyz.dussim.viessmann.feature.api.constraintsClass
-import xyz.dussim.viessmann.feature.api.propertyValueClass
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Command
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Constraint
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Feature
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Property
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentTypeMismatch
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.MissingComponent
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.WrongFeatureImplementation
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
-import kotlin.jvm.JvmField
+import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmRecord
 import kotlin.reflect.KClass
 
-@JvmRecord
-@ConsistentCopyVisibility
-data class ExpectedActualClass private constructor(
-    val expected: KClass<*>,
-    val actual: KClass<*>,
+// Pre-compute KClass references
+private val stringValueClass = StringValue::class
+private val booleanValueClass = BooleanValue::class
+private val doubleValueClass = DoubleValue::class
+private val listDoubleValueClass = ListDoubleValue::class
+private val listStringValueClass = ListStringValue::class
+private val listDeviceErrorValueClass = ListDeviceErrorValue::class
+private val listZigbeeDeviceStatusValueClass = ListZigbeeDeviceStatusValue::class
+private val listRoomActorValueClass = ListRoomActorValue::class
+private val listDeviceValueClass = ListDeviceValue::class
+private val objectOtherRoomConfigurationValueClass = ObjectOtherRoomConfigurationValue::class
+private val scheduleValueClass = ScheduleValue::class
+private val listEmptyValueClass = ListEmptyValue::class
+private val unknownValueClass = UnknownValue::class
+private val booleanConstraintsClass = BooleanConstraints::class
+private val numberConstraintsClass = NumberConstraints::class
+private val stringConstraintsClass = StringConstraints::class
+private val scheduleConstraintsClass = ScheduleConstraints::class
+private val unknownConstraintsClass = UnknownConstraints::class
+
+@PublishedApi
+internal const val stringValueClassIndex = 0
+
+@PublishedApi
+internal const val booleanValueClassIndex = 1
+
+@PublishedApi
+internal const val doubleValueClassIndex = 2
+
+@PublishedApi
+internal const val listDoubleValueClassIndex = 3
+
+@PublishedApi
+internal const val listStringValueClassIndex = 4
+
+@PublishedApi
+internal const val listDeviceErrorValueClassIndex = 5
+
+@PublishedApi
+internal const val listZigbeeDeviceStatusValueClassIndex = 6
+
+@PublishedApi
+internal const val listRoomActorValueClassIndex = 7
+
+@PublishedApi
+internal const val listDeviceValueClassIndex = 8
+
+@PublishedApi
+internal const val objectOtherRoomConfigurationValueClassIndex = 9
+
+@PublishedApi
+internal const val scheduleValueClassIndex = 10
+
+@PublishedApi
+internal const val listEmptyValueClassIndex = 11
+
+@PublishedApi
+internal const val unknownValueClassIndex = 12
+
+@PublishedApi
+internal const val booleanConstraintsClassIndex = 13
+
+@PublishedApi
+internal const val numberConstraintsClassIndex = 14
+
+@PublishedApi
+internal const val stringConstraintsClassIndex = 15
+
+@PublishedApi
+internal const val scheduleConstraintsClassIndex = 16
+
+@PublishedApi
+internal const val unknownConstraintsClassIndex = 17
+
+// this is funny but... equals call is faster than == due to kotlin inserting intrinsics for == call to first check for null on this, but we know it can't be null
+@Suppress("ReplaceCallWithBinaryOperator")
+fun KClass<*>.toInt(): Int =
+    when {
+        this.equals(stringValueClass) -> stringValueClassIndex
+        this.equals(booleanValueClass) -> booleanValueClassIndex
+        this.equals(doubleValueClass) -> doubleValueClassIndex
+        this.equals(listDoubleValueClass) -> listDoubleValueClassIndex
+        this.equals(listStringValueClass) -> listStringValueClassIndex
+        this.equals(listDeviceErrorValueClass) -> listDeviceErrorValueClassIndex
+        this.equals(listZigbeeDeviceStatusValueClass) -> listZigbeeDeviceStatusValueClassIndex
+        this.equals(listRoomActorValueClass) -> listRoomActorValueClassIndex
+        this.equals(listDeviceValueClass) -> listDeviceValueClassIndex
+        this.equals(objectOtherRoomConfigurationValueClass) -> objectOtherRoomConfigurationValueClassIndex
+        this.equals(scheduleValueClass) -> scheduleValueClassIndex
+        this.equals(listEmptyValueClass) -> listEmptyValueClassIndex
+        this.equals(unknownValueClass) -> unknownValueClassIndex
+        this.equals(booleanConstraintsClass) -> booleanConstraintsClassIndex
+        this.equals(numberConstraintsClass) -> numberConstraintsClassIndex
+        this.equals(stringConstraintsClass) -> stringConstraintsClassIndex
+        this.equals(scheduleConstraintsClass) -> scheduleConstraintsClassIndex
+        this.equals(unknownConstraintsClass) -> unknownConstraintsClassIndex
+        else -> error("Unknown class: ${this.simpleName}")
+    }
+
+private val EXPECTED_ACTUAL_CLASSES by lazy {
+    val all =
+        listOf(
+            stringValueClass,
+            booleanValueClass,
+            doubleValueClass,
+            listDoubleValueClass,
+            listStringValueClass,
+            listDeviceErrorValueClass,
+            listZigbeeDeviceStatusValueClass,
+            listRoomActorValueClass,
+            listDeviceValueClass,
+            objectOtherRoomConfigurationValueClass,
+            scheduleValueClass,
+            listEmptyValueClass,
+            unknownValueClass,
+            booleanConstraintsClass,
+            numberConstraintsClass,
+            stringConstraintsClass,
+            scheduleConstraintsClass,
+            unknownConstraintsClass,
+        )
+
+    buildList(all.size * all.size) {
+        for (i in all.indices) {
+            for (j in all.indices) {
+                add(all[i] to all[j])
+            }
+        }
+    }
+}
+
+@JvmInline
+value class ExpectedActualClass internal constructor(
+    internal val indexIntoList: Int,
 ) {
+    init {
+        require(indexIntoList >= 0) { "Index into list must be non-negative, got $indexIntoList" }
+        require(indexIntoList < 18 * 18) { "Index into list must be less than 18 * 18, got $indexIntoList" }
+    }
+
+    val expectedClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].first
+    val actualClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].second
+
     companion object {
-        private val PROPERTIES =
-            buildMap<KClass<out PropertyValue<*>>, MutableMap<KClass<out PropertyValue<*>>, ExpectedActualClass>> {
-                val allTypes =
-                    listOf(
-                        UnknownValue::class,
-                        BooleanValue::class,
-                        DoubleValue::class,
-                        StringValue::class,
-                        ListDoubleValue::class,
-                        ListStringValue::class,
-                        ListDeviceErrorValue::class,
-                        ListZigbeeDeviceStatusValue::class,
-                        ListRoomActorValue::class,
-                        ListDeviceValue::class,
-                        ObjectOtherRoomConfigurationValue::class,
-                        ScheduleValue::class,
-                        ListEmptyValue::class,
-                    )
-
-                allTypes.forEach { expected ->
-                    allTypes.forEach { actual ->
-                        getOrPut(expected) { mutableMapOf() }
-                            .getOrPut(actual) { ExpectedActualClass(expected, actual) }
-                    }
-                }
-            }
-
-        private val CONSTRAINTS =
-            buildMap<KClass<out Constraints<*>>, MutableMap<KClass<out Constraints<*>>, ExpectedActualClass>> {
-                val allTypes =
-                    listOf(
-                        UnknownConstraints::class,
-                        BooleanConstraints::class,
-                        NumberConstraints::class,
-                        StringConstraints::class,
-                        ScheduleConstraints::class,
-                    )
-
-                allTypes.forEach { expected ->
-                    allTypes.forEach { actual ->
-                        getOrPut(expected) { mutableMapOf() }
-                            .getOrPut(actual) { ExpectedActualClass(expected, actual) }
-                    }
-                }
-            }
-
-        fun ofProperties(
-            expected: KClass<out PropertyValue<*>>,
-            actual: KClass<out PropertyValue<*>>,
-        ): ExpectedActualClass = PROPERTIES.getValue(expected).getValue(actual)
-
-        fun ofConstraints(
-            expected: KClass<out Constraints<*>>,
-            actual: KClass<out Constraints<*>>,
-        ): ExpectedActualClass = CONSTRAINTS.getValue(expected).getValue(actual)
+        fun of(
+            expected: Int,
+            actual: Int,
+        ) = ExpectedActualClass(expected * 18 + actual)
     }
 }
 
 // Cache common error types to avoid repeated allocations, I identified kotlin was caching those ::class calls, but it was still slower than this
 @Suppress("NOTHING_TO_INLINE")
 object PropertyValidationErrors {
-    // Pre-compute KClass references
-    @JvmField
-    val stringValueClass = StringValue::class
-
-    @JvmField
-    val booleanValueClass = BooleanValue::class
-
-    @JvmField
-    val doubleValueClass = DoubleValue::class
-
-    @JvmField
-    val listDoubleValueClass = ListDoubleValue::class
-
-    @JvmField
-    val listStringValueClass = ListStringValue::class
-
-    @JvmField
-    val listDeviceErrorValueClass = ListDeviceErrorValue::class
-
-    @JvmField
-    val listZigbeeDeviceStatusValueClass = ListZigbeeDeviceStatusValue::class
-
-    @JvmField
-    val listRoomActorValueClass = ListRoomActorValue::class
-
-    @JvmField
-    val listDeviceValueClass = ListDeviceValue::class
-
-    @JvmField
-    val objectOtherRoomConfigurationValueClass = ObjectOtherRoomConfigurationValue::class
-
-    @JvmField
-    val scheduleValueClass = ScheduleValue::class
-
-    @JvmField
-    val listEmptyValueClass = ListEmptyValue::class
-
-    @JvmField
-    val unknownValueClass = UnknownValue::class
-
-    @JvmField
-    val booleanConstraintsClass = BooleanConstraints::class
-
-    @JvmField
-    val numberConstraintsClass = NumberConstraints::class
-
-    @JvmField
-    val stringConstraintsClass = StringConstraints::class
-
-    @JvmField
-    val scheduleConstraintsClass = ScheduleConstraints::class
-
-    @JvmField
-    val unknownConstraintsClass = UnknownConstraints::class
+    fun interface MismatchPropertiesGetter {
+        operator fun invoke(actualIndex: Int): ValidationResult<ComponentTypeMismatch>
+    }
 
     @PublishedApi
     internal val mismatches =
@@ -167,55 +190,20 @@ object PropertyValidationErrors {
     inline fun getMismatchProperties(
         typeOfComponent: ValidationError.ComponentType,
         nameOfComponent: String,
-        expectedClass: KClass<out PropertyValue<*>>,
-    ): (actualClass: KClass<out PropertyValue<*>>) -> ValidationResult<ComponentTypeMismatch> {
-        val expectedIndex = expectedClass.toInt()
-        return { actualClass ->
-            val actualIndex = actualClass.toInt()
+        expectedIndex: Int,
+    ): MismatchPropertiesGetter =
+        { actualIndex ->
             val map = mismatches[expectedIndex]
             val value = map[actualIndex]
             if (value != null) {
                 value
             } else {
                 val value =
-                    ValidationResult.of(
+                    Invalid(
                         ComponentTypeMismatch(
                             typeOfComponent,
                             nameOfComponent,
-                            ExpectedActualClass.ofProperties(expectedClass, actualClass),
-                        ),
-                    )
-                mismatches[expectedIndex] =
-                    IntToObjectMap.of(
-                        actualClass.toInt(),
-                        value,
-                        map,
-                    )
-
-                value
-            }
-        }
-    }
-
-    inline fun getMismatchConstraints(
-        typeOfComponent: ValidationError.ComponentType,
-        nameOfComponent: String,
-        expectedClass: KClass<out Constraints<*>>,
-    ): (actualClass: KClass<out Constraints<*>>) -> ValidationResult<ComponentTypeMismatch> {
-        val expectedIndex = expectedClass.toInt()
-        return { actualClass ->
-            val actualIndex = actualClass.toInt()
-            val map = mismatches[expectedIndex]
-            val value = map[actualIndex]
-            if (value != null) {
-                value
-            } else {
-                val value =
-                    ValidationResult.of(
-                        ComponentTypeMismatch(
-                            typeOfComponent,
-                            nameOfComponent,
-                            ExpectedActualClass.ofConstraints(expectedClass, actualClass),
+                            ExpectedActualClass.of(expectedIndex, actualIndex),
                         ),
                     )
                 mismatches[expectedIndex] =
@@ -227,32 +215,6 @@ object PropertyValidationErrors {
 
                 value
             }
-        }
-    }
-
-    // this is funny but... equals call is faster than == due to kotlin inserting intrinsics for == call to first check for null on this, but we know it can't be null
-    @Suppress("ReplaceCallWithBinaryOperator")
-    fun KClass<*>.toInt(): Int =
-        when {
-            this.equals(stringValueClass) -> 0
-            this.equals(booleanValueClass) -> 1
-            this.equals(doubleValueClass) -> 2
-            this.equals(listDoubleValueClass) -> 3
-            this.equals(listStringValueClass) -> 4
-            this.equals(listDeviceErrorValueClass) -> 5
-            this.equals(listZigbeeDeviceStatusValueClass) -> 6
-            this.equals(listRoomActorValueClass) -> 7
-            this.equals(listDeviceValueClass) -> 8
-            this.equals(objectOtherRoomConfigurationValueClass) -> 9
-            this.equals(scheduleValueClass) -> 10
-            this.equals(listEmptyValueClass) -> 11
-            this.equals(unknownValueClass) -> 12
-            this.equals(booleanConstraintsClass) -> 13
-            this.equals(numberConstraintsClass) -> 14
-            this.equals(stringConstraintsClass) -> 15
-            this.equals(scheduleConstraintsClass) -> 16
-            this.equals(unknownConstraintsClass) -> 17
-            else -> error("Unknown class: ${this.simpleName}")
         }
 }
 
@@ -280,18 +242,14 @@ sealed interface ValidationError {
 
     @JvmRecord
     data class NumberOfParametersMismatch(
-        val info: Info,
+        val expected: Expected,
         val actual: Int,
     ) : ValidationError {
-        data class Info(
+        data class Expected(
             val typeOfComponent: ComponentType,
             val nameOfComponent: String,
             val expected: Int,
         )
-
-        val typeOfComponent: ComponentType get() = info.typeOfComponent
-        val nameOfComponent: String get() = info.nameOfComponent
-        val expected: Int get() = info.expected
     }
 
     @JvmRecord

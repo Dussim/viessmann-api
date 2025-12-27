@@ -2,7 +2,7 @@
 
 package xyz.dussim.viessmann.feature.api
 
-import xyz.dussim.viessmann.feature.api.validation.combineToLong
+import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 @RequiresOptIn("Unsafe factory creation method that assumes property of given name and type exists")
 @Retention(AnnotationRetention.BINARY)
@@ -14,5 +14,5 @@ interface FeatureEnumFactory<in I : PropertyValue<*>, out T> {
 
     @UnsafeFactoryCreationMethod
     context(feature: Feature)
-    operator fun invoke(propertyName: String): T = invoke(feature.properties[propertyName, combineToLong(propertyName.hashCode(), propertyName.length)]!!.value as I)
+    operator fun invoke(propertyName: String): T = invoke(feature.properties[propertyName, propertyHash(propertyName.hashCode(), propertyName.length)]!!.value as I)
 }

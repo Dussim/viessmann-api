@@ -22,11 +22,23 @@ import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import xyz.dussim.viessmann.feature.api.validation.booleanValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.doubleValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.listDeviceErrorValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.listDeviceValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.listDoubleValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.listEmptyValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.listRoomActorValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.listStringValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.listZigbeeDeviceStatusValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.objectOtherRoomConfigurationValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.scheduleValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.stringValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.unknownValueClassIndex
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmRecord
-import kotlin.reflect.KClass
 import kotlin.time.Instant
 
 private const val BOOLEAN = "boolean"
@@ -95,22 +107,22 @@ sealed interface PropertyValue<T> {
     val element: T
 }
 
-inline val PropertyValue<*>.propertyValueClass: KClass<out PropertyValue<*>>
+inline val PropertyValue<*>.propertyValueClassIndex: Int
     get() =
         when (this) {
-            is BooleanValue -> PropertyValue.booleanValueClass
-            is DoubleValue -> PropertyValue.doubleValueClass
-            is ListDeviceErrorValue -> PropertyValue.listDeviceErrorValueClass
-            is ListDeviceValue -> PropertyValue.listDeviceValueClass
-            is ListDoubleValue -> PropertyValue.listDoubleValueClass
-            is ListRoomActorValue -> PropertyValue.listRoomActorValueClass
-            is ListStringValue -> PropertyValue.listStringValueClass
-            is ListZigbeeDeviceStatusValue -> PropertyValue.listZigbeeDeviceStatusValueClass
-            is ObjectOtherRoomConfigurationValue -> PropertyValue.objectValueClass
-            is ScheduleValue -> PropertyValue.scheduleValueClass
-            is StringValue -> PropertyValue.stringValueClass
-            is UnknownValue -> PropertyValue.unknownValueClass
-            ListEmptyValue -> PropertyValue.listEmptyValueClass
+            is BooleanValue -> booleanValueClassIndex
+            is DoubleValue -> doubleValueClassIndex
+            is ListDeviceErrorValue -> listDeviceErrorValueClassIndex
+            is ListDeviceValue -> listDeviceValueClassIndex
+            is ListDoubleValue -> listDoubleValueClassIndex
+            is ListRoomActorValue -> listRoomActorValueClassIndex
+            is ListStringValue -> listStringValueClassIndex
+            is ListZigbeeDeviceStatusValue -> listZigbeeDeviceStatusValueClassIndex
+            is ObjectOtherRoomConfigurationValue -> objectOtherRoomConfigurationValueClassIndex
+            is ScheduleValue -> scheduleValueClassIndex
+            is StringValue -> stringValueClassIndex
+            is UnknownValue -> unknownValueClassIndex
+            is ListEmptyValue -> listEmptyValueClassIndex
         }
 
 sealed interface ListPropertyValue
