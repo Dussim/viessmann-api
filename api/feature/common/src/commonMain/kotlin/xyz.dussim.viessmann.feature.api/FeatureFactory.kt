@@ -84,12 +84,20 @@ data class FeatureMatchers(
     val byValidation: FeatureMatcher,
 )
 
+fun interface IndexedFeatureMatchersFactory {
+    operator fun invoke(index: Int): FeatureMatchers
+}
+
 @JvmRecord
 data class FeatureUtils(
     val factory: FeatureFactory<*>,
     val matchers: FeatureMatchers,
     val validation: ValidationRule<Feature, *>,
 )
+
+fun interface IndexedFeatureUtilsFactory {
+    operator fun invoke(index: Int): FeatureUtils
+}
 
 class FeatureResolver(
     private val features: List<Feature>,
