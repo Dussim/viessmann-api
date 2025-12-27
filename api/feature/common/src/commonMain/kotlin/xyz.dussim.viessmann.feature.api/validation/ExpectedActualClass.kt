@@ -25,26 +25,6 @@ import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmRecord
 import kotlin.reflect.KClass
 
-// Pre-compute KClass references
-private val stringValueClass = StringValue::class
-private val booleanValueClass = BooleanValue::class
-private val doubleValueClass = DoubleValue::class
-private val listDoubleValueClass = ListDoubleValue::class
-private val listStringValueClass = ListStringValue::class
-private val listDeviceErrorValueClass = ListDeviceErrorValue::class
-private val listZigbeeDeviceStatusValueClass = ListZigbeeDeviceStatusValue::class
-private val listRoomActorValueClass = ListRoomActorValue::class
-private val listDeviceValueClass = ListDeviceValue::class
-private val objectOtherRoomConfigurationValueClass = ObjectOtherRoomConfigurationValue::class
-private val scheduleValueClass = ScheduleValue::class
-private val listEmptyValueClass = ListEmptyValue::class
-private val unknownValueClass = UnknownValue::class
-private val booleanConstraintsClass = BooleanConstraints::class
-private val numberConstraintsClass = NumberConstraints::class
-private val stringConstraintsClass = StringConstraints::class
-private val scheduleConstraintsClass = ScheduleConstraints::class
-private val unknownConstraintsClass = UnknownConstraints::class
-
 @PublishedApi
 internal const val stringValueClassIndex = 0
 
@@ -99,52 +79,27 @@ internal const val scheduleConstraintsClassIndex = 16
 @PublishedApi
 internal const val unknownConstraintsClassIndex = 17
 
-// this is funny but... equals call is faster than == due to kotlin inserting intrinsics for == call to first check for null on this, but we know it can't be null
-@Suppress("ReplaceCallWithBinaryOperator")
-fun KClass<*>.toInt(): Int =
-    when {
-        this.equals(stringValueClass) -> stringValueClassIndex
-        this.equals(booleanValueClass) -> booleanValueClassIndex
-        this.equals(doubleValueClass) -> doubleValueClassIndex
-        this.equals(listDoubleValueClass) -> listDoubleValueClassIndex
-        this.equals(listStringValueClass) -> listStringValueClassIndex
-        this.equals(listDeviceErrorValueClass) -> listDeviceErrorValueClassIndex
-        this.equals(listZigbeeDeviceStatusValueClass) -> listZigbeeDeviceStatusValueClassIndex
-        this.equals(listRoomActorValueClass) -> listRoomActorValueClassIndex
-        this.equals(listDeviceValueClass) -> listDeviceValueClassIndex
-        this.equals(objectOtherRoomConfigurationValueClass) -> objectOtherRoomConfigurationValueClassIndex
-        this.equals(scheduleValueClass) -> scheduleValueClassIndex
-        this.equals(listEmptyValueClass) -> listEmptyValueClassIndex
-        this.equals(unknownValueClass) -> unknownValueClassIndex
-        this.equals(booleanConstraintsClass) -> booleanConstraintsClassIndex
-        this.equals(numberConstraintsClass) -> numberConstraintsClassIndex
-        this.equals(stringConstraintsClass) -> stringConstraintsClassIndex
-        this.equals(scheduleConstraintsClass) -> scheduleConstraintsClassIndex
-        this.equals(unknownConstraintsClass) -> unknownConstraintsClassIndex
-        else -> error("Unknown class: ${this.simpleName}")
-    }
-
 private val EXPECTED_ACTUAL_CLASSES by lazy {
     val all =
         listOf(
-            stringValueClass,
-            booleanValueClass,
-            doubleValueClass,
-            listDoubleValueClass,
-            listStringValueClass,
-            listDeviceErrorValueClass,
-            listZigbeeDeviceStatusValueClass,
-            listRoomActorValueClass,
-            listDeviceValueClass,
-            objectOtherRoomConfigurationValueClass,
-            scheduleValueClass,
-            listEmptyValueClass,
-            unknownValueClass,
-            booleanConstraintsClass,
-            numberConstraintsClass,
-            stringConstraintsClass,
-            scheduleConstraintsClass,
-            unknownConstraintsClass,
+            StringValue::class,
+            BooleanValue::class,
+            DoubleValue::class,
+            ListDoubleValue::class,
+            ListStringValue::class,
+            ListDeviceErrorValue::class,
+            ListZigbeeDeviceStatusValue::class,
+            ListRoomActorValue::class,
+            ListDeviceValue::class,
+            ObjectOtherRoomConfigurationValue::class,
+            ScheduleValue::class,
+            ListEmptyValue::class,
+            UnknownValue::class,
+            BooleanConstraints::class,
+            NumberConstraints::class,
+            StringConstraints::class,
+            ScheduleConstraints::class,
+            UnknownConstraints::class,
         )
 
     buildList(all.size * all.size) {
