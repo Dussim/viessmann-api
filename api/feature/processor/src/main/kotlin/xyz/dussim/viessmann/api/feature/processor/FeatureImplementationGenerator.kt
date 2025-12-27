@@ -6,7 +6,6 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MemberName
@@ -23,13 +22,16 @@ import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.FeatureMatcher
-import xyz.dussim.viessmann.feature.api.FeatureMatchers
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
 import xyz.dussim.viessmann.feature.api.UnsafeFactoryCreationMethod
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 
+/**
+ * Creates a variable-argument function call CodeBlock.
+ * Useful for generating validation result aggregation calls.
+ */
 fun varArgFunctionCall(
     function: MemberName,
     args: List<CodeBlock>,
@@ -42,6 +44,9 @@ fun varArgFunctionCall(
     .add(")\n")
     .build()
 
+/**
+ * Generates constructor accepting a delegate feature.
+ */
 context(context: SymbolContext)
 fun constructor() =
     FunSpec
@@ -52,51 +57,81 @@ fun constructor() =
                 .build(),
         ).build()
 
+/**
+ * Generates initialization block that validates and assigns properties and commands.
+ * Throws FeatureValidationException if validation fails.
+ */
 context(context: SymbolContext)
 fun initBlock(): CodeBlock {
-    val parameterPropertiesAssignments =
-        context
-            .parameterProperties
-            .map {
-                val (name, type, _, isListProperty, isEnumProperty) = it
-                if (isEnumProperty) {
-                    CodeBlock.of("$name = %T(%S)\n", type, name)
-                } else if (isListProperty) {
-                    val combined = combineToLong(name.hashCode(), name.length)
-                    CodeBlock.of("$name = delegate.properties[%1S, %2L]!!.value as? %3T ?: %3T.EMPTY\n", name, combined, type)
-                } else {
-                    val combined = combineToLong(name.hashCode(), name.length)
-                    CodeBlock.of("$name = delegate.properties[%S, %L]!!.value as %T\n", name, combined, type)
-                }
-            }
-
-    val commandsAssignments =
-        context
-            .commandProperties
-            .map { (name, type, _) ->
-                val combined = combineToLong(name.hashCode(), name.length)
-                CodeBlock.of("$name = %T.factory(delegate.commands[%S, %L]!!)\n", type, name, combined)
-            }
-
-    val assignments = commandsAssignments + parameterPropertiesAssignments
-
-    if (assignments.isEmpty()) {
+    if (context.parameterProperties.isEmpty() && context.commandProperties.isEmpty()) {
         return CodeBlock.of("")
     }
 
     return CodeBlock
         .builder()
-        .beginControlFlow("try")
-        .apply { assignments.forEach(::add) }
-        .nextControlFlow("catch (_: Exception)")
-        .add(
-            "throw %T(%S, invoke($DELEGATE).map { it.toString() })\n",
-            FeatureValidationException::class.asTypeName(),
-            context.name.asString(),
-        ).endControlFlow()
-        .build()
+        .apply {
+            beginControlFlow("try")
+            context.parameterProperties.forEachIndexed { index, property ->
+                addPropertyInitialization(property)
+            }
+            context.commandProperties.forEachIndexed { index, property ->
+                addCommandInitialization(property)
+            }
+            nextControlFlow("catch (_: Exception)")
+            addValidationException()
+            endControlFlow()
+        }.build()
 }
 
+/**
+ * Adds property initialization code with validation.
+ */
+context(context: SymbolContext)
+private fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
+    val (name, type, _, isListProperty, isEnumProperty) = property
+
+    when {
+        isEnumProperty -> {
+            add("$name = %T(%S)\n", type, name)
+        }
+
+        isListProperty -> {
+            val combined = combineToLong(name.hashCode(), name.length)
+            add("$name = delegate.properties[%1S, %2L]!!.value as? %3T ?: %3T.EMPTY\n", name, combined, type)
+        }
+
+        else -> {
+            val combined = combineToLong(name.hashCode(), name.length)
+            add("$name = delegate.properties[%S, %L]?.value as %T\n", name, combined, type)
+        }
+    }
+}
+
+/**
+ * Adds command initialization code with validation.
+ */
+context(context: SymbolContext)
+private fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty) {
+    val (name, type, _) = property
+    val combined = combineToLong(name.hashCode(), name.length)
+    add("$name = %T.factory(delegate.commands[%S, %L]!!)\n", type, name, combined)
+}
+
+/**
+ * Adds FeatureValidationException throw statement.
+ */
+context(context: SymbolContext)
+private fun CodeBlock.Builder.addValidationException() {
+    add(
+        "throw %T(%S, invoke($DELEGATE))\n",
+        FeatureValidationException::class.asTypeName(),
+        context.name.asString(),
+    )
+}
+
+/**
+ * Generates companion object that implements validation rules for the feature.
+ */
 context(context: SymbolContext)
 fun companionObject(): TypeSpec {
     val subTypeValidationMember =
@@ -114,7 +149,7 @@ fun companionObject(): TypeSpec {
                 CodeBlock.of("%N(value),\n", context.implName)
             }
 
-    val propertyType =
+    val featureValidationRuleType =
         ValidationRule::class
             .asClassName()
             .parameterizedBy(
@@ -127,7 +162,7 @@ fun companionObject(): TypeSpec {
             PropertySpec
                 .builder(
                     "subTypeRule",
-                    propertyType,
+                    featureValidationRuleType,
                 ).addModifiers(KModifier.PRIVATE)
                 .initializer("%M(%S)", subTypeValidationMember, context.implName)
                 .build(),
@@ -135,20 +170,19 @@ fun companionObject(): TypeSpec {
             context
                 .parameterProperties
                 .map {
-                    val (name, _, _, _) = it
                     PropertySpec
                         .builder(
-                            "${name}PropertyRule",
-                            propertyType,
+                            generatePropertyRuleName(it.name),
+                            featureValidationRuleType,
                         ).addModifiers(KModifier.PRIVATE)
-                        .initializer("%M(%S)", it.validationFunction, name)
+                        .initializer("%M(%S)", it.validationFunction, it.name)
                         .build()
                 }
 
     return TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(
-            propertyType,
+            featureValidationRuleType,
         ).addProperties(properties)
         .addFunction(
             FunSpec
@@ -178,6 +212,9 @@ fun companionObject(): TypeSpec {
         ).build()
 }
 
+/**
+ * Generates internal factory property for creating feature implementations.
+ */
 context(context: SymbolContext)
 fun internalFactoryProperty(): PropertySpec {
     val factoryType =
@@ -185,16 +222,13 @@ fun internalFactoryProperty(): PropertySpec {
             .asTypeName()
             .parameterizedBy(context.superInterface)
 
-    val factoryName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Factory"
+    val factoryName = generateFactoryName(context.implName)
 
     return PropertySpec
         .builder(factoryName, factoryType)
         .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(
-            AnnotationSpec
-                .builder(PublishedApi::class)
-                .build(),
-        ).initializer(
+        .addAnnotation(publishedApiAnnotation)
+        .initializer(
             "%T { feature -> feature as? %T ?: %T(feature as %T) }",
             FeatureFactory::class,
             context.superInterface,
@@ -203,33 +237,24 @@ fun internalFactoryProperty(): PropertySpec {
         ).build()
 }
 
+/**
+ * Generates internal matchers property for matching features by name and validation.
+ */
 context(context: SymbolContext)
 fun internalMatchersProperty(): PropertySpec {
     val featureMatcherMemberByName = FeatureMatcher.Companion::class.asClassName().member("byName")
     val featureMatcherMemberByValidation = FeatureMatcher.Companion::class.asClassName().member("byValidation")
-    val featureMatchersClass = typeNameOf<FeatureMatchers>()
 
-    val matchersName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Matchers"
-
-    val isIndexed = context.featureName.contains("{}")
-
-    val propertyType =
-        if (isIndexed) {
-            LambdaTypeName.get(
-                parameters = listOf(ParameterSpec.unnamed(INT)),
-                returnType = featureMatchersClass,
-            )
-        } else {
-            featureMatchersClass
-        }
+    val matchersName = generateMatchersName(context.implName)
+    val propertyType = indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS)
 
     val initializer =
-        if (isIndexed) {
+        if (context.isIndexed) {
             CodeBlock
                 .builder()
                 .add("{ index ->\n")
                 .indent()
-                .add("%T(\n", featureMatchersClass)
+                .add("%T(\n", FEATURE_MATCHERS_CLASS)
                 .indent()
                 .add("byName = %M(%S.replace(\"{}\", index.toString())),\n", featureMatcherMemberByName, context.featureName)
                 .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
@@ -241,7 +266,7 @@ fun internalMatchersProperty(): PropertySpec {
         } else {
             CodeBlock
                 .builder()
-                .add("%T(\n", featureMatchersClass)
+                .add("%T(\n", FEATURE_MATCHERS_CLASS)
                 .indent()
                 .add("byName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
                 .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
@@ -253,42 +278,29 @@ fun internalMatchersProperty(): PropertySpec {
     return PropertySpec
         .builder(matchersName, propertyType)
         .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(
-            AnnotationSpec
-                .builder(PublishedApi::class)
-                .build(),
-        ).initializer(initializer)
+        .addAnnotation(publishedApiAnnotation)
+        .initializer(initializer)
         .build()
 }
 
+/**
+ * Generates internal utils property combining factory, matchers, and validation.
+ */
 context(context: SymbolContext)
 fun internalUtilsProperty(): PropertySpec {
-    val featureUtilsClass = ClassName("xyz.dussim.viessmann.feature.api", "FeatureUtils")
-    val featureMatchersClass = typeNameOf<FeatureMatchers>()
+    val utilsName = generateUtilsName(context.implName)
+    val factoryName = generateFactoryName(context.implName)
+    val matchersName = generateMatchersName(context.implName)
 
-    val utilsName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Utils"
-    val factoryName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Factory"
-    val matchersName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Matchers"
-
-    val isIndexed = context.featureName.contains("{}")
-
-    val propertyType =
-        if (isIndexed) {
-            LambdaTypeName.get(
-                parameters = listOf(ParameterSpec.unnamed(INT)),
-                returnType = featureUtilsClass,
-            )
-        } else {
-            featureUtilsClass
-        }
+    val propertyType = indexedOrDirectType(context.isIndexed, FEATURE_UTILS_CLASS)
 
     val initializer =
-        if (isIndexed) {
+        if (context.isIndexed) {
             CodeBlock
                 .builder()
                 .add("{ index ->\n")
                 .indent()
-                .add("%T(\n", featureUtilsClass)
+                .add("%T(\n", FEATURE_UTILS_CLASS)
                 .indent()
                 .add("factory = %N,\n", factoryName)
                 .add("matchers = %N(index),\n", matchersName)
@@ -301,7 +313,7 @@ fun internalUtilsProperty(): PropertySpec {
         } else {
             CodeBlock
                 .builder()
-                .add("%T(\n", featureUtilsClass)
+                .add("%T(\n", FEATURE_UTILS_CLASS)
                 .indent()
                 .add("factory = %N,\n", factoryName)
                 .add("matchers = %N,\n", matchersName)
@@ -314,25 +326,21 @@ fun internalUtilsProperty(): PropertySpec {
     return PropertySpec
         .builder(utilsName, propertyType)
         .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(
-            AnnotationSpec
-                .builder(PublishedApi::class)
-                .build(),
-        ).initializer(initializer)
+        .addAnnotation(publishedApiAnnotation)
+        .initializer(initializer)
         .build()
 }
 
+/**
+ * Generates internal command factory properties for each nested command.
+ */
 context(context: SymbolContext)
 fun internalCommandFactoryProperties(): List<PropertySpec> =
     context
         .nestedCommands
         .map { commandContext ->
-            val featurePrefix =
-                context.implName.simpleName
-                    .replaceFirstChar { it.lowercase() }
-                    .removeSuffix("Impl")
             val commandName = commandContext.implType.simpleName.replaceFirstChar { it.lowercase() }
-            val factoryName = featurePrefix + commandName.replaceFirstChar { it.uppercase() } + "Factory"
+            val factoryName = generateCommandFactoryName(context.implName, commandName)
             val factoryType =
                 LambdaTypeName.get(
                     parameters = listOf(ParameterSpec.unnamed(typeNameOf<Command>())),
@@ -342,25 +350,21 @@ fun internalCommandFactoryProperties(): List<PropertySpec> =
             PropertySpec
                 .builder(factoryName, factoryType)
                 .addModifiers(KModifier.INTERNAL)
-                .addAnnotation(
-                    AnnotationSpec
-                        .builder(PublishedApi::class)
-                        .build(),
-                ).initializer("%L", commandContext.implType.constructorReference())
+                .addAnnotation(publishedApiAnnotation)
+                .initializer("%L", commandContext.implType.constructorReference())
                 .build()
         }
 
+/**
+ * Generates extension properties for command companion objects (factory and validationRule).
+ */
 context(context: SymbolContext)
 fun commandExtensions(): List<PropertySpec> =
     context
         .nestedCommands
         .map { commandContext ->
-            val featurePrefix =
-                context.implName.simpleName
-                    .replaceFirstChar { it.lowercase() }
-                    .removeSuffix("Impl")
             val commandName = commandContext.implType.simpleName.replaceFirstChar { it.lowercase() }
-            val factoryName = featurePrefix + commandName.replaceFirstChar { it.uppercase() } + "Factory"
+            val factoryName = generateCommandFactoryName(context.implName, commandName)
             val factoryType =
                 LambdaTypeName.get(
                     parameters = listOf(ParameterSpec.unnamed(typeNameOf<Command>())),
@@ -398,6 +402,10 @@ fun commandExtensions(): List<PropertySpec> =
             )
         }.flatten()
 
+/**
+ * Generates extension properties for feature companion objects.
+ * Includes factory, validationRule, featureName, matchers, and utils properties.
+ */
 context(context: SymbolContext)
 fun featureExtensions(): List<PropertySpec> {
     val baseType =
@@ -405,7 +413,7 @@ fun featureExtensions(): List<PropertySpec> {
             .asTypeName()
             .parameterizedBy(context.superInterface)
 
-    val factoryName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Factory"
+    val factoryName = generateFactoryName(context.implName)
 
     val funSpec =
         FunSpec
@@ -444,20 +452,8 @@ fun featureExtensions(): List<PropertySpec> {
 
     val baseProperties = listOf(factoryProperty, validationRuleProperty)
 
-    val matchersName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Matchers"
-    val featureMatchersClass = ClassName("xyz.dussim.viessmann.feature.api", "FeatureMatchers")
-
-    val isIndexed = context.featureName.contains("{}")
-
-    val matchersType =
-        if (isIndexed) {
-            LambdaTypeName.get(
-                parameters = listOf(ParameterSpec.unnamed(INT)),
-                returnType = featureMatchersClass,
-            )
-        } else {
-            featureMatchersClass
-        }
+    val matchersName = generateMatchersName(context.implName)
+    val matchersType = indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS)
 
     val featureNameProperty =
         PropertySpec
@@ -483,18 +479,8 @@ fun featureExtensions(): List<PropertySpec> {
                     .build(),
             ).build()
 
-    val utilsName = context.implName.simpleName.replaceFirstChar { it.lowercase() } + "Utils"
-    val featureUtilsClass = ClassName("xyz.dussim.viessmann.feature.api", "FeatureUtils")
-
-    val utilsType =
-        if (isIndexed) {
-            LambdaTypeName.get(
-                parameters = listOf(ParameterSpec.unnamed(INT)),
-                returnType = featureUtilsClass,
-            )
-        } else {
-            featureUtilsClass
-        }
+    val utilsName = generateUtilsName(context.implName)
+    val utilsType = indexedOrDirectType(context.isIndexed, FEATURE_UTILS_CLASS)
 
     val utilsProperty =
         PropertySpec
@@ -511,6 +497,18 @@ fun featureExtensions(): List<PropertySpec> {
     return baseProperties + listOf(featureNameProperty, matchersProperty, utilsProperty)
 }
 
+/**
+ * Generates complete feature implementation including:
+ * - Main implementation class
+ * - Factory functions
+ * - Matchers for feature lookup
+ * - Utils combining factory, matchers, and validation
+ * - Command implementations
+ * - Extension properties
+ *
+ * @param context The symbol context with all feature information
+ * @return FileSpec containing the complete feature implementation
+ */
 @OptIn(DelicateKotlinPoetApi::class)
 fun generateFeatureImplementation(context: SymbolContext) =
     context(context) {
@@ -522,11 +520,8 @@ fun generateFeatureImplementation(context: SymbolContext) =
             TypeSpec
                 .classBuilder(context.implName)
                 .addModifiers(KModifier.INTERNAL)
-                .addAnnotation(
-                    AnnotationSpec
-                        .builder(PublishedApi::class)
-                        .build(),
-                ).primaryConstructor(constructor)
+                .addAnnotation(publishedApiAnnotation)
+                .primaryConstructor(constructor)
                 .addSuperinterface(context.symbol.toClassName())
                 .addAnnotation(
                     AnnotationSpec
@@ -559,8 +554,11 @@ fun generateFeatureImplementation(context: SymbolContext) =
             .build()
     }
 
-@PublishedApi
-internal inline fun combineToLong(
+/**
+ * Combines two integers into a single long value for efficient map lookups.
+ * Used for property/command name hashing.
+ */
+internal fun combineToLong(
     high: Int,
     low: Int,
 ): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)

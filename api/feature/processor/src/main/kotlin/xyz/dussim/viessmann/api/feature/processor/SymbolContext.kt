@@ -107,10 +107,17 @@ enum class BaseFeature(
     Geofencing(GEOFENCING_PROPERTIES, typeNameOf<Feature.Geofencing>()),
 }
 
+/**
+ * Marker interface for types that can be converted to KotlinPoet PropertySpec.
+ */
 interface ConvertibleToPropertySpec {
     fun asPropertySpec(): PropertySpec
 }
 
+/**
+ * Represents a property inherited from the superinterface (e.g., Feature.Device).
+ * These properties are delegated to the underlying feature instance.
+ */
 data class SuperInterfaceProperty(
     val name: String,
     val type: TypeName,
@@ -131,6 +138,16 @@ data class SuperInterfaceProperty(
             .build()
 }
 
+/**
+ * Represents a feature property (not a command).
+ * Can be a simple value, list value, or enum value.
+ *
+ * @property name Property name
+ * @property type Property type (may be enum or value type)
+ * @property property Parent class declaration
+ * @property isListProperty True if this is a list property
+ * @property isEnumProperty True if this is an enum property
+ */
 data class ParameterProperty(
     val name: String,
     val type: TypeName,
@@ -178,6 +195,10 @@ data class ParameterProperty(
             .build()
 }
 
+/**
+ * Represents a command property on a feature.
+ * Commands are executable actions with parameters and constraints.
+ */
 data class CommandProperty(
     val name: String,
     val type: TypeName,
@@ -197,6 +218,10 @@ data class CommandProperty(
             .build()
 }
 
+/**
+ * Context containing all information needed to generate a feature implementation.
+ * Manages properties, commands, enums, and validation rules.
+ */
 data class SymbolContext(
     val symbol: KSClassDeclaration,
 ) {
@@ -207,6 +232,11 @@ data class SymbolContext(
     val superInterfaceCompanion = superInterface.nestedClass("Companion")
     val implName = ClassName(symbol.packageName.asString(), symbol.simpleName.asString() + "Impl")
     val implCompanion = implName.nestedClass("Companion")
+
+    /**
+     * True if the feature name contains a placeholder "{}" for indexed features.
+     */
+    val isIndexed by lazy { featureName.contains("{}") }
 
     val baseFeature by lazy {
         symbol.superTypes.firstNotNullOf {
@@ -250,6 +280,10 @@ data class SymbolContext(
     }
 }
 
+/**
+ * Context for feature enum types.
+ * Feature enums are custom enum types used as property values.
+ */
 data class EnumSymbolContext(
     val parentContext: SymbolContext,
     val symbol: KSClassDeclaration,
