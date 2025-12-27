@@ -18,7 +18,7 @@ data class Command(
     val uri: String,
     val name: String,
     val isExecutable: Boolean,
-    @Serializable(with = EfficientStringKeyMap.ParametersSerializer::class)
+    @Serializable(with = ParametersSerializer::class)
     val params: EfficientStringKeyMap<Parameter>,
 )
 

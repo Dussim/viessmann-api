@@ -40,7 +40,7 @@ open class ThreeElementMapBenchmark {
                 "key3" to "value3",
             )
         standardMap = data
-        efficientMap = EfficientStringKeyMap.createFrom(data)
+        efficientMap = EfficientStringKeyMap(data)
     }
 
     @Benchmark

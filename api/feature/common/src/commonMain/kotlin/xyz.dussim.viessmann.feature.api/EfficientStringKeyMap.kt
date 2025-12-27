@@ -7,540 +7,217 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
-@Suppress("NOTHING_TO_INLINE")
-abstract class EfficientStringKeyMap<T> : Map<String, T> {
+sealed class EfficientStringKeyMap<out T>(
+    private val originalMap: Map<String, T>,
+) : Map<String, T> by originalMap {
+    companion object {
+        operator fun <T> invoke(from: Map<String, T>): EfficientStringKeyMap<T> =
+            when (from.size) {
+                0 -> Empty
+                1 -> OneElement(from)
+                2 -> TwoElements(from)
+                3 -> ThreeElements(from)
+                4 -> FourElements(from)
+                else -> NElements(from)
+            }
+    }
+
+    open class Serializer<T>(
+        valueSerializer: KSerializer<T>,
+    ) : KSerializer<EfficientStringKeyMap<T>> {
+        private val delegateSerializer = MapSerializer(String.serializer(), valueSerializer)
+
+        override val descriptor = delegateSerializer.descriptor
+
+        override fun serialize(
+            encoder: Encoder,
+            value: EfficientStringKeyMap<T>,
+        ) {
+            delegateSerializer.serialize(encoder, value.originalMap)
+        }
+
+        override fun deserialize(decoder: Decoder): EfficientStringKeyMap<T> = invoke(delegateSerializer.deserialize(decoder))
+    }
+
+    private val precomputedHash = originalMap.hashCode()
+
+    final override fun hashCode(): Int = precomputedHash
+
+    final override fun equals(other: Any?): Boolean = originalMap == other
+
+    final override fun get(key: String): T? = get(key, propertyHash(key.hashCode(), key.length))
+
     abstract operator fun get(
         key: String,
         precomputedHash: Long,
     ): T?
-
-    final override fun containsKey(key: String): Boolean = keys.contains(key)
-
-    final override fun containsValue(value: T): Boolean = values.contains(value)
-
-    data object CommandsSerializer : KSerializer<EfficientStringKeyMap<Command>> {
-        private val delegateSerializer = MapSerializer(String.Companion.serializer(), Command.serializer())
-        override val descriptor = delegateSerializer.descriptor
-
-        override fun serialize(
-            encoder: Encoder,
-            value: EfficientStringKeyMap<Command>,
-        ) {
-            delegateSerializer.serialize(encoder, value)
-        }
-
-        override fun deserialize(decoder: Decoder): EfficientStringKeyMap<Command> = createFrom(decoder.decodeSerializableValue(delegateSerializer))
-    }
-
-    data object ParametersSerializer : KSerializer<EfficientStringKeyMap<Parameter>> {
-        private val delegateSerializer = MapSerializer(String.serializer(), Parameter.serializer())
-        override val descriptor = delegateSerializer.descriptor
-
-        override fun serialize(
-            encoder: Encoder,
-            value: EfficientStringKeyMap<Parameter>,
-        ) {
-            delegateSerializer.serialize(encoder, value)
-        }
-
-        override fun deserialize(decoder: Decoder): EfficientStringKeyMap<Parameter> = createFrom(decoder.decodeSerializableValue(delegateSerializer))
-    }
-
-    data object PropertiesSerializer : KSerializer<EfficientStringKeyMap<Property>> {
-        private val delegateSerializer = MapSerializer(String.serializer(), Property.serializer())
-        override val descriptor = delegateSerializer.descriptor
-
-        override fun serialize(
-            encoder: Encoder,
-            value: EfficientStringKeyMap<Property>,
-        ) {
-            delegateSerializer.serialize(encoder, value)
-        }
-
-        override fun deserialize(decoder: Decoder): EfficientStringKeyMap<Property> = createFrom(decoder.decodeSerializableValue(delegateSerializer))
-    }
-
-    companion object {
-        private val EMPTY =
-            object : EfficientStringKeyMap<Nothing>() {
-                override val size = 0
-                override val keys = emptySet<String>()
-                override val values = emptyList<Nothing>()
-                override val entries = emptySet<Map.Entry<String, Nothing>>()
-
-                override fun isEmpty(): Boolean = true
-
-                override fun get(key: String): Nothing? = null
-
-                override fun get(
-                    key: String,
-                    precomputedHash: Long,
-                ): Nothing? = null
-
-                override fun equals(other: Any?): Boolean = other === this
-
-                override fun hashCode() = 0
-            }
-
-        @Suppress("UNCHECKED_CAST")
-        fun <T> createFrom(map: Map<String, T>): EfficientStringKeyMap<T> =
-            when (map.size) {
-                0 -> {
-                    EMPTY as EfficientStringKeyMap<T>
-                }
-
-                1 -> {
-                    val entry = map.entries.first()
-                    OneElement(
-                        key1 = entry.key,
-                        value1 = entry.value,
-                    )
-                }
-
-                2 -> {
-                    val iterator = map.entries.iterator()
-                    val entry1 = iterator.next()
-                    val entry2 = iterator.next()
-                    TwoElements(
-                        key1 = entry1.key,
-                        value1 = entry1.value,
-                        key2 = entry2.key,
-                        value2 = entry2.value,
-                    )
-                }
-
-                3 -> {
-                    val iterator = map.entries.iterator()
-                    val entry1 = iterator.next()
-                    val entry2 = iterator.next()
-                    val entry3 = iterator.next()
-                    ThreeElements(
-                        key1 = entry1.key,
-                        value1 = entry1.value,
-                        key2 = entry2.key,
-                        value2 = entry2.value,
-                        key3 = entry3.key,
-                        value3 = entry3.value,
-                    )
-                }
-
-                4 -> {
-                    val iterator = map.entries.iterator()
-                    val entry1 = iterator.next()
-                    val entry2 = iterator.next()
-                    val entry3 = iterator.next()
-                    val entry4 = iterator.next()
-                    FourElements(
-                        key1 = entry1.key,
-                        value1 = entry1.value,
-                        key2 = entry2.key,
-                        value2 = entry2.value,
-                        key3 = entry3.key,
-                        value3 = entry3.value,
-                        key4 = entry4.key,
-                        value4 = entry4.value,
-                    )
-                }
-
-                else -> {
-                    NElements(map)
-                }
-            }
-    }
-
-    private class OneElement<T>(
-        private val key1: String,
-        private val value1: T,
-    ) : EfficientStringKeyMap<T>() {
-        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
-            var result = hash1
-            result = 31 * result + length1
-            result = 31 * result + combined.hashCode()
-            result = 31 * result + key1.hashCode()
-            result = 31 * result + value1.hashCode()
-            result
-        }
-
-        private val hash1 = key1.hashCode()
-        private val length1 = key1.length
-        private val combined = propertyHash(hash1, length1)
-
-        override val size: Int = 1
-        override val keys: Set<String> = setOf(key1)
-        override val values: Collection<T> = listOf(value1)
-        override val entries: Set<Map.Entry<String, T>> =
-            setOf(
-                object : Map.Entry<String, T> {
-                    override val key: String = key1
-                    override val value: T = value1
-                },
-            )
-
-        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
-
-        override fun get(
-            key: String,
-            precomputedHash: Long,
-        ): T? = getImpl(key, precomputedHash)
-
-        override fun isEmpty(): Boolean = false
-
-        private inline fun getImpl(
-            key: String,
-            combined: Long,
-        ): T? =
-            when (combined) {
-                this.combined if (key1.compareTo(key) == 0) -> value1
-                else -> null
-            }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-
-            other as OneElement<*>
-
-            if (hash1 != other.hash1) return false
-            if (length1 != other.length1) return false
-            if (combined != other.combined) return false
-            if (key1 != other.key1) return false
-            if (value1 != other.value1) return false
-            return true
-        }
-
-        override fun hashCode() = hashCode
-    }
-
-    private class TwoElements<T>(
-        private val key1: String,
-        private val value1: T,
-        private val key2: String,
-        private val value2: T,
-    ) : EfficientStringKeyMap<T>() {
-        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
-            var result = combined1.hashCode()
-            result = 31 * result + combined2.hashCode()
-            result = 31 * result + key1.hashCode()
-            result = 31 * result + (value1?.hashCode() ?: 0)
-            result = 31 * result + key2.hashCode()
-            result = 31 * result + (value2?.hashCode() ?: 0)
-            result
-        }
-
-        private val combined1 = propertyHash(key1.hashCode(), key1.length)
-        private val combined2 = propertyHash(key2.hashCode(), key2.length)
-
-        override val size: Int = 2
-        override val keys: Set<String> = setOf(key1, key2)
-        override val values: Collection<T> = listOf(value1, value2)
-        override val entries: Set<Map.Entry<String, T>> =
-            setOf(
-                object : Map.Entry<String, T> {
-                    override val key: String = key1
-                    override val value: T = value1
-                },
-                object : Map.Entry<String, T> {
-                    override val key: String = key2
-                    override val value: T = value2
-                },
-            )
-
-        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
-
-        override fun get(
-            key: String,
-            precomputedHash: Long,
-        ): T? = getImpl(key, precomputedHash)
-
-        override fun isEmpty(): Boolean = false
-
-        private inline fun getImpl(
-            key: String,
-            combined: Long,
-        ): T? =
-            when (combined) {
-                combined1 if (key1.compareTo(key) == 0) -> value1
-                combined2 if (key2.compareTo(key) == 0) -> value2
-                else -> null
-            }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-
-            other as TwoElements<*>
-
-            if (combined1 != other.combined1) return false
-            if (combined2 != other.combined2) return false
-            if (key1 != other.key1) return false
-            if (value1 != other.value1) return false
-            if (key2 != other.key2) return false
-            if (value2 != other.value2) return false
-            return true
-        }
-
-        override fun hashCode() = hashCode
-    }
-
-    private class ThreeElements<T>(
-        private val key1: String,
-        private val value1: T,
-        private val key2: String,
-        private val value2: T,
-        private val key3: String,
-        private val value3: T,
-    ) : EfficientStringKeyMap<T>() {
-        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
-            var result = combined1.hashCode()
-            result = 31 * result + combined2.hashCode()
-            result = 31 * result + combined3.hashCode()
-            result = 31 * result + key1.hashCode()
-            result = 31 * result + (value1?.hashCode() ?: 0)
-            result = 31 * result + key2.hashCode()
-            result = 31 * result + (value2?.hashCode() ?: 0)
-            result = 31 * result + key3.hashCode()
-            result = 31 * result + (value3?.hashCode() ?: 0)
-            result
-        }
-
-        private val combined1 = propertyHash(key1.hashCode(), key1.length)
-        private val combined2 = propertyHash(key2.hashCode(), key2.length)
-        private val combined3 = propertyHash(key3.hashCode(), key3.length)
-
-        override val size: Int = 3
-        override val keys: Set<String> = setOf(key1, key2, key3)
-        override val values: Collection<T> = listOf(value1, value2, value3)
-        override val entries: Set<Map.Entry<String, T>> =
-            setOf(
-                object : Map.Entry<String, T> {
-                    override val key: String = key1
-                    override val value: T = value1
-                },
-                object : Map.Entry<String, T> {
-                    override val key: String = key2
-                    override val value: T = value2
-                },
-                object : Map.Entry<String, T> {
-                    override val key: String = key3
-                    override val value: T = value3
-                },
-            )
-
-        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
-
-        override fun get(
-            key: String,
-            precomputedHash: Long,
-        ): T? = getImpl(key, precomputedHash)
-
-        override fun isEmpty(): Boolean = false
-
-        private inline fun getImpl(
-            key: String,
-            combined: Long,
-        ): T? =
-            when (combined) {
-                combined1 if (key1.compareTo(key) == 0) -> value1
-                combined2 if (key2.compareTo(key) == 0) -> value2
-                combined3 if (key3.compareTo(key) == 0) -> value3
-                else -> null
-            }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-
-            other as ThreeElements<*>
-
-            if (combined1 != other.combined1) return false
-            if (combined2 != other.combined2) return false
-            if (combined3 != other.combined3) return false
-            if (key1 != other.key1) return false
-            if (value1 != other.value1) return false
-            if (key2 != other.key2) return false
-            if (value2 != other.value2) return false
-            if (key3 != other.key3) return false
-            if (value3 != other.value3) return false
-
-            return true
-        }
-
-        override fun hashCode() = hashCode
-    }
-
-    private class FourElements<T>(
-        private val key1: String,
-        private val value1: T,
-        private val key2: String,
-        private val value2: T,
-        private val key3: String,
-        private val value3: T,
-        private val key4: String,
-        private val value4: T,
-    ) : EfficientStringKeyMap<T>() {
-        private val hashCode by lazy(LazyThreadSafetyMode.NONE) {
-            var result = combined1.hashCode()
-            result = 31 * result + combined2.hashCode()
-            result = 31 * result + combined3.hashCode()
-            result = 31 * result + combined4.hashCode()
-            result = 31 * result + key1.hashCode()
-            result = 31 * result + (value1?.hashCode() ?: 0)
-            result = 31 * result + key2.hashCode()
-            result = 31 * result + (value2?.hashCode() ?: 0)
-            result = 31 * result + key3.hashCode()
-            result = 31 * result + (value3?.hashCode() ?: 0)
-            result = 31 * result + key4.hashCode()
-            result = 31 * result + (value4?.hashCode() ?: 0)
-            result
-        }
-
-        private val combined1 = propertyHash(key1.hashCode(), key1.length)
-        private val combined2 = propertyHash(key2.hashCode(), key2.length)
-        private val combined3 = propertyHash(key3.hashCode(), key3.length)
-        private val combined4 = propertyHash(key4.hashCode(), key4.length)
-
-        override val size: Int = 4
-        override val keys: Set<String> = setOf(key1, key2, key3, key4)
-        override val values: Collection<T> = listOf(value1, value2, value3, value4)
-        override val entries: Set<Map.Entry<String, T>> =
-            setOf(
-                object : Map.Entry<String, T> {
-                    override val key: String = key1
-                    override val value: T = value1
-                },
-                object : Map.Entry<String, T> {
-                    override val key: String = key2
-                    override val value: T = value2
-                },
-                object : Map.Entry<String, T> {
-                    override val key: String = key3
-                    override val value: T = value3
-                },
-                object : Map.Entry<String, T> {
-                    override val key: String = key4
-                    override val value: T = value4
-                },
-            )
-
-        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
-
-        override fun get(
-            key: String,
-            precomputedHash: Long,
-        ): T? = getImpl(key, precomputedHash)
-
-        override fun isEmpty(): Boolean = false
-
-        private inline fun getImpl(
-            key: String,
-            combined: Long,
-        ): T? =
-            when (combined) {
-                combined1 if (key1.compareTo(key) == 0) -> value1
-                combined2 if (key2.compareTo(key) == 0) -> value2
-                combined3 if (key3.compareTo(key) == 0) -> value3
-                combined4 if (key4.compareTo(key) == 0) -> value4
-                else -> null
-            }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-
-            other as FourElements<*>
-
-            if (combined1 != other.combined1) return false
-            if (combined2 != other.combined2) return false
-            if (combined3 != other.combined3) return false
-            if (combined4 != other.combined4) return false
-            if (key1 != other.key1) return false
-            if (value1 != other.value1) return false
-            if (key2 != other.key2) return false
-            if (value2 != other.value2) return false
-            if (key3 != other.key3) return false
-            if (value3 != other.value3) return false
-            if (key4 != other.key4) return false
-            if (value4 != other.value4) return false
-
-            return true
-        }
-
-        override fun hashCode() = hashCode
-    }
-
-    class NElements<T>(
-        private val map: Map<String, T>,
-    ) : EfficientStringKeyMap<T>() {
-        private val hashCode by lazy { map.hashCode() }
-
-        private val keyArray = map.keys.sortedBy { it.length }.toTypedArray()
-        private val combinedArray = keyArray.map { propertyHash(it.hashCode(), it.length) }.toLongArray()
-        private val valuesArray = keyArray.map { map[it] }.toTypedArray<Any?>()
-        private val jumpTable =
-            IntArray(keyArray.maxOf { it.length } + 1) {
-                keyArray.indexOfFirst { key -> key.length == it }
-            }
-        private val endIndex =
-            IntArray(jumpTable.size) {
-                val jump = jumpTable[it]
-                if (jump == -1) {
-                    -1
-                } else {
-                    val length = keyArray[jump].length
-                    val index = keyArray.indexOfFirst { key -> key.length > length }
-                    if (index == -1) keyArray.size else index
-                }
-            }
-        private var bitset = 0
-
-        override val size = map.size
-        override val keys = map.keys
-        override val values = map.values
-        override val entries = map.entries
-
-        init {
-            for (key in keyArray) {
-                bitset = bitset or (1 shl key.length)
-            }
-        }
-
-        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
-
-        override fun get(
-            key: String,
-            precomputedHash: Long,
-        ): T? = getImpl(key, precomputedHash)
-
-        override fun isEmpty() = false
-
-        private inline fun extractLow(value: Long): Int = (value and 0xFFFFFFFFL).toInt()
-
-        @Suppress("UNCHECKED_CAST")
-        private inline fun getImpl(
-            key: String,
-            combined: Long,
-        ): T? {
-            val length = extractLow(combined)
-            if (bitset and (1 shl length) == 0) return null
-            var current = jumpTable[length]
-            val end = endIndex[length]
-            do {
-                if (combined == combinedArray[current] && key.compareTo(keyArray[current]) == 0) {
-                    return valuesArray[current] as T?
-                }
-                current++
-            } while (current < end)
-            return null
-        }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null) return false
-            if (other is NElements<*>) return map == other.map
-            if (other is Map<*, *>) return map == other
-            return false
-        }
-
-        override fun hashCode() = hashCode
-    }
 }
+
+private data object Empty : EfficientStringKeyMap<Nothing>(emptyMap()) {
+    override val size = 0
+
+    override fun isEmpty(): Boolean = true
+
+    override fun containsKey(key: String): Boolean = false
+
+    override fun containsValue(value: Nothing): Boolean = false
+
+    override fun get(
+        key: String,
+        precomputedHash: Long,
+    ): Nothing? = null
+}
+
+private data class OneElement<T>(
+    private val originalMap: Map<String, T>,
+    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("One element map must have at least one element"),
+    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("One element map must have at least one element"),
+    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
+    override val size: Int = 1,
+) : EfficientStringKeyMap<T>(originalMap) {
+    override fun get(
+        key: String,
+        precomputedHash: Long,
+    ): T? =
+        when (precomputedHash) {
+            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
+            else -> null
+        }
+
+    override fun isEmpty(): Boolean = false
+}
+
+private data class TwoElements<T>(
+    private val originalMap: Map<String, T>,
+    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("Two elements map must have at least two elements"),
+    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("Two elements map must have at least two elements"),
+    private val key2: String = originalMap.keys.elementAtOrNull(1) ?: error("Two elements map must have at least two elements"),
+    private val value2: T = originalMap.values.elementAtOrNull(1) ?: error("Two elements map must have at least two elements"),
+    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
+    private val precomputedHash2: Long = propertyHash(key2.hashCode(), key2.length),
+    override val size: Int = 2,
+) : EfficientStringKeyMap<T>(originalMap) {
+    override fun get(
+        key: String,
+        precomputedHash: Long,
+    ): T? =
+        when (precomputedHash) {
+            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
+            precomputedHash2 if (key2.compareTo(key) == 0) -> value2
+            else -> null
+        }
+
+    override fun isEmpty(): Boolean = false
+}
+
+private data class ThreeElements<T>(
+    private val originalMap: Map<String, T>,
+    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("Three elements map must have at least three elements"),
+    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("Three elements map must have at least three elements"),
+    private val key2: String = originalMap.keys.elementAtOrNull(1) ?: error("Three elements map must have at least three elements"),
+    private val value2: T = originalMap.values.elementAtOrNull(1) ?: error("Three elements map must have at least three elements"),
+    private val key3: String = originalMap.keys.elementAtOrNull(2) ?: error("Three elements map must have at least three elements"),
+    private val value3: T = originalMap.values.elementAtOrNull(2) ?: error("Three elements map must have at least three elements"),
+    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
+    private val precomputedHash2: Long = propertyHash(key2.hashCode(), key2.length),
+    private val precomputedHash3: Long = propertyHash(key3.hashCode(), key3.length),
+    override val size: Int = 3,
+) : EfficientStringKeyMap<T>(originalMap) {
+    override fun get(
+        key: String,
+        precomputedHash: Long,
+    ): T? =
+        when (precomputedHash) {
+            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
+            precomputedHash2 if (key2.compareTo(key) == 0) -> value2
+            precomputedHash3 if (key3.compareTo(key) == 0) -> value3
+            else -> null
+        }
+
+    override fun isEmpty(): Boolean = false
+}
+
+private data class FourElements<T>(
+    private val originalMap: Map<String, T>,
+    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("Four elements map must have at least four elements"),
+    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("Four elements map must have at least four elements"),
+    private val key2: String = originalMap.keys.elementAtOrNull(1) ?: error("Four elements map must have at least four elements"),
+    private val value2: T = originalMap.values.elementAtOrNull(1) ?: error("Four elements map must have at least four elements"),
+    private val key3: String = originalMap.keys.elementAtOrNull(2) ?: error("Four elements map must have at least four elements"),
+    private val value3: T = originalMap.values.elementAtOrNull(2) ?: error("Four elements map must have at least four elements"),
+    private val key4: String = originalMap.keys.elementAtOrNull(3) ?: error("Four elements map must have at least four elements"),
+    private val value4: T = originalMap.values.elementAtOrNull(3) ?: error("Four elements map must have at least four elements"),
+    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
+    private val precomputedHash2: Long = propertyHash(key2.hashCode(), key2.length),
+    private val precomputedHash3: Long = propertyHash(key3.hashCode(), key3.length),
+    private val precomputedHash4: Long = propertyHash(key4.hashCode(), key4.length),
+    override val size: Int = 4,
+) : EfficientStringKeyMap<T>(originalMap) {
+    override fun get(
+        key: String,
+        precomputedHash: Long,
+    ): T? =
+        when (precomputedHash) {
+            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
+            precomputedHash2 if (key2.compareTo(key) == 0) -> value2
+            precomputedHash3 if (key3.compareTo(key) == 0) -> value3
+            precomputedHash4 if (key4.compareTo(key) == 0) -> value4
+            else -> null
+        }
+
+    override fun isEmpty(): Boolean = false
+}
+
+@Suppress("ArrayInDataClass")
+private data class NElements<T>(
+    private val originalMap: Map<String, T>,
+    private val arrayKeys: Array<String> = originalMap.keys.sortedBy { it.length }.toTypedArray(),
+    private val arrayValues: Array<Any?> = Array(arrayKeys.size) { originalMap[arrayKeys[it]] },
+    private val arrayHashes: LongArray = LongArray(arrayKeys.size) { propertyHash(arrayKeys[it].hashCode(), arrayKeys[it].length) },
+    private val startIndexJumpTable: IntArray =
+        IntArray(arrayKeys.maxOf { it.length } + 1) {
+            arrayKeys.indexOfFirst { key -> key.length == it }
+        },
+    private val endIndexJumpTable: IntArray =
+        IntArray(startIndexJumpTable.size) {
+            val jump = startIndexJumpTable[it]
+            if (jump == -1) {
+                -1
+            } else {
+                val length = arrayKeys[jump].length
+                val index = arrayKeys.indexOfFirst { key -> key.length > length }
+                if (index == -1) arrayKeys.size else index
+            }
+        },
+    private val lengthBitset: Int = originalMap.keys.fold(0) { acc, key -> acc or (1 shl key.length) },
+    override val size: Int = originalMap.size,
+) : EfficientStringKeyMap<T>(originalMap) {
+    override fun get(
+        key: String,
+        precomputedHash: Long,
+    ): T? {
+        val length = extractLow(precomputedHash)
+        if (lengthBitset and (1 shl length) == 0) return null
+        var current = startIndexJumpTable[length]
+        val end = endIndexJumpTable[length]
+        do {
+            if (precomputedHash == arrayHashes[current] && key.compareTo(arrayKeys[current]) == 0) {
+                @Suppress("UNCHECKED_CAST")
+                return arrayValues[current] as T?
+            }
+            current++
+        } while (current < end)
+        return null
+    }
+
+    override fun isEmpty(): Boolean = false
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun extractLow(value: Long): Int = (value and 0xFFFFFFFFL).toInt()
+}
+
+data object ParametersSerializer : EfficientStringKeyMap.Serializer<Parameter>(Parameter.serializer())
+
+data object PropertiesSerializer : EfficientStringKeyMap.Serializer<Property>(Property.serializer())
+
+data object CommandsSerializer : EfficientStringKeyMap.Serializer<Command>(Command.serializer())

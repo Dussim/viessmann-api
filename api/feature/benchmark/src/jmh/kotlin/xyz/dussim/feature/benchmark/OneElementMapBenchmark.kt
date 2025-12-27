@@ -33,7 +33,7 @@ open class OneElementMapBenchmark {
     fun setup() {
         val data = mapOf("key1" to "value1")
         standardMap = data
-        efficientMap = EfficientStringKeyMap.createFrom(data)
+        efficientMap = EfficientStringKeyMap(data)
     }
 
     @Benchmark
