@@ -2,26 +2,8 @@
 
 package xyz.dussim.viessmann.feature.api
 
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.NothingSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.encodeStructure
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.double
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import xyz.dussim.viessmann.feature.api.validation.booleanValueClassIndex
 import xyz.dussim.viessmann.feature.api.validation.doubleValueClassIndex
 import xyz.dussim.viessmann.feature.api.validation.listDeviceErrorValueClassIndex
@@ -35,19 +17,17 @@ import xyz.dussim.viessmann.feature.api.validation.objectOtherRoomConfigurationV
 import xyz.dussim.viessmann.feature.api.validation.scheduleValueClassIndex
 import xyz.dussim.viessmann.feature.api.validation.stringValueClassIndex
 import xyz.dussim.viessmann.feature.api.validation.unknownValueClassIndex
-import kotlin.jvm.JvmField
-import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmRecord
 import kotlin.time.Instant
 
-private const val BOOLEAN = "boolean"
-private const val NUMBER = "number"
-private const val STRING = "string"
-private const val ARRAY = "array"
-private const val OBJECT = "object"
-private const val DEVICE_LIST = "DeviceList"
-private const val SCHEDULE = "Schedule"
+internal const val BOOLEAN = "boolean"
+internal const val NUMBER = "number"
+internal const val STRING = "string"
+internal const val ARRAY = "array"
+internal const val OBJECT = "object"
+internal const val DEVICE_LIST = "DeviceList"
+internal const val SCHEDULE = "Schedule"
 
 @JvmRecord
 @ConsistentCopyVisibility
@@ -63,162 +43,130 @@ data class Property internal constructor(
 }
 
 sealed interface PropertyValue<T> {
-    companion object {
-        @JvmField
-        val stringValueClass = StringValue::class
-
-        @JvmField
-        val doubleValueClass = DoubleValue::class
-
-        @JvmField
-        val listDoubleValueClass = ListDoubleValue::class
-
-        @JvmField
-        val objectValueClass = ObjectOtherRoomConfigurationValue::class
-
-        @JvmField
-        val scheduleValueClass = ScheduleValue::class
-
-        @JvmField
-        val listEmptyValueClass = ListEmptyValue::class
-
-        @JvmField
-        val unknownValueClass = UnknownValue::class
-
-        @JvmField
-        val listDeviceErrorValueClass = ListDeviceErrorValue::class
-
-        @JvmField
-        val listZigbeeDeviceStatusValueClass = ListZigbeeDeviceStatusValue::class
-
-        @JvmField
-        val listRoomActorValueClass = ListRoomActorValue::class
-
-        @JvmField
-        val listDeviceValueClass = ListDeviceValue::class
-
-        @JvmField
-        val booleanValueClass = BooleanValue::class
-
-        @JvmField
-        val listStringValueClass = ListStringValue::class
-    }
-
     val element: T
-}
 
-inline val PropertyValue<*>.propertyValueClassIndex: Int
-    get() =
-        when (this) {
-            is BooleanValue -> booleanValueClassIndex
-            is DoubleValue -> doubleValueClassIndex
-            is ListDeviceErrorValue -> listDeviceErrorValueClassIndex
-            is ListDeviceValue -> listDeviceValueClassIndex
-            is ListDoubleValue -> listDoubleValueClassIndex
-            is ListRoomActorValue -> listRoomActorValueClassIndex
-            is ListStringValue -> listStringValueClassIndex
-            is ListZigbeeDeviceStatusValue -> listZigbeeDeviceStatusValueClassIndex
-            is ObjectOtherRoomConfigurationValue -> objectOtherRoomConfigurationValueClassIndex
-            is ScheduleValue -> scheduleValueClassIndex
-            is StringValue -> stringValueClassIndex
-            is UnknownValue -> unknownValueClassIndex
-            is ListEmptyValue -> listEmptyValueClassIndex
-        }
+    val propertyValueClassIndex: Int
+}
 
 sealed interface ListPropertyValue
 
-@JvmInline
-value class UnknownValue(
+@JvmRecord
+data class UnknownValue(
     override val element: JsonElement,
-) : PropertyValue<JsonElement>
+) : PropertyValue<JsonElement> {
+    override val propertyValueClassIndex get() = unknownValueClassIndex
+}
 
-@JvmInline
-value class BooleanValue(
+@JvmRecord
+data class BooleanValue(
     override val element: Boolean,
-) : PropertyValue<Boolean>
+) : PropertyValue<Boolean> {
+    override val propertyValueClassIndex get() = booleanValueClassIndex
+}
 
-@JvmInline
-value class DoubleValue(
+@JvmRecord
+data class DoubleValue(
     override val element: Double,
-) : PropertyValue<Double>
+) : PropertyValue<Double> {
+    override val propertyValueClassIndex get() = doubleValueClassIndex
+}
 
-@JvmInline
-value class StringValue(
+@JvmRecord
+data class StringValue(
     override val element: String,
-) : PropertyValue<String>
+) : PropertyValue<String> {
+    override val propertyValueClassIndex get() = stringValueClassIndex
+}
 
-@JvmInline
-value class ListDoubleValue(
+@JvmRecord
+data class ListDoubleValue(
     override val element: List<Double>,
 ) : PropertyValue<List<Double>>,
     ListPropertyValue {
+    override val propertyValueClassIndex get() = listDoubleValueClassIndex
+
     companion object {
         val EMPTY = ListDoubleValue(emptyList())
     }
 }
 
-@JvmInline
-value class ListStringValue(
+@JvmRecord
+data class ListStringValue(
     override val element: List<String>,
 ) : PropertyValue<List<String>>,
     ListPropertyValue {
+    override val propertyValueClassIndex get() = listStringValueClassIndex
+
     companion object {
         val EMPTY = ListStringValue(emptyList())
     }
 }
 
-@JvmInline
-value class ListDeviceErrorValue(
+@JvmRecord
+data class ListDeviceErrorValue(
     override val element: List<DeviceError>,
 ) : PropertyValue<List<DeviceError>>,
     ListPropertyValue {
+    override val propertyValueClassIndex get() = listDeviceErrorValueClassIndex
+
     companion object {
         val EMPTY = ListDeviceErrorValue(emptyList())
     }
 }
 
-@JvmInline
-value class ListZigbeeDeviceStatusValue(
+@JvmRecord
+data class ListZigbeeDeviceStatusValue(
     override val element: List<ZigbeeDeviceStatus>,
 ) : PropertyValue<List<ZigbeeDeviceStatus>>,
     ListPropertyValue {
+    override val propertyValueClassIndex get() = listZigbeeDeviceStatusValueClassIndex
+
     companion object {
         val EMPTY = ListZigbeeDeviceStatusValue(emptyList())
     }
 }
 
-@JvmInline
-value class ListRoomActorValue(
+@JvmRecord
+data class ListRoomActorValue(
     override val element: List<RoomActor>,
 ) : PropertyValue<List<RoomActor>>,
     ListPropertyValue {
+    override val propertyValueClassIndex get() = listRoomActorValueClassIndex
+
     companion object {
         val EMPTY = ListRoomActorValue(emptyList())
     }
 }
 
-@JvmInline
-value class ListDeviceValue(
+@JvmRecord
+data class ListDeviceValue(
     override val element: List<Device>,
 ) : PropertyValue<List<Device>>,
     ListPropertyValue {
+    override val propertyValueClassIndex get() = listDeviceValueClassIndex
+
     companion object {
         val EMPTY = ListDeviceValue(emptyList())
     }
 }
 
-@JvmInline
-value class ObjectOtherRoomConfigurationValue(
+@JvmRecord
+data class ObjectOtherRoomConfigurationValue(
     override val element: OtherRoomConfiguration,
-) : PropertyValue<OtherRoomConfiguration>
+) : PropertyValue<OtherRoomConfiguration> {
+    override val propertyValueClassIndex get() = objectOtherRoomConfigurationValueClassIndex
+}
 
-@JvmInline
-value class ScheduleValue(
+@JvmRecord
+data class ScheduleValue(
     override val element: Map<String, List<Schedule>>,
-) : PropertyValue<Map<String, List<Schedule>>>
+) : PropertyValue<Map<String, List<Schedule>>> {
+    override val propertyValueClassIndex get() = scheduleValueClassIndex
+}
 
 data object ListEmptyValue : PropertyValue<List<Nothing>>, ListPropertyValue {
     override val element = emptyList<Nothing>()
+    override val propertyValueClassIndex get() = listEmptyValueClassIndex
 }
 
 @OptIn(kotlin.time.ExperimentalTime::class)
@@ -335,137 +283,3 @@ fun Property.Companion.of(scheduleMap: Map<String, List<Schedule>>): Property = 
 
 @JvmName("ofSchedules")
 fun Property.Companion.of(vararg schedule: Pair<String, List<Schedule>>): Property = Property(SCHEDULE, ScheduleValue(schedule.toMap()))
-
-@OptIn(ExperimentalSerializationApi::class)
-internal data object PropertySerializer : KSerializer<Property> {
-    override val descriptor =
-        buildClassSerialDescriptor("xyz.dussim.viessmann.feature.api.Property") {
-            element<String>("type")
-            element<JsonElement>("value")
-            element<String?>("unit")
-        }
-
-    override fun serialize(
-        encoder: Encoder,
-        value: Property,
-    ) {
-        encoder.encodeStructure(descriptor) {
-            encodeStringElement(descriptor, 0, value.type)
-            when (val propertyValue = value.value) {
-                is BooleanValue -> encodeBooleanElement(descriptor, 1, propertyValue.element)
-                is DoubleValue -> encodeDoubleElement(descriptor, 1, propertyValue.element)
-                is StringValue -> encodeStringElement(descriptor, 1, propertyValue.element)
-                is ListDoubleValue -> encodeSerializableElement(descriptor, 1, ListSerializer(Double.serializer()), propertyValue.element)
-                is ListStringValue -> encodeSerializableElement(descriptor, 1, ListSerializer(String.serializer()), propertyValue.element)
-                is UnknownValue -> encodeSerializableElement(descriptor, 1, JsonElement.serializer(), propertyValue.element)
-                is ListDeviceErrorValue -> encodeSerializableElement(descriptor, 1, ListSerializer(DeviceError.serializer()), propertyValue.element)
-                is ListRoomActorValue -> encodeSerializableElement(descriptor, 1, ListSerializer(RoomActor.serializer()), propertyValue.element)
-                is ListZigbeeDeviceStatusValue -> encodeSerializableElement(descriptor, 1, ListSerializer(ZigbeeDeviceStatus.serializer()), propertyValue.element)
-                is ObjectOtherRoomConfigurationValue -> encodeSerializableElement(descriptor, 1, OtherRoomConfiguration.serializer(), propertyValue.element)
-                is ListDeviceValue -> encodeSerializableElement(descriptor, 1, ListSerializer(Device.serializer()), propertyValue.element)
-                is ScheduleValue -> encodeSerializableElement(descriptor, 1, MapSerializer(String.serializer(), ListSerializer(Schedule.serializer())), propertyValue.element)
-                ListEmptyValue -> encodeSerializableElement(descriptor, 1, ListSerializer(NothingSerializer()), emptyList())
-            }
-            encodeNullableSerializableElement(descriptor, 2, String.serializer(), value.unit)
-        }
-    }
-
-    override fun deserialize(decoder: Decoder): Property {
-        val jsonDecoder = decoder as JsonDecoder
-        val element = jsonDecoder.decodeJsonElement().jsonObject
-        val type = element.getValue("type").jsonPrimitive.content
-        val value = element.getValue("value")
-        val unit = element["unit"]?.jsonPrimitive?.content
-
-        return Property(
-            type = type,
-            value =
-                when (type) {
-                    BOOLEAN -> {
-                        BooleanValue(value.jsonPrimitive.boolean)
-                    }
-
-                    NUMBER -> {
-                        DoubleValue(value.jsonPrimitive.double)
-                    }
-
-                    STRING -> {
-                        StringValue(value.jsonPrimitive.content)
-                    }
-
-                    ARRAY -> {
-                        val array = value as? JsonArray
-
-                        decoder.decodeOrNull(array, String.serializer(), ::ListStringValue)
-                            ?: decoder.decodeOrNull(array, Double.serializer(), ::ListDoubleValue)
-                            ?: decoder.decodeOrNull(array, DeviceError.serializer(), ::ListDeviceErrorValue)
-                            ?: decoder.decodeOrNull(array, ZigbeeDeviceStatus.serializer(), ::ListZigbeeDeviceStatusValue)
-                            ?: decoder.decodeOrNull(array, RoomActor.serializer(), ::ListRoomActorValue)
-                            ?: UnknownValue(value)
-                    }
-
-                    OBJECT -> {
-                        val obj = value as? JsonObject
-
-                        decoder.decodeOrNull(obj, OtherRoomConfiguration.serializer(), ::ObjectOtherRoomConfigurationValue)
-                            ?: UnknownValue(value)
-                    }
-
-                    DEVICE_LIST -> {
-                        val array = value as? JsonArray
-
-                        decoder.decodeOrNull(array, Device.serializer(), ::ListDeviceValue)
-                            ?: UnknownValue(value)
-                    }
-
-                    SCHEDULE -> {
-                        val obj = value as? JsonObject
-
-                        decoder.decodeOrNull(obj, MapSerializer(String.serializer(), ListSerializer(Schedule.serializer())), ::ScheduleValue)
-                            ?: UnknownValue(value)
-                    }
-
-                    else -> {
-                        UnknownValue(value)
-                    }
-                },
-            unit = unit,
-        )
-    }
-
-    private fun <T> JsonDecoder.decodeOrNull(
-        array: JsonArray?,
-        serializer: KSerializer<T>,
-        provider: (List<T>) -> PropertyValue<*>,
-    ): PropertyValue<*>? {
-        if (array == null) {
-            return null
-        }
-
-        if (array.isEmpty()) {
-            return ListEmptyValue
-        }
-
-        return try {
-            provider(json.decodeFromJsonElement(ListSerializer(serializer), array))
-        } catch (_: Exception) {
-            return null
-        }
-    }
-
-    private fun <T> JsonDecoder.decodeOrNull(
-        obj: JsonObject?,
-        serializer: KSerializer<T>,
-        provider: (T) -> PropertyValue<*>,
-    ): PropertyValue<*>? {
-        if (obj == null) {
-            return null
-        }
-
-        return try {
-            provider(json.decodeFromJsonElement(serializer, obj))
-        } catch (_: Exception) {
-            return null
-        }
-    }
-}

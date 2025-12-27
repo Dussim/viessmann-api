@@ -25,8 +25,6 @@ import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
-import xyz.dussim.viessmann.feature.api.constraintsClassIndex
-import xyz.dussim.viessmann.feature.api.propertyValueClassIndex
 import xyz.dussim.viessmann.feature.api.validation.PropertyValidationErrors.getMismatchProperties
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Constraint
