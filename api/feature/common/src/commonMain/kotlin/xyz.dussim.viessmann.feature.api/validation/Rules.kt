@@ -25,13 +25,15 @@ import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
-import xyz.dussim.viessmann.feature.api.constraintsClass
-import xyz.dussim.viessmann.feature.api.propertyValueClass
+import xyz.dussim.viessmann.feature.api.constraintsClassIndex
+import xyz.dussim.viessmann.feature.api.propertyValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.PropertyValidationErrors.getMismatchProperties
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Constraint
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Property
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.MissingComponent
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
+import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch.Expected
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.WrongFeatureImplementation
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 
@@ -45,167 +47,186 @@ internal val featureGatewayClass = Feature.Gateway::class
 internal val featureGeofencingClass = Feature.Geofencing::class
 
 @PublishedApi
-internal inline fun combineToLong(
+internal inline fun propertyHash(
     high: Int,
     low: Int,
 ): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)
 
 @PublishedApi
-internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(propertyName: String): ValidationRule<Feature, ValidationError> {
-    val missingError = ValidationResult.of(MissingComponent(ComponentType.Property, propertyName, T::class))
-    val getMismatchProperties = PropertyValidationErrors.getMismatchProperties(Property, propertyName, T::class)
-    val combined = combineToLong(propertyName.hashCode(), propertyName.length)
+internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
+    propertyName: String,
+    expectedIndex: Int,
+): ValidationRule<Feature, ValidationError> {
+    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
+    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
+    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { target ->
-        val property = target.properties[propertyName, combined] ?: return@ValidationRule missingError
+        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
         if (property.value is T) {
             ValidationResult.Valid
         } else {
-            getMismatchProperties(property.value.propertyValueClass)
+            getMismatchProperties(property.value.propertyValueClassIndex)
         }
     }
 }
 
 @PublishedApi
-internal inline fun <reified T : PropertyValue<*>> typedPropertyRuleProps(propertyName: String): ValidationRule<EfficientStringKeyMap<Property>, ValidationError> {
-    val missingError = ValidationResult.of(MissingComponent(ComponentType.Property, propertyName, T::class))
-    val getMismatchProperties = PropertyValidationErrors.getMismatchProperties(Property, propertyName, T::class)
-    val combined = combineToLong(propertyName.hashCode(), propertyName.length)
+internal inline fun <reified T : PropertyValue<*>> typedPropertyRuleProps(
+    propertyName: String,
+    expectedIndex: Int,
+): ValidationRule<EfficientStringKeyMap<Property>, ValidationError> {
+    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
+    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
+    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { properties ->
-        val property = properties[propertyName, combined] ?: return@ValidationRule missingError
+        val property = properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
         if (property.value is T) {
             ValidationResult.Valid
         } else {
-            getMismatchProperties(property.value.propertyValueClass)
+            getMismatchProperties(property.value.propertyValueClassIndex)
         }
     }
 }
 
 @PublishedApi
-internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(propertyName: String): ValidationRule<Feature, ValidationError> {
-    val missingError = ValidationResult.of(MissingComponent(ComponentType.Property, propertyName, T::class))
-    val getMismatchProperties = PropertyValidationErrors.getMismatchProperties(Property, propertyName, T::class)
-    val combined = combineToLong(propertyName.hashCode(), propertyName.length)
+internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
+    propertyName: String,
+    expectedIndex: Int,
+): ValidationRule<Feature, ValidationError> {
+    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
+    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
+    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { target ->
-        val property = target.properties[propertyName, combined] ?: return@ValidationRule missingError
+        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
         if (property.value is ListEmptyValue || property.value is T) {
             ValidationResult.Valid
         } else {
-            getMismatchProperties(property.value.propertyValueClass)
+            getMismatchProperties(property.value.propertyValueClassIndex)
         }
     }
 }
 
 @PublishedApi
-internal inline fun <reified T : PropertyValue<*>> typedListPropertyRuleProps(propertyName: String): ValidationRule<EfficientStringKeyMap<Property>, ValidationError> {
-    val missingError = ValidationResult.of(MissingComponent(ComponentType.Property, propertyName, T::class))
-    val getMismatchProperties = PropertyValidationErrors.getMismatchProperties(Property, propertyName, T::class)
-    val combined = combineToLong(propertyName.hashCode(), propertyName.length)
+internal inline fun <reified T : PropertyValue<*>> typedListPropertyRuleProps(
+    propertyName: String,
+    expectedIndex: Int,
+): ValidationRule<EfficientStringKeyMap<Property>, ValidationError> {
+    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
+    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
+    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { properties ->
-        val property = properties[propertyName, combined] ?: return@ValidationRule missingError
+        val property = properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
         if (property.value is ListEmptyValue || property.value is T) {
             ValidationResult.Valid
         } else {
-            getMismatchProperties(property.value.propertyValueClass)
+            getMismatchProperties(property.value.propertyValueClassIndex)
         }
     }
 }
 
 @PublishedApi
-internal inline fun <reified T : Constraints<*>> typedCommandRule(propertyName: String): ValidationRule<Command, ValidationError> {
-    val missingError = ValidationResult.of(MissingComponent(ComponentType.Command, propertyName, T::class))
-    val getMismatchProperties = PropertyValidationErrors.getMismatchConstraints(Constraint, propertyName, T::class)
-    val combined = combineToLong(propertyName.hashCode(), propertyName.length)
+internal inline fun <reified T : Constraints<*>> typedCommandRule(
+    parameterName: String,
+    expectedIndex: Int,
+): ValidationRule<Command, ValidationError> {
+    val missingError = Invalid(MissingComponent(ComponentType.Command, parameterName, T::class))
+    val getMismatchProperties = getMismatchProperties(Constraint, parameterName, expectedIndex)
+    val precomputedHash = propertyHash(parameterName.hashCode(), parameterName.length)
 
     return ValidationRule { target ->
-        val property = target.params[propertyName, combined]?.constraints ?: return@ValidationRule missingError
+        val property = target.params[parameterName, precomputedHash]?.constraints ?: return@ValidationRule missingError
         if (property is T) {
             ValidationResult.Valid
         } else {
-            getMismatchProperties(property.constraintsClass)
+            getMismatchProperties(property.constraintsClassIndex)
         }
     }
 }
 
-inline fun stringPropertyRule(propertyName: String) = typedPropertyRule<StringValue>(propertyName)
+inline fun stringPropertyRule(propertyName: String) = typedPropertyRule<StringValue>(propertyName, stringValueClassIndex)
 
-inline fun booleanPropertyRule(propertyName: String) = typedPropertyRule<BooleanValue>(propertyName)
+inline fun booleanPropertyRule(propertyName: String) = typedPropertyRule<BooleanValue>(propertyName, booleanValueClassIndex)
 
-inline fun doublePropertyRule(propertyName: String) = typedPropertyRule<DoubleValue>(propertyName)
+inline fun doublePropertyRule(propertyName: String) = typedPropertyRule<DoubleValue>(propertyName, doubleValueClassIndex)
 
-inline fun listDoublePropertyRule(propertyName: String) = typedListPropertyRule<ListDoubleValue>(propertyName)
+inline fun listDoublePropertyRule(propertyName: String) = typedListPropertyRule<ListDoubleValue>(propertyName, listDoubleValueClassIndex)
 
-inline fun listStringPropertyRule(propertyName: String) = typedListPropertyRule<ListStringValue>(propertyName)
+inline fun listStringPropertyRule(propertyName: String) = typedListPropertyRule<ListStringValue>(propertyName, listStringValueClassIndex)
 
-inline fun listDeviceErrorPropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceErrorValue>(propertyName)
+inline fun listDeviceErrorPropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceErrorValue>(propertyName, listDeviceErrorValueClassIndex)
 
-inline fun listZigbeeDeviceStatusPropertyRule(propertyName: String) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName)
+inline fun listZigbeeDeviceStatusPropertyRule(propertyName: String) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName, listZigbeeDeviceStatusValueClassIndex)
 
-inline fun listRoomActorPropertyRule(propertyName: String) = typedListPropertyRule<ListRoomActorValue>(propertyName)
+inline fun listRoomActorPropertyRule(propertyName: String) = typedListPropertyRule<ListRoomActorValue>(propertyName, listRoomActorValueClassIndex)
 
-inline fun listDevicePropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceValue>(propertyName)
+inline fun listDevicePropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceValue>(propertyName, listDeviceValueClassIndex)
 
-inline fun objectOtherRoomConfigurationPropertyRule(propertyName: String) = typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName)
+inline fun objectOtherRoomConfigurationPropertyRule(propertyName: String) =
+    typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName, objectOtherRoomConfigurationValueClassIndex)
 
-inline fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName)
+inline fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName, scheduleValueClassIndex)
 
-inline fun stringPropertyRuleProps(propertyName: String) = typedPropertyRuleProps<StringValue>(propertyName)
+inline fun stringPropertyRuleProps(propertyName: String) = typedPropertyRuleProps<StringValue>(propertyName, stringValueClassIndex)
 
-inline fun booleanPropertyRuleProps(propertyName: String) = typedPropertyRuleProps<BooleanValue>(propertyName)
+inline fun booleanPropertyRuleProps(propertyName: String) = typedPropertyRuleProps<BooleanValue>(propertyName, booleanValueClassIndex)
 
-inline fun doublePropertyRuleProps(propertyName: String) = typedPropertyRuleProps<DoubleValue>(propertyName)
+inline fun doublePropertyRuleProps(propertyName: String) = typedPropertyRuleProps<DoubleValue>(propertyName, doubleValueClassIndex)
 
-inline fun listDoublePropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDoubleValue>(propertyName)
+inline fun listDoublePropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDoubleValue>(propertyName, listDoubleValueClassIndex)
 
-inline fun listStringPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListStringValue>(propertyName)
+inline fun listStringPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListStringValue>(propertyName, listStringValueClassIndex)
 
-inline fun listDeviceErrorPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDeviceErrorValue>(propertyName)
+inline fun listDeviceErrorPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDeviceErrorValue>(propertyName, listDeviceErrorValueClassIndex)
 
-inline fun listZigbeeDeviceStatusPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListZigbeeDeviceStatusValue>(propertyName)
+inline fun listZigbeeDeviceStatusPropertyRuleProps(propertyName: String) =
+    typedListPropertyRuleProps<ListZigbeeDeviceStatusValue>(propertyName, listZigbeeDeviceStatusValueClassIndex)
 
-inline fun listRoomActorPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListRoomActorValue>(propertyName)
+inline fun listRoomActorPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListRoomActorValue>(propertyName, listRoomActorValueClassIndex)
 
-inline fun listDevicePropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDeviceValue>(propertyName)
+inline fun listDevicePropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDeviceValue>(propertyName, listDeviceValueClassIndex)
 
-inline fun objectOtherRoomConfigurationPropertyRuleProps(propertyName: String) = typedPropertyRuleProps<ObjectOtherRoomConfigurationValue>(propertyName)
+inline fun objectOtherRoomConfigurationPropertyRuleProps(propertyName: String) =
+    typedPropertyRuleProps<ObjectOtherRoomConfigurationValue>(propertyName, objectOtherRoomConfigurationValueClassIndex)
 
-inline fun schedulePropertyRuleProps(propertyName: String) = typedPropertyRuleProps<ScheduleValue>(propertyName)
+inline fun schedulePropertyRuleProps(propertyName: String) = typedPropertyRuleProps<ScheduleValue>(propertyName, scheduleValueClassIndex)
 
 inline fun numberOfParametersRule(
     expected: Int,
     name: String,
 ): ValidationRule<Command, ValidationError> {
-    val info = NumberOfParametersMismatch.Info(ComponentType.Command, name, expected)
+    val expectedData = Expected(ComponentType.Command, name, expected)
     return ValidationRule { command ->
         if (command.params.size == expected) {
             return@ValidationRule ValidationResult.Valid
         } else {
-            return@ValidationRule ValidationResult.of(
-                NumberOfParametersMismatch(info, command.params.size),
+            return@ValidationRule Invalid(
+                NumberOfParametersMismatch(expectedData, command.params.size),
             )
         }
     }
 }
 
-inline fun stringConstraintsRule(parameterName: String) = typedCommandRule<StringConstraints>(parameterName)
+inline fun stringConstraintsRule(parameterName: String) = typedCommandRule<StringConstraints>(parameterName, stringConstraintsClassIndex)
 
-inline fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstraints>(parameterName)
+inline fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstraints>(parameterName, numberConstraintsClassIndex)
 
-inline fun booleanConstraintsRule(parameterName: String) = typedCommandRule<BooleanConstraints>(parameterName)
+inline fun booleanConstraintsRule(parameterName: String) = typedCommandRule<BooleanConstraints>(parameterName, booleanConstraintsClassIndex)
 
-inline fun unknownConstraintsRule(parameterName: String) = typedCommandRule<UnknownConstraints>(parameterName)
+inline fun unknownConstraintsRule(parameterName: String) = typedCommandRule<UnknownConstraints>(parameterName, unknownConstraintsClassIndex)
 
-inline fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> = typedCommandRule<ScheduleConstraints>(parameterName)
+inline fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> =
+    typedCommandRule<ScheduleConstraints>(parameterName, scheduleConstraintsClassIndex)
 
 inline fun commandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,
 ): ValidationRule<Feature, ValidationError> {
-    val missingError = ValidationResult.of(MissingComponent(ComponentType.Feature, commandName, Command::class))
-    val combined = combineToLong(commandName.hashCode(), commandName.length)
+    val missingError = Invalid(MissingComponent(ComponentType.Feature, commandName, Command::class))
+    val combined = propertyHash(commandName.hashCode(), commandName.length)
 
     return ValidationRule { feature ->
         val command = feature.commands[commandName, combined] ?: return@ValidationRule missingError

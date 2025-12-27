@@ -5,13 +5,13 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import xyz.dussim.viessmann.feature.api.validation.combineToLong
+import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 @Suppress("NOTHING_TO_INLINE")
 abstract class EfficientStringKeyMap<T> : Map<String, T> {
     abstract operator fun get(
         key: String,
-        combined: Long,
+        precomputedHash: Long,
     ): T?
 
     final override fun containsKey(key: String): Boolean = keys.contains(key)
@@ -74,7 +74,7 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
 
                 override fun get(
                     key: String,
-                    combined: Long,
+                    precomputedHash: Long,
                 ): Nothing? = null
 
                 override fun equals(other: Any?): Boolean = other === this
@@ -163,7 +163,7 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
 
         private val hash1 = key1.hashCode()
         private val length1 = key1.length
-        private val combined = combineToLong(hash1, length1)
+        private val combined = propertyHash(hash1, length1)
 
         override val size: Int = 1
         override val keys: Set<String> = setOf(key1)
@@ -176,12 +176,12 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 },
             )
 
-        override fun get(key: String): T? = getImpl(key, combineToLong(key.hashCode(), key.length))
+        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
 
         override fun get(
             key: String,
-            combined: Long,
-        ): T? = getImpl(key, combined)
+            precomputedHash: Long,
+        ): T? = getImpl(key, precomputedHash)
 
         override fun isEmpty(): Boolean = false
 
@@ -227,8 +227,8 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
             result
         }
 
-        private val combined1 = combineToLong(key1.hashCode(), key1.length)
-        private val combined2 = combineToLong(key2.hashCode(), key2.length)
+        private val combined1 = propertyHash(key1.hashCode(), key1.length)
+        private val combined2 = propertyHash(key2.hashCode(), key2.length)
 
         override val size: Int = 2
         override val keys: Set<String> = setOf(key1, key2)
@@ -245,16 +245,16 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 },
             )
 
-        override fun get(key: String): T? = getImpl(key, combineToLong(key.hashCode(), key.length))
+        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
 
         override fun get(
             key: String,
-            combined: Long,
-        ): T? = getImpl(key, combined)
+            precomputedHash: Long,
+        ): T? = getImpl(key, precomputedHash)
 
         override fun isEmpty(): Boolean = false
 
-        private fun getImpl(
+        private inline fun getImpl(
             key: String,
             combined: Long,
         ): T? =
@@ -303,9 +303,9 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
             result
         }
 
-        private val combined1 = combineToLong(key1.hashCode(), key1.length)
-        private val combined2 = combineToLong(key2.hashCode(), key2.length)
-        private val combined3 = combineToLong(key3.hashCode(), key3.length)
+        private val combined1 = propertyHash(key1.hashCode(), key1.length)
+        private val combined2 = propertyHash(key2.hashCode(), key2.length)
+        private val combined3 = propertyHash(key3.hashCode(), key3.length)
 
         override val size: Int = 3
         override val keys: Set<String> = setOf(key1, key2, key3)
@@ -326,16 +326,16 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 },
             )
 
-        override fun get(key: String): T? = getImpl(key, combineToLong(key.hashCode(), key.length))
+        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
 
         override fun get(
             key: String,
-            combined: Long,
-        ): T? = getImpl(key, combined)
+            precomputedHash: Long,
+        ): T? = getImpl(key, precomputedHash)
 
         override fun isEmpty(): Boolean = false
 
-        private fun getImpl(
+        private inline fun getImpl(
             key: String,
             combined: Long,
         ): T? =
@@ -394,10 +394,10 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
             result
         }
 
-        private val combined1 = combineToLong(key1.hashCode(), key1.length)
-        private val combined2 = combineToLong(key2.hashCode(), key2.length)
-        private val combined3 = combineToLong(key3.hashCode(), key3.length)
-        private val combined4 = combineToLong(key4.hashCode(), key4.length)
+        private val combined1 = propertyHash(key1.hashCode(), key1.length)
+        private val combined2 = propertyHash(key2.hashCode(), key2.length)
+        private val combined3 = propertyHash(key3.hashCode(), key3.length)
+        private val combined4 = propertyHash(key4.hashCode(), key4.length)
 
         override val size: Int = 4
         override val keys: Set<String> = setOf(key1, key2, key3, key4)
@@ -422,16 +422,16 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
                 },
             )
 
-        override fun get(key: String): T? = getImpl(key, combineToLong(key.hashCode(), key.length))
+        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
 
         override fun get(
             key: String,
-            combined: Long,
-        ): T? = getImpl(key, combined)
+            precomputedHash: Long,
+        ): T? = getImpl(key, precomputedHash)
 
         override fun isEmpty(): Boolean = false
 
-        private fun getImpl(
+        private inline fun getImpl(
             key: String,
             combined: Long,
         ): T? =
@@ -474,7 +474,7 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
         private val hashCode by lazy { map.hashCode() }
 
         private val keyArray = map.keys.sortedBy { it.length }.toTypedArray()
-        private val combinedArray = keyArray.map { combineToLong(it.hashCode(), it.length) }.toLongArray()
+        private val combinedArray = keyArray.map { propertyHash(it.hashCode(), it.length) }.toLongArray()
         private val valuesArray = keyArray.map { map[it] }.toTypedArray<Any?>()
         private val jumpTable =
             IntArray(keyArray.maxOf { it.length } + 1) {
@@ -504,12 +504,12 @@ abstract class EfficientStringKeyMap<T> : Map<String, T> {
             }
         }
 
-        override fun get(key: String): T? = getImpl(key, combineToLong(key.hashCode(), key.length))
+        override fun get(key: String): T? = getImpl(key, propertyHash(key.hashCode(), key.length))
 
         override fun get(
             key: String,
-            combined: Long,
-        ): T? = getImpl(key, combined)
+            precomputedHash: Long,
+        ): T? = getImpl(key, precomputedHash)
 
         override fun isEmpty() = false
 
