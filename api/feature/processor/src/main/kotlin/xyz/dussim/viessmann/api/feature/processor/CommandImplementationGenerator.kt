@@ -33,6 +33,9 @@ private val CONSTRAINTS_VALIDATION_FUNCTIONS =
         typeNameOf<ScheduleConstraints>() to MemberName(VALIDATION_PACKAGE, "scheduleConstraintsRule"),
     )
 
+/**
+ * Generates constructor for command implementation.
+ */
 context(context: CommandSymbolContext)
 fun constructor() =
     FunSpec
@@ -43,6 +46,9 @@ fun constructor() =
                 .build(),
         ).build()
 
+/**
+ * Generates command property that overrides the base command.
+ */
 context(context: CommandSymbolContext)
 fun constructorProperty() =
     PropertySpec
@@ -51,6 +57,10 @@ fun constructorProperty() =
         .initializer(COMMAND)
         .build()
 
+/**
+ * Generates init block that extracts and validates command constraints.
+ * Throws CommandValidationException if constraints are invalid.
+ */
 context(context: CommandSymbolContext)
 fun initBlock() =
     CodeBlock
@@ -70,6 +80,9 @@ fun initBlock() =
         ).endControlFlow()
         .build()
 
+/**
+ * Generates function to validate command from feature context.
+ */
 context(context: CommandSymbolContext)
 fun validateFromFeatureContextFunction() =
     FunSpec
@@ -93,21 +106,27 @@ fun validateFromFeatureContextFunction() =
                 ),
         ).build()
 
+/**
+ * Generates companion object with validation rules for command constraints.
+ */
 context(context: CommandSymbolContext)
 fun companionObject(): TypeSpec {
+    val commandValidationRuleType =
+        ValidationRule::class
+            .asClassName()
+            .parameterizedBy(
+                typeNameOf<Command>(),
+                typeNameOf<ValidationError>(),
+            )
+
     val properties =
         context
             .constraintsProperties
             .map {
                 PropertySpec
                     .builder(
-                        "${it.name}ConstraintRule",
-                        ValidationRule::class
-                            .asClassName()
-                            .parameterizedBy(
-                                typeNameOf<Command>(),
-                                typeNameOf<ValidationError>(),
-                            ),
+                        generateConstraintRuleName(it.name),
+                        commandValidationRuleType,
                     ).addModifiers(KModifier.PRIVATE)
                     .initializer(CodeBlock.of("%M(%S)", CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type), it.name))
                     .build()
@@ -115,12 +134,7 @@ fun companionObject(): TypeSpec {
                 PropertySpec
                     .builder(
                         "numberOfParametersRule",
-                        ValidationRule::class
-                            .asClassName()
-                            .parameterizedBy(
-                                typeNameOf<Command>(),
-                                typeNameOf<ValidationError>(),
-                            ),
+                        commandValidationRuleType,
                     ).addModifiers(KModifier.PRIVATE)
                     .initializer(CodeBlock.of("%M(%L, commandName)", NUMBER_OF_PARAMETERS_RULE, context.constraintsProperties.size))
                     .build(),
@@ -189,11 +203,18 @@ fun companionObject(): TypeSpec {
         .build()
 }
 
+/**
+ * Generates complete command implementation class.
+ * Creates an internal class that implements the command interface with validation.
+ *
+ * @param context The command context with all necessary information
+ * @return TypeSpec for the command implementation class
+ */
 fun generateCommandImplementation(context: CommandSymbolContext) =
     context(context) {
         TypeSpec
             .classBuilder(context.implName)
-            .addAnnotation(PublishedApi::class)
+            .addAnnotation(publishedApiAnnotation)
             .addModifiers(KModifier.INTERNAL)
             .addSuperinterface(context.superInterface)
             .primaryConstructor(constructor())
