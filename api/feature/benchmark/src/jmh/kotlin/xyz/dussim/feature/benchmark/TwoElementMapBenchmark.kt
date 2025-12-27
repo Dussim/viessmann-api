@@ -38,7 +38,7 @@ open class TwoElementMapBenchmark {
                 "key2" to "value2",
             )
         standardMap = data
-        efficientMap = EfficientStringKeyMap.createFrom(data)
+        efficientMap = EfficientStringKeyMap(data)
     }
 
     @Benchmark

@@ -46,9 +46,9 @@ data class DeviceFeature(
     override val apiVersion: Int,
     override val timestamp: Instant,
     override val uri: String,
-    @Serializable(with = EfficientStringKeyMap.PropertiesSerializer::class)
+    @Serializable(with = PropertiesSerializer::class)
     override val properties: EfficientStringKeyMap<Property>,
-    @Serializable(with = EfficientStringKeyMap.CommandsSerializer::class)
+    @Serializable(with = CommandsSerializer::class)
     override val commands: EfficientStringKeyMap<Command>,
     override val isActive: Boolean?,
 ) : Feature.Device
@@ -63,9 +63,9 @@ data class GatewayFeature(
     override val apiVersion: Int,
     override val timestamp: Instant,
     override val uri: String,
-    @Serializable(with = EfficientStringKeyMap.PropertiesSerializer::class)
+    @Serializable(with = PropertiesSerializer::class)
     override val properties: EfficientStringKeyMap<Property>,
-    @Serializable(with = EfficientStringKeyMap.CommandsSerializer::class)
+    @Serializable(with = CommandsSerializer::class)
     override val commands: EfficientStringKeyMap<Command>,
     override val deviceId: String?,
     override val isActive: Boolean?,
@@ -81,9 +81,9 @@ data class GeofencingFeature(
     override val apiVersion: Int,
     override val timestamp: Instant,
     override val uri: String,
-    @Serializable(with = EfficientStringKeyMap.PropertiesSerializer::class)
+    @Serializable(with = PropertiesSerializer::class)
     override val properties: EfficientStringKeyMap<Property>,
-    @Serializable(with = EfficientStringKeyMap.CommandsSerializer::class)
+    @Serializable(with = CommandsSerializer::class)
     override val commands: EfficientStringKeyMap<Command>,
     override val deviceId: String?,
     override val gatewayId: String?,
