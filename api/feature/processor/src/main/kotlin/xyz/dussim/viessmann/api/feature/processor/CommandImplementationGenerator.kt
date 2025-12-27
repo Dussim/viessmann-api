@@ -199,7 +199,10 @@ fun generateCommandImplementation(context: CommandSymbolContext) =
             .primaryConstructor(constructor())
             .addProperty(constructorProperty())
             .addProperties(context.allPropertiesImpl)
-            .addInitializerBlock(initBlock())
-            .addType(companionObject())
+            .apply {
+                if (context.constraintsProperties.isNotEmpty()) {
+                    addInitializerBlock(initBlock())
+                }
+            }.addType(companionObject())
             .build()
     }
