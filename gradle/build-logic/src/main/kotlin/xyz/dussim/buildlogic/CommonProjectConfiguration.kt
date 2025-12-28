@@ -57,7 +57,7 @@ fun Project.configureDetekt() {
 
 fun Project.configureGroupAndVersion() {
     group = "xyz.dussim"
-    version = "0.0.2"
+    version = "0.0.3"
 }
 
 fun Project.configurePublishing() {

@@ -11,15 +11,10 @@ object FeatureMerger {
     fun mergeAll(features: List<DeviceFeature>): List<DeviceFeature> =
         features
             .groupBy { feature ->
-                collapseFeatureName(feature.feature)
+                feature.wildcardFeature
             }.map { (collapsedName, featuresToMerge) ->
                 mergeFeatures(featuresToMerge).copy(feature = collapsedName)
             }
-
-    private fun collapseFeatureName(name: String): String =
-        name.split('.').joinToString(".") { segment ->
-            if (segment.isNotEmpty() && segment.all { it.isDigit() }) "{}" else segment
-        }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun mergeFeatures(features: List<DeviceFeature>): DeviceFeature {
@@ -45,8 +40,8 @@ object FeatureMerger {
         }
 
         return first.copy(
-            properties = EfficientStringKeyMap.createFrom(allProperties),
-            commands = EfficientStringKeyMap.createFrom(allCommands),
+            properties = EfficientStringKeyMap(allProperties),
+            commands = EfficientStringKeyMap(allCommands),
         )
     }
 }
