@@ -1,7 +1,5 @@
 package xyz.dussim.viessmann.api.feature.processor
 
-import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FileSpec
@@ -23,7 +21,6 @@ import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.FeatureMatcher
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
-import xyz.dussim.viessmann.feature.api.UnsafeFactoryCreationMethod
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
@@ -90,20 +87,18 @@ fun initBlock(): CodeBlock {
 context(context: SymbolContext)
 private fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
     val (name, type, _, isListProperty, isEnumProperty) = property
-
+    val combined = combineToLong(name.hashCode(), name.length)
     when {
         isEnumProperty -> {
-            add("$name = %T(%S)\n", type, name)
+            add("$name = %T(properties[%S, %L]!!.value as %T)\n", type, name, combined, property.underlyingType)
         }
 
         isListProperty -> {
-            val combined = combineToLong(name.hashCode(), name.length)
-            add("$name = delegate.properties[%1S, %2L]!!.value as? %3T ?: %3T.EMPTY\n", name, combined, type)
+            add("$name = properties[%1S, %2L]!!.value as? %3T ?: %3T.EMPTY\n", name, combined, type)
         }
 
         else -> {
-            val combined = combineToLong(name.hashCode(), name.length)
-            add("$name = delegate.properties[%S, %L]?.value as %T\n", name, combined, type)
+            add("$name = properties[%S, %L]!!.value as %T\n", name, combined, type)
         }
     }
 }
@@ -526,12 +521,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
                 .addAnnotation(publishedApiAnnotation)
                 .primaryConstructor(constructor)
                 .addSuperinterface(context.symbol.toClassName())
-                .addAnnotation(
-                    AnnotationSpec
-                        .builder(ClassName("kotlin", "OptIn"))
-                        .addMember("markerClass = [%T::class]", UnsafeFactoryCreationMethod::class.asClassName())
-                        .build(),
-                ).addTypes(
+                .addTypes(
                     context
                         .nestedCommands
                         .map(::generateCommandImplementation),
