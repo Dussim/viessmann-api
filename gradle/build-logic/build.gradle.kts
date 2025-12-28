@@ -23,8 +23,8 @@ dependencies {
 
     implementation(libs.kotlinpoet.ksp)
 
-    implementation("xyz.dussim:dto:0.0.2")
-    implementation("xyz.dussim:annotations:0.0.2")
+    implementation("xyz.dussim:dto:0.0.3")
+    implementation("xyz.dussim:annotations:0.0.3")
 }
 
 gradlePlugin {
