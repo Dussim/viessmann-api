@@ -10,6 +10,7 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -56,6 +57,7 @@ val PROPERTY_VALIDATION_FUNCTIONS =
 private val SUPERINTERFACE_PROPERTIES =
     mapOf(
         "feature" to typeNameOf<String>(),
+        "wildcardFeature" to typeNameOf<String>(),
         //
         "isEnabled" to typeNameOf<Boolean>(),
         "isReady" to typeNameOf<Boolean>(),
@@ -115,13 +117,21 @@ interface ConvertibleToPropertySpec {
 }
 
 /**
+ * Marker interface for types that can be converted to KotlinPoet ParameterSpec.
+ */
+interface ConvertibleToParameterSpec {
+    fun asParameterSpec(): ParameterSpec
+}
+
+/**
  * Represents a property inherited from the superinterface (e.g., Feature.Device).
  * These properties are delegated to the underlying feature instance.
  */
 data class SuperInterfaceProperty(
     val name: String,
     val type: TypeName,
-) : ConvertibleToPropertySpec {
+) : ConvertibleToPropertySpec,
+    ConvertibleToParameterSpec {
     companion object {
         fun from(entry: Map.Entry<String, TypeName>) =
             SuperInterfaceProperty(
@@ -134,7 +144,13 @@ data class SuperInterfaceProperty(
         PropertySpec
             .builder(name, type)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("$DELEGATE.$name")
+            .initializer(name)
+            .build()
+
+    override fun asParameterSpec() =
+        ParameterSpec
+            .builder(name, type)
+            .defaultValue("$DELEGATE.$name")
             .build()
 }
 
@@ -259,6 +275,8 @@ data class SymbolContext(
     val featurePropertiesImpl by lazy { featureProperties.map { it.asPropertySpec() } }
     val parameterPropertiesImpl by lazy { parameterProperties.map { it.asPropertySpec() } }
     val commandPropertiesImpl by lazy { commandProperties.map { it.asPropertySpec() } }
+
+    val featureParametersImpl by lazy { featureProperties.map { it.asParameterSpec() } }
 
     val allPropertiesImpl by lazy { featurePropertiesImpl + parameterPropertiesImpl + commandPropertiesImpl }
 

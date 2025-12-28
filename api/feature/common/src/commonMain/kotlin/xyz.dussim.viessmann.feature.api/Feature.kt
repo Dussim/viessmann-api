@@ -21,6 +21,8 @@ sealed interface Feature {
     val gatewayId: String?
     val isActive: Boolean?
 
+    val wildcardFeature: String get() = feature.toWildcardFeature()
+
     interface Device : Feature {
         override val deviceId: String
         override val gatewayId: String
@@ -39,6 +41,7 @@ sealed interface Feature {
 @JvmRecord
 data class DeviceFeature(
     override val feature: String,
+    override val wildcardFeature: String = feature.toWildcardFeature(),
     override val deviceId: String,
     override val gatewayId: String,
     override val isEnabled: Boolean,
@@ -57,6 +60,7 @@ data class DeviceFeature(
 @JvmRecord
 data class GatewayFeature(
     override val feature: String,
+    override val wildcardFeature: String = feature.toWildcardFeature(),
     override val gatewayId: String,
     override val isEnabled: Boolean,
     override val isReady: Boolean,
@@ -75,6 +79,7 @@ data class GatewayFeature(
 @JvmRecord
 data class GeofencingFeature(
     override val feature: String,
+    override val wildcardFeature: String = feature.toWildcardFeature(),
     override val isActive: Boolean,
     override val isEnabled: Boolean,
     override val isReady: Boolean,
@@ -88,3 +93,8 @@ data class GeofencingFeature(
     override val deviceId: String?,
     override val gatewayId: String?,
 ) : Feature.Geofencing
+
+private fun String.toWildcardFeature(): String =
+    split(".").joinToString(".") { segment ->
+        if (segment.isNotEmpty() && segment.all { it.isDigit() }) "{}" else segment
+    }

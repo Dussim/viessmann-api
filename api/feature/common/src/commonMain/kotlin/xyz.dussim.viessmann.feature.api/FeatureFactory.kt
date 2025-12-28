@@ -63,7 +63,15 @@ fun interface FeatureMatcher {
             override fun matches(feature: Feature): Boolean = feature.feature == name
         }
 
+        private class ByWildcardNameImpl(
+            private val name: String,
+        ) : FeatureMatcher {
+            override fun matches(feature: Feature): Boolean = feature.wildcardFeature == name
+        }
+
         fun byName(name: String): FeatureMatcher = ByNameImpl(name)
+
+        fun byWildcardName(name: String): FeatureMatcher = ByWildcardNameImpl(name)
 
         fun byValidation(rule: ValidationRule<Feature, *>): FeatureMatcher = ByValidationImpl(rule)
 
@@ -81,6 +89,7 @@ infix fun FeatureMatcher.andThen(other: FeatureMatcher): FeatureMatcher = Featur
 @JvmRecord
 data class FeatureMatchers(
     val byName: FeatureMatcher,
+    val byWildcardName: FeatureMatcher,
     val byValidation: FeatureMatcher,
 )
 

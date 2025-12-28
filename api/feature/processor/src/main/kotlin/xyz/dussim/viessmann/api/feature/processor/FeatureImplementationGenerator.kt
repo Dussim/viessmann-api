@@ -55,7 +55,8 @@ fun constructor() =
             ParameterSpec
                 .builder(DELEGATE, context.baseFeature.delegate)
                 .build(),
-        ).build()
+        ).addParameters(context.featureParametersImpl)
+        .build()
 
 /**
  * Generates initialization block that validates and assigns properties and commands.
@@ -257,6 +258,7 @@ fun internalMatchersProperty(): PropertySpec {
                 .add("%T(\n", FEATURE_MATCHERS_CLASS)
                 .indent()
                 .add("byName = %M(%S.replace(\"{}\", index.toString())),\n", featureMatcherMemberByName, context.featureName)
+                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
                 .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
                 .unindent()
                 .add(")")
@@ -269,6 +271,7 @@ fun internalMatchersProperty(): PropertySpec {
                 .add("%T(\n", FEATURE_MATCHERS_CLASS)
                 .indent()
                 .add("byName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
+                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
                 .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
                 .unindent()
                 .add(")")
@@ -519,7 +522,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
         val classImpl =
             TypeSpec
                 .classBuilder(context.implName)
-                .addModifiers(KModifier.INTERNAL)
+                .addModifiers(KModifier.INTERNAL, KModifier.DATA)
                 .addAnnotation(publishedApiAnnotation)
                 .primaryConstructor(constructor)
                 .addSuperinterface(context.symbol.toClassName())
@@ -533,12 +536,55 @@ fun generateFeatureImplementation(context: SymbolContext) =
                         .nestedCommands
                         .map(::generateCommandImplementation),
                 ).addType(companionObject())
-                .addProperties(properties)
+                .addProperty(
+                    PropertySpec
+                        .builder("delegate", context.baseFeature.delegate)
+                        .addModifiers(KModifier.PRIVATE)
+                        .initializer("delegate")
+                        .build(),
+                ).addProperties(properties)
                 .apply {
                     if (initBlock.isNotEmpty()) {
                         addInitializerBlock(initBlock)
                     }
-                }.build()
+                }.addFunction(
+                    FunSpec
+                        .builder("equals")
+                        .addModifiers(KModifier.OVERRIDE)
+                        .addParameter("other", Any::class.asClassName().copy(nullable = true))
+                        .returns(Boolean::class)
+                        .addStatement("if (other === this) return true")
+                        .addStatement("if (other == null) return false")
+                        .addStatement("if (other is %T) return delegate == other.delegate", context.implName)
+                        .addStatement("if (other is %T) return delegate == other", context.baseFeature.delegate)
+                        .beginControlFlow("if (other is %T)", typeNameOf<Feature>())
+                        .addStatement(
+                            """
+                            if (feature != other.feature) return false
+                            if (wildcardFeature != other.wildcardFeature) return false
+                            if (isEnabled != other.isEnabled) return false
+                            if (isReady != other.isReady) return false
+                            if (apiVersion != other.apiVersion) return false
+                            if (timestamp != other.timestamp) return false
+                            if (uri != other.uri) return false
+                            if (properties != other.properties) return false
+                            if (commands != other.commands) return false
+                            if (deviceId != other.deviceId) return false
+                            if (gatewayId != other.gatewayId) return false
+                            if (isActive != other.isActive) return false
+                            return true
+                            """.trimIndent(),
+                        ).endControlFlow()
+                        .addStatement("return false")
+                        .build(),
+                ).addFunction(
+                    FunSpec
+                        .builder("hashCode")
+                        .addModifiers(KModifier.OVERRIDE)
+                        .returns(Int::class)
+                        .addStatement("return delegate.hashCode()")
+                        .build(),
+                ).build()
 
         FileSpec
             .builder(context.implName)
