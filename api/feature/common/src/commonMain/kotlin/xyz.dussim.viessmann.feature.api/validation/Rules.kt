@@ -105,30 +105,29 @@ internal inline fun <reified T : Constraints<*>> typedCommandRule(
     }
 }
 
-inline fun stringPropertyRule(propertyName: String) = typedPropertyRule<StringValue>(propertyName, stringValueClassIndex)
+fun stringPropertyRule(propertyName: String) = typedPropertyRule<StringValue>(propertyName, stringValueClassIndex)
 
-inline fun booleanPropertyRule(propertyName: String) = typedPropertyRule<BooleanValue>(propertyName, booleanValueClassIndex)
+fun booleanPropertyRule(propertyName: String) = typedPropertyRule<BooleanValue>(propertyName, booleanValueClassIndex)
 
-inline fun doublePropertyRule(propertyName: String) = typedPropertyRule<DoubleValue>(propertyName, doubleValueClassIndex)
+fun doublePropertyRule(propertyName: String) = typedPropertyRule<DoubleValue>(propertyName, doubleValueClassIndex)
 
-inline fun listDoublePropertyRule(propertyName: String) = typedListPropertyRule<ListDoubleValue>(propertyName, listDoubleValueClassIndex)
+fun listDoublePropertyRule(propertyName: String) = typedListPropertyRule<ListDoubleValue>(propertyName, listDoubleValueClassIndex)
 
-inline fun listStringPropertyRule(propertyName: String) = typedListPropertyRule<ListStringValue>(propertyName, listStringValueClassIndex)
+fun listStringPropertyRule(propertyName: String) = typedListPropertyRule<ListStringValue>(propertyName, listStringValueClassIndex)
 
-inline fun listDeviceErrorPropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceErrorValue>(propertyName, listDeviceErrorValueClassIndex)
+fun listDeviceErrorPropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceErrorValue>(propertyName, listDeviceErrorValueClassIndex)
 
-inline fun listZigbeeDeviceStatusPropertyRule(propertyName: String) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName, listZigbeeDeviceStatusValueClassIndex)
+fun listZigbeeDeviceStatusPropertyRule(propertyName: String) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName, listZigbeeDeviceStatusValueClassIndex)
 
-inline fun listRoomActorPropertyRule(propertyName: String) = typedListPropertyRule<ListRoomActorValue>(propertyName, listRoomActorValueClassIndex)
+fun listRoomActorPropertyRule(propertyName: String) = typedListPropertyRule<ListRoomActorValue>(propertyName, listRoomActorValueClassIndex)
 
-inline fun listDevicePropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceValue>(propertyName, listDeviceValueClassIndex)
+fun listDevicePropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceValue>(propertyName, listDeviceValueClassIndex)
 
-inline fun objectOtherRoomConfigurationPropertyRule(propertyName: String) =
-    typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName, objectOtherRoomConfigurationValueClassIndex)
+fun objectOtherRoomConfigurationPropertyRule(propertyName: String) = typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName, objectOtherRoomConfigurationValueClassIndex)
 
-inline fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName, scheduleValueClassIndex)
+fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName, scheduleValueClassIndex)
 
-inline fun numberOfParametersRule(
+fun numberOfParametersRule(
     expected: Int,
     name: String,
 ): ValidationRule<Command, ValidationError> {
@@ -144,18 +143,17 @@ inline fun numberOfParametersRule(
     }
 }
 
-inline fun stringConstraintsRule(parameterName: String) = typedCommandRule<StringConstraints>(parameterName, stringConstraintsClassIndex)
+fun stringConstraintsRule(parameterName: String) = typedCommandRule<StringConstraints>(parameterName, stringConstraintsClassIndex)
 
-inline fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstraints>(parameterName, numberConstraintsClassIndex)
+fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstraints>(parameterName, numberConstraintsClassIndex)
 
-inline fun booleanConstraintsRule(parameterName: String) = typedCommandRule<BooleanConstraints>(parameterName, booleanConstraintsClassIndex)
+fun booleanConstraintsRule(parameterName: String) = typedCommandRule<BooleanConstraints>(parameterName, booleanConstraintsClassIndex)
 
-inline fun unknownConstraintsRule(parameterName: String) = typedCommandRule<UnknownConstraints>(parameterName, unknownConstraintsClassIndex)
+fun unknownConstraintsRule(parameterName: String) = typedCommandRule<UnknownConstraints>(parameterName, unknownConstraintsClassIndex)
 
-inline fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> =
-    typedCommandRule<ScheduleConstraints>(parameterName, scheduleConstraintsClassIndex)
+fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> = typedCommandRule<ScheduleConstraints>(parameterName, scheduleConstraintsClassIndex)
 
-inline fun commandRule(
+fun commandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,
 ): ValidationRule<Feature, ValidationError> {
@@ -167,7 +165,7 @@ inline fun commandRule(
     }
 }
 
-inline fun deviceFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
+fun deviceFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
     val gatewayError = Invalid(WrongFeatureImplementation(featureName, featureGatewayClass, featureDeviceClass))
     val geofencingError = Invalid(WrongFeatureImplementation(featureName, featureGeofencingClass, featureDeviceClass))
 
@@ -180,7 +178,7 @@ inline fun deviceFeatureRule(featureName: String): ValidationRule<Feature, Valid
     }
 }
 
-inline fun gatewayFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
+fun gatewayFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
     val deviceError = Invalid(WrongFeatureImplementation(featureName, featureDeviceClass, featureGatewayClass))
     val geofencingError = Invalid(WrongFeatureImplementation(featureName, featureGeofencingClass, featureGatewayClass))
 
@@ -193,7 +191,7 @@ inline fun gatewayFeatureRule(featureName: String): ValidationRule<Feature, Vali
     }
 }
 
-inline fun geofencingFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
+fun geofencingFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
     val deviceError = Invalid(WrongFeatureImplementation(featureName, featureDeviceClass, featureGeofencingClass))
     val gatewayError = Invalid(WrongFeatureImplementation(featureName, featureGatewayClass, featureGeofencingClass))
 
