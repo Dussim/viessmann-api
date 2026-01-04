@@ -239,6 +239,7 @@ fun internalFactoryProperty(): PropertySpec {
 context(context: SymbolContext)
 fun internalMatchersProperty(): PropertySpec {
     val featureMatcherMemberByName = FeatureMatcher.Companion::class.asClassName().member("byName")
+    val featureMatcherMemberByWildcardName = FeatureMatcher.Companion::class.asClassName().member("byWildcardName")
     val featureMatcherMemberByValidation = FeatureMatcher.Companion::class.asClassName().member("byValidation")
 
     val matchersName = generateMatchersName(context.implName)
@@ -253,7 +254,7 @@ fun internalMatchersProperty(): PropertySpec {
                 .add("%T(\n", FEATURE_MATCHERS_CLASS)
                 .indent()
                 .add("byName = %M(%S.replace(\"{}\", index.toString())),\n", featureMatcherMemberByName, context.featureName)
-                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
+                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByWildcardName, context.featureName)
                 .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
                 .unindent()
                 .add(")")
@@ -266,7 +267,7 @@ fun internalMatchersProperty(): PropertySpec {
                 .add("%T(\n", FEATURE_MATCHERS_CLASS)
                 .indent()
                 .add("byName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
-                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
+                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByWildcardName, context.featureName)
                 .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
                 .unindent()
                 .add(")")
