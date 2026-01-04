@@ -228,15 +228,4 @@ open class ValidationBenchmark {
     fun validateIncorrectFeature(blackHole: Blackhole) {
         blackHole.consume(validator(incorrectFeature))
     }
-
-    @Benchmark
-    fun constructIncorrectFeatureThrowingException() =
-        try {
-            factory(incorrectFeature)
-        } catch (e: Exception) {
-            e
-        }
-
-    @Benchmark
-    fun tryConstructIncorrectFeature() = factory.getOrNull(incorrectFeature)
 }
