@@ -150,7 +150,6 @@ data class SuperInterfaceProperty(
     override fun asParameterSpec() =
         ParameterSpec
             .builder(name, type)
-            .defaultValue("$DELEGATE.$name")
             .build()
 }
 
