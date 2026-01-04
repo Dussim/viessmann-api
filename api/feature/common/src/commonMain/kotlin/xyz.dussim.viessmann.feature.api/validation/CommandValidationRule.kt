@@ -5,7 +5,9 @@ import xyz.dussim.viessmann.feature.api.Feature
 interface CommandValidationRule {
     val commandName: String
 
-    fun validateFromFeatureContext(feature: Feature): ValidationResult<ValidationError>
+    val rule: ValidationRule<Feature, ValidationError>
+
+    fun validateFromFeatureContext(feature: Feature): ValidationResult<ValidationError> = rule.validate(feature)
 }
 
 @Suppress("NOTHING_TO_INLINE")

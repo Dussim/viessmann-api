@@ -14,6 +14,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Command
@@ -138,13 +139,6 @@ fun companionObject(): TypeSpec {
             else -> error("Unreachable")
         }
 
-    val commandsValidation =
-        context
-            .nestedCommands
-            .map { context ->
-                CodeBlock.of("%N.validateFromFeatureContext(value),\n", context.implName)
-            }
-
     val featureValidationRuleType =
         ValidationRule::class
             .asClassName()
@@ -162,7 +156,7 @@ fun companionObject(): TypeSpec {
                 ).addModifiers(KModifier.PRIVATE)
                 .initializer("%M(%S)", subTypeValidationMember, context.implName)
                 .build(),
-        ) +
+        ).plus(
             context
                 .parameterProperties
                 .map {
@@ -173,7 +167,20 @@ fun companionObject(): TypeSpec {
                         ).addModifiers(KModifier.PRIVATE)
                         .initializer("%M(%S)", it.validationFunction, it.name)
                         .build()
-                }
+                },
+        ).plus(
+            context
+                .nestedCommands
+                .map {
+                    PropertySpec
+                        .builder(
+                            generatePropertyRuleName(it.lowerCaseName),
+                            featureValidationRuleType,
+                        ).addModifiers(KModifier.PRIVATE)
+                        .initializer("${it.implName}.rule")
+                        .build()
+                },
+        )
 
     return TypeSpec
         .companionObjectBuilder()
@@ -201,7 +208,7 @@ fun companionObject(): TypeSpec {
                         .add(
                             varArgFunctionCall(
                                 validationResultOf,
-                                properties.map { CodeBlock.of("${it.name}.validate(value),\n") } + commandsValidation,
+                                properties.map { CodeBlock.of("${it.name}.validate(value),\n") },
                             ),
                         ).build(),
                 ).build(),
@@ -225,11 +232,29 @@ fun internalFactoryProperty(): PropertySpec {
         .addModifiers(KModifier.INTERNAL)
         .addAnnotation(publishedApiAnnotation)
         .initializer(
-            "%T { feature -> feature as? %T ?: %T(feature as %T) }",
-            FeatureFactory::class,
-            context.superInterface,
-            context.implName,
-            context.baseFeature.delegate,
+            buildCodeBlock {
+                add("%T { feature ->\n", FeatureFactory::class)
+                indent()
+                add("feature as? %T ?: %T(\n", context.superInterface, context.implName)
+                indent()
+                add("delegate = feature as %T,\n", context.baseFeature.delegate)
+                add("feature = feature.feature,\n")
+                add("wildcardFeature = feature.wildcardFeature,\n")
+                add("isEnabled = feature.isEnabled,\n")
+                add("isReady = feature.isReady,\n")
+                add("apiVersion = feature.apiVersion,\n")
+                add("timestamp = feature.timestamp,\n")
+                add("uri = feature.uri,\n")
+                add("properties = feature.properties,\n")
+                add("commands = feature.commands,\n")
+                add("deviceId = feature.deviceId,\n")
+                add("gatewayId = feature.gatewayId,\n")
+                add("isActive = feature.isActive,\n")
+                add(")\n")
+                unindent()
+                unindent()
+                add("}")
+            },
         ).build()
 }
 
@@ -518,7 +543,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
         val classImpl =
             TypeSpec
                 .classBuilder(context.implName)
-                .addModifiers(KModifier.INTERNAL, KModifier.DATA)
+                .addModifiers(KModifier.INTERNAL)
                 .addAnnotation(publishedApiAnnotation)
                 .primaryConstructor(constructor)
                 .addSuperinterface(context.symbol.toClassName())

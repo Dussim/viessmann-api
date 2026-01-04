@@ -86,14 +86,11 @@ data class CommandSymbolContext(
     }
 
     val name = command.simpleName.asString()
+    val lowerCaseName = name.replaceFirstChar(Char::lowercaseChar)
     val implName = "${name}Impl"
 
     val superInterface = command.toClassName()
     val implType = parentContext.implName.nestedClass(implName)
-
-    val isParameterLess by lazy {
-        constraintsProperties.isEmpty()
-    }
 
     val constraintsProperties by lazy {
         command

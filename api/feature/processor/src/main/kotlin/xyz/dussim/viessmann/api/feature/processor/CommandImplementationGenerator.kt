@@ -143,15 +143,15 @@ fun companionObject(): TypeSpec {
     val commandRuleProperty =
         PropertySpec
             .builder(
-                "commandRule",
+                "rule",
                 ValidationRule::class
                     .asClassName()
                     .parameterizedBy(
                         typeNameOf<Feature>(),
                         typeNameOf<ValidationError>(),
                     ),
-            ).addModifiers(KModifier.PRIVATE)
-            .initializer(CodeBlock.of("%M(commandName, this)", commandRule))
+            ).addModifiers(KModifier.OVERRIDE)
+            .initializer(CodeBlock.of("%M(%S, this)", commandRule, context.lowerCaseName))
             .build()
 
     val validateFunction =
@@ -190,16 +190,16 @@ fun companionObject(): TypeSpec {
                     typeNameOf<Command>(),
                     typeNameOf<ValidationError>(),
                 ),
-        ).addProperty(
+        ).addProperty(commandRuleProperty)
+        .addProperty(
             PropertySpec
                 .builder("commandName", typeNameOf<String>())
                 .addModifiers(KModifier.OVERRIDE)
-                .initializer(CodeBlock.of("%S", context.name.replaceFirstChar(Char::lowercaseChar)))
+                .initializer(CodeBlock.of("%S", context.lowerCaseName))
                 .build(),
         ).addProperties(properties)
-        .addProperty(commandRuleProperty)
         .addFunction(validateFunction)
-        .addFunction(validateFromFeatureContextFunction())
+//        .addFunction(validateFromFeatureContextFunction())
         .build()
 }
 
