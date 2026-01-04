@@ -7,7 +7,6 @@ import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Constraints
 import xyz.dussim.viessmann.feature.api.DoubleValue
-import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
@@ -18,7 +17,6 @@ import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
-import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.PropertyValue
 import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleValue
@@ -70,25 +68,6 @@ internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
 }
 
 @PublishedApi
-internal inline fun <reified T : PropertyValue<*>> typedPropertyRuleProps(
-    propertyName: String,
-    expectedIndex: Int,
-): ValidationRule<EfficientStringKeyMap<Property>, ValidationError> {
-    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
-    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
-    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
-
-    return ValidationRule { properties ->
-        val property = properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
-        if (property.value is T) {
-            ValidationResult.Valid
-        } else {
-            getMismatchProperties(property.value.propertyValueClassIndex)
-        }
-    }
-}
-
-@PublishedApi
 internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
     propertyName: String,
     expectedIndex: Int,
@@ -99,25 +78,6 @@ internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
 
     return ValidationRule { target ->
         val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
-        if (property.value is ListEmptyValue || property.value is T) {
-            ValidationResult.Valid
-        } else {
-            getMismatchProperties(property.value.propertyValueClassIndex)
-        }
-    }
-}
-
-@PublishedApi
-internal inline fun <reified T : PropertyValue<*>> typedListPropertyRuleProps(
-    propertyName: String,
-    expectedIndex: Int,
-): ValidationRule<EfficientStringKeyMap<Property>, ValidationError> {
-    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
-    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
-    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
-
-    return ValidationRule { properties ->
-        val property = properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
         if (property.value is ListEmptyValue || property.value is T) {
             ValidationResult.Valid
         } else {
@@ -167,30 +127,6 @@ inline fun objectOtherRoomConfigurationPropertyRule(propertyName: String) =
     typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName, objectOtherRoomConfigurationValueClassIndex)
 
 inline fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName, scheduleValueClassIndex)
-
-inline fun stringPropertyRuleProps(propertyName: String) = typedPropertyRuleProps<StringValue>(propertyName, stringValueClassIndex)
-
-inline fun booleanPropertyRuleProps(propertyName: String) = typedPropertyRuleProps<BooleanValue>(propertyName, booleanValueClassIndex)
-
-inline fun doublePropertyRuleProps(propertyName: String) = typedPropertyRuleProps<DoubleValue>(propertyName, doubleValueClassIndex)
-
-inline fun listDoublePropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDoubleValue>(propertyName, listDoubleValueClassIndex)
-
-inline fun listStringPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListStringValue>(propertyName, listStringValueClassIndex)
-
-inline fun listDeviceErrorPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDeviceErrorValue>(propertyName, listDeviceErrorValueClassIndex)
-
-inline fun listZigbeeDeviceStatusPropertyRuleProps(propertyName: String) =
-    typedListPropertyRuleProps<ListZigbeeDeviceStatusValue>(propertyName, listZigbeeDeviceStatusValueClassIndex)
-
-inline fun listRoomActorPropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListRoomActorValue>(propertyName, listRoomActorValueClassIndex)
-
-inline fun listDevicePropertyRuleProps(propertyName: String) = typedListPropertyRuleProps<ListDeviceValue>(propertyName, listDeviceValueClassIndex)
-
-inline fun objectOtherRoomConfigurationPropertyRuleProps(propertyName: String) =
-    typedPropertyRuleProps<ObjectOtherRoomConfigurationValue>(propertyName, objectOtherRoomConfigurationValueClassIndex)
-
-inline fun schedulePropertyRuleProps(propertyName: String) = typedPropertyRuleProps<ScheduleValue>(propertyName, scheduleValueClassIndex)
 
 inline fun numberOfParametersRule(
     expected: Int,
