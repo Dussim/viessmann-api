@@ -74,7 +74,7 @@ fun initBlock() =
                 }
         }.nextControlFlow("catch (_: Exception)")
         .add(
-            "throw %T(%S, invoke(command).map { it.toString() })\n",
+            "throw %T(%S, validate(command).map { it.toString() })\n",
             CommandValidationException::class.asTypeName(),
             context.superInterface,
         ).endControlFlow()
@@ -101,7 +101,7 @@ fun validateFromFeatureContextFunction() =
         ).addCode(
             CodeBlock
                 .of(
-                    "return %M(feature)",
+                    "return %M.validate(feature)",
                     commandRule,
                 ),
         ).build()

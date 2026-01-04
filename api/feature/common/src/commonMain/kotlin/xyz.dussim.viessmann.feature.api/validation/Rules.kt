@@ -227,8 +227,7 @@ inline fun commandRule(
     val combined = propertyHash(commandName.hashCode(), commandName.length)
 
     return ValidationRule { feature ->
-        val command = feature.commands[commandName, combined] ?: return@ValidationRule missingError
-        innerRule(command)
+        innerRule.validate(feature.commands[commandName, combined] ?: return@ValidationRule missingError)
     }
 }
 

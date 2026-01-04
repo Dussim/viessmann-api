@@ -3,6 +3,7 @@ package xyz.dussim.viessmann.api.feature.processor
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
@@ -46,7 +47,14 @@ data class ConstraintProperty(
         PropertySpec
             .builder("constraint${index + 1}", type)
             .addModifiers(KModifier.OVERRIDE)
-            .getter(
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(Deprecated::class)
+                    .addMember("message = \"Use '$name' instead\"")
+                    .addMember("replaceWith = ReplaceWith(\"$name\")")
+                    .addMember("level = DeprecationLevel.WARNING")
+                    .build(),
+            ).getter(
                 FunSpec
                     .getterBuilder()
                     .addCode("return $name")
@@ -65,6 +73,18 @@ data class CommandSymbolContext(
     val parentContext: SymbolContext,
     val command: KSClassDeclaration,
 ) {
+    companion object {
+        private val DEFAULT_CONSTRAINTS =
+            setOf(
+                "constraint1",
+                "constraint2",
+                "constraint3",
+                "constraint4",
+                "constraint5",
+                "constraint6",
+            )
+    }
+
     val name = command.simpleName.asString()
     val implName = "${name}Impl"
 
@@ -78,6 +98,7 @@ data class CommandSymbolContext(
     val constraintsProperties by lazy {
         command
             .getDeclaredProperties()
+            .filterNot { it.simpleName.asString() in DEFAULT_CONSTRAINTS }
             .map(ConstraintProperty::from)
             .toList()
     }
