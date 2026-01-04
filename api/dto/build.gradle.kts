@@ -30,25 +30,7 @@ generateFeatureInterfaces {
     packageName.set("xyz.dussim.viessmann.api.features")
 
     ignoredFeatures.addAll(
-        "device.etn",
-        "device.messages.errors.raw",
-        "device.serial",
-        "device.timeseries.monitoringIonization",
-        "device.zigbee.active",
         "heating.boiler.pumps.internal",
-        "heating.boiler.pumps.internal.target",
-        "heating.boiler.sensors.temperature.commonSupply",
-        "heating.boiler.serial",
-        "heating.boiler.temperature",
-        "heating.bufferCylinder.sensors.temperature.main",
-        "device.configuration",
-        "device.zigbee.coordinator",
-        "rooms",
-        "rooms.{}",
-        "rooms.others.{}",
-        "device.timezone",
-        "tcu.mode",
-        "heating.circuits.{}.heating.schedule",
     )
 }
 
