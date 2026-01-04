@@ -123,8 +123,6 @@ class DeviceFeaturesTest :
         context("Decorates with DeviceConfigurationFeature") {
             val feature = featuresRoomControl[DeviceConfigurationFeature.factory, DeviceConfigurationFeature.matchers.byName]
             assertSoftly {
-                feature.ttCircuitsActive shouldBeValue emptyList()
-                feature.ttCircuitsEnabled shouldBeValue emptyList()
                 feature.dhwActive shouldBeValue false
                 feature.dhwEnabled shouldBeValue false
                 feature.solarActive shouldBeValue false

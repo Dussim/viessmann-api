@@ -52,7 +52,7 @@ class FeatureInterfaceGenerator(
         feature.properties.entries.sortedBy { it.key }.forEach { (name, property) ->
             val typeName = property.value::class.asClassName()
             if (property.value is ListEmptyValue) {
-                logger.warn("Property ${feature.feature}.$name is empty list, skipping it as unknown what kind of object it holds")
+                logger.warn("Feature property ${feature.feature}::$name is empty list, skipping it as unknown what kind of object it holds")
             } else {
                 typeSpec.addProperty(
                     PropertySpec

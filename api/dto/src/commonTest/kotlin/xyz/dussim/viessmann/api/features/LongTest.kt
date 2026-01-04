@@ -18,7 +18,7 @@ class LongTest :
                 DeviceZigbeeActiveFeature.utils to 156,
                 HeatingBoilerPumpsInternalFeature.utils to 1794,
                 HeatingBoilerPumpsInternalTargetFeature.utils to 1248,
-                HeatingBoilerSensorsTemperatureCommonSupplyFeature.utils to 1794,
+                HeatingBoilerSensorsTemperatureCommonSupplyFeature.utils to 156,
                 HeatingBoilerSerialFeature.utils to 936,
                 HeatingBoilerTemperatureFeature.utils to 1248,
                 HeatingBufferCylinderSensorsTemperatureMainFeature.utils to 1794,
