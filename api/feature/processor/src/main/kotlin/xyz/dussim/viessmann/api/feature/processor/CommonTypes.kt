@@ -5,11 +5,14 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.FeatureMatchers
 import xyz.dussim.viessmann.feature.api.FeatureUtils
 import xyz.dussim.viessmann.feature.api.IndexedFeatureMatchersFactory
 import xyz.dussim.viessmann.feature.api.IndexedFeatureUtilsFactory
+import xyz.dussim.viessmann.feature.api.validation.UnsafeValidationResultOf
+import xyz.dussim.viessmann.feature.api.validation.UnsafeValidationResultUtils
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 
 const val VALIDATION_PACKAGE = "xyz.dussim.viessmann.feature.api.validation"
@@ -34,6 +37,7 @@ val FEATURE_UTILS_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureUtils")
 val validateAll = MemberName(VALIDATION_PACKAGE, "validateAll")
 val commandRule = MemberName(VALIDATION_PACKAGE, "commandRule")
 val validationResultOf = ValidationResult.Companion::class.member("of")
+val unsafeValidationResultOf = UnsafeValidationResultUtils::class.member("of")
 
 /**
  * Creates the PublishedApi annotation spec.
@@ -41,6 +45,12 @@ val validationResultOf = ValidationResult.Companion::class.member("of")
 val publishedApiAnnotation: AnnotationSpec =
     AnnotationSpec
         .builder(PublishedApi::class)
+        .build()
+
+val unsafeValidationResultOfOptInAnnotation =
+    AnnotationSpec
+        .builder(ClassName("kotlin", "OptIn"))
+        .addMember("markerClass = [%T::class]", UnsafeValidationResultOf::class.asClassName())
         .build()
 
 /**

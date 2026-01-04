@@ -12,6 +12,13 @@ value class ValidationResult<out T>
         @PublishedApi
         internal val value: Any?,
     ) {
+        internal inline val isInvalidBit: Int
+            get() =
+                when (value) {
+                    null -> 0
+                    else -> 1
+                }
+
         inline val size: Int
             get() =
                 when (value) {
