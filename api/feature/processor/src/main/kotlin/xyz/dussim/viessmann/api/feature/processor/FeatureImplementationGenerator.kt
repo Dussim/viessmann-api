@@ -544,29 +544,23 @@ fun generateFeatureImplementation(context: SymbolContext) =
                         .addParameter("other", Any::class.asClassName().copy(nullable = true))
                         .returns(Boolean::class)
                         .addStatement("if (other === this) return true")
-                        .addStatement("if (other == null) return false")
-                        .addStatement("if (other is %T) return delegate == other.delegate", context.implName)
-                        .addStatement("if (other is %T) return delegate == other", context.baseFeature.delegate)
-                        .beginControlFlow("if (other is %T)", typeNameOf<Feature>())
+                        .addStatement("if (other !is %T) return false", typeNameOf<Feature>())
                         .addStatement(
                             """
-                            if (feature != other.feature) return false
-                            if (wildcardFeature != other.wildcardFeature) return false
-                            if (isEnabled != other.isEnabled) return false
-                            if (isReady != other.isReady) return false
-                            if (apiVersion != other.apiVersion) return false
-                            if (timestamp != other.timestamp) return false
-                            if (uri != other.uri) return false
-                            if (properties != other.properties) return false
-                            if (commands != other.commands) return false
-                            if (deviceId != other.deviceId) return false
-                            if (gatewayId != other.gatewayId) return false
-                            if (isActive != other.isActive) return false
-                            return true
+                            return feature == other.feature &&
+                                   wildcardFeature == other.wildcardFeature &&
+                                   isEnabled == other.isEnabled &&
+                                   isReady == other.isReady &&
+                                   apiVersion == other.apiVersion &&
+                                   timestamp == other.timestamp &&
+                                   uri == other.uri &&
+                                   properties == other.properties &&
+                                   commands == other.commands &&
+                                   deviceId == other.deviceId &&
+                                   gatewayId == other.gatewayId &&
+                                   isActive == other.isActive
                             """.trimIndent(),
-                        ).endControlFlow()
-                        .addStatement("return false")
-                        .build(),
+                        ).build(),
                 ).addFunction(
                     FunSpec
                         .builder("hashCode")

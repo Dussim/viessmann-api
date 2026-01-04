@@ -1,6 +1,5 @@
 package xyz.dussim.viessmann.feature.api.validation
 
-import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 import kotlin.jvm.JvmInline
 
 @Suppress("FunctionName")
@@ -973,29 +972,8 @@ fun interface ValidationRule<T, E> {
             vararg rules: ValidationRule<T, E>,
         ): ValidationRule<T, E> =
             ValidationRule { value ->
-                rules.fold(rule(value)) { acc, rule ->
-                    val next = rule(value)
-                    when {
-                        acc.isInvalid -> {
-                            when {
-                                next.isInvalid -> {
-                                    var index = 0
-                                    val array = arrayOfNulls<Any>(acc.size + next.size)
-                                    acc.forEach { element -> array[index++] = element }
-                                    next.forEach { element -> array[index++] = element }
-                                    Invalid(values = array as Array<E>)
-                                }
-
-                                else -> {
-                                    acc
-                                }
-                            }
-                        }
-
-                        else -> {
-                            next
-                        }
-                    }
+                rules.fold(rule(value)) { acc, currentRule ->
+                    ValidationResult.of(acc, currentRule(value))
                 }
             }
 
@@ -1005,24 +983,15 @@ fun interface ValidationRule<T, E> {
             vararg rules: ValidationRule<T, E>,
         ): ValidationRule<T, E> =
             ValidationRule { value ->
-                rules.fold(rule(value)) { acc, rule ->
-                    when {
-                        acc.isInvalid -> {
-                            val next = rule(value)
-                            if (!next.isInvalid) {
-                                return@ValidationRule Valid()
-                            }
-                            var index = 0
-                            val array = arrayOfNulls<Any>(acc.size + next.size)
-                            acc.forEach { element -> array[index++] = element }
-                            next.forEach { element -> array[index++] = element }
-                            Invalid(values = array as Array<E>)
-                        }
-
-                        else -> {
-                            return@ValidationRule Valid()
-                        }
+                rules.fold(rule(value)) { acc, currentRule ->
+                    if (!acc.isInvalid) {
+                        return@ValidationRule acc
                     }
+                    val next = currentRule(value)
+                    if (!next.isInvalid) {
+                        return@ValidationRule next
+                    }
+                    ValidationResult.of(acc, next)
                 }
             }
     }
@@ -1033,39 +1002,27 @@ fun interface ValidationRule<T, E> {
 @Suppress("NOTHING_TO_INLINE")
 inline operator fun <T, E> ValidationRule<T, E>.invoke(value: T): ValidationResult<E> = validate(value)
 
-inline fun <T, R, E> ValidationRule<R, E>.transform(crossinline transform: (T) -> R): ValidationRule<T, E> = ValidationRule { value -> this(transform(value)) }
+/**
+ * Transforms a validation rule to work on a different input type by applying a transformation function.
+ */
+inline fun <From, To, E> ValidationRule<To, E>.transform(crossinline transform: (From) -> To): ValidationRule<From, E> = ValidationRule { value -> this(transform(value)) }
 
+/**
+ * Validates all values in the iterable, accumulating all errors into a single result.
+ */
 @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
 inline fun <T, E> ValidationRule<T, E>.validateAll(values: Iterable<T>): ValidationResult<E> =
     values.fold(Valid()) { acc, value ->
-        val next = invoke(value)
-        when {
-            acc.isInvalid -> {
-                when {
-                    next.isInvalid -> {
-                        var index = 0
-                        val array = arrayOfNulls<Any>(acc.size + next.size)
-                        acc.forEach { element -> array[index++] = element }
-                        next.forEach { element -> array[index++] = element }
-                        Invalid(values = array as Array<E>)
-                    }
-
-                    else -> {
-                        acc
-                    }
-                }
-            }
-
-            else -> {
-                next
-            }
-        }
+        ValidationResult.of(acc, invoke(value))
     }
 
+/**
+ * Validates all values in the sequence, accumulating all errors into a single result.
+ */
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T, E> ValidationRule<T, E>.validateAll(values: Sequence<T>): ValidationResult<E> = validateAll(values.asIterable())
 
-inline fun <E> ValidationResult<E>.onError(crossinline effect: (E) -> Unit): ValidationResult<E> =
-    apply {
-        forEach(effect)
-    }
+/**
+ * Executes the given effect for each error in an invalid result, returning the original result.
+ */
+inline fun <E> ValidationResult<E>.onError(crossinline effect: (E) -> Unit): ValidationResult<E> = apply { forEach(effect) }
