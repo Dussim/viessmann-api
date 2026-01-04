@@ -3,6 +3,8 @@ package xyz.dussim.buildlogic
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -119,6 +121,22 @@ class FeatureInterfaceGenerator(
             typeSpec.addSuperinterface(commandClassName.parameterizedBy(typeArguments))
         } else {
             typeSpec.addSuperinterface(commandClassName)
+        }
+
+        params.forEachIndexed { index, (paramName, parameter) ->
+            typeSpec.addProperty(
+                PropertySpec
+                    .builder("constraint${index + 1}", mapParameterToConstraintsTypeName(parameter), KModifier.OVERRIDE)
+                    .getter(FunSpec.getterBuilder().addStatement("return %N", paramName).build())
+                    .addAnnotation(
+                        AnnotationSpec
+                            .builder(Deprecated::class)
+                            .addMember("message = \"Use '$paramName' instead\"")
+                            .addMember("replaceWith = ReplaceWith(\"$paramName\")")
+                            .addMember("level = DeprecationLevel.WARNING")
+                            .build(),
+                    ).build(),
+            )
         }
 
         params.forEach { (paramName, parameter) ->

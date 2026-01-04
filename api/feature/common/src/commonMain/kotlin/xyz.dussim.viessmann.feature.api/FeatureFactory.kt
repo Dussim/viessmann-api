@@ -54,7 +54,7 @@ fun interface FeatureMatcher {
         private class ByValidationImpl(
             private val rule: ValidationRule<Feature, *>,
         ) : FeatureMatcher {
-            override fun matches(feature: Feature): Boolean = !rule(feature).isInvalid
+            override fun matches(feature: Feature): Boolean = !rule.validate(feature).isInvalid
         }
 
         private class ByNameImpl(

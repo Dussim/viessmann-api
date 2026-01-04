@@ -119,7 +119,7 @@ private fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty
 context(context: SymbolContext)
 private fun CodeBlock.Builder.addValidationException() {
     add(
-        "throw %T(%S, invoke($DELEGATE))\n",
+        "throw %T(%S, validate($DELEGATE))\n",
         FeatureValidationException::class.asTypeName(),
         context.name.asString(),
     )
@@ -142,7 +142,7 @@ fun companionObject(): TypeSpec {
         context
             .nestedCommands
             .map { context ->
-                CodeBlock.of("%N(value),\n", context.implName)
+                CodeBlock.of("%N.validateFromFeatureContext(value),\n", context.implName)
             }
 
     val featureValidationRuleType =
@@ -581,7 +581,6 @@ fun generateFeatureImplementation(context: SymbolContext) =
             }.addProperties(internalCommandFactoryProperties())
             .addProperties(commandExtensions())
             .addProperties(featureExtensions())
-            .addImport("xyz.dussim.viessmann.feature.api.validation", "invoke")
             .build()
     }
 
