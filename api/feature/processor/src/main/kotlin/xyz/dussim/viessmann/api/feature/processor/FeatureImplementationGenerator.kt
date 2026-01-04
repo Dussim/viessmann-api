@@ -180,7 +180,6 @@ fun companionObject(): TypeSpec {
         .addSuperinterface(
             featureValidationRuleType,
         ).addProperties(properties)
-        .addAnnotation(unsafeValidationResultOfOptInAnnotation)
         .addFunction(
             FunSpec
                 .builder("validate")
@@ -201,8 +200,8 @@ fun companionObject(): TypeSpec {
                         .add("return ")
                         .add(
                             varArgFunctionCall(
-                                if (commandsValidation.isEmpty()) unsafeValidationResultOf else validationResultOf,
-                                properties.map { CodeBlock.of("${it.name}(value),\n") } + commandsValidation,
+                                validationResultOf,
+                                properties.map { CodeBlock.of("${it.name}.validate(value),\n") } + commandsValidation,
                             ),
                         ).build(),
                 ).build(),

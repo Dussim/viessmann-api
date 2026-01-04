@@ -174,8 +174,8 @@ fun companionObject(): TypeSpec {
                     .add("return ")
                     .add(
                         varArgFunctionCall(
-                            unsafeValidationResultOf,
-                            properties.map { CodeBlock.of("${it.name}(value),\n") },
+                            validationResultOf,
+                            properties.map { CodeBlock.of("${it.name}.validate(value),\n") },
                         ),
                     ).build(),
             ).build()
@@ -190,8 +190,7 @@ fun companionObject(): TypeSpec {
                     typeNameOf<Command>(),
                     typeNameOf<ValidationError>(),
                 ),
-        ).addAnnotation(unsafeValidationResultOfOptInAnnotation)
-        .addProperty(
+        ).addProperty(
             PropertySpec
                 .builder("commandName", typeNameOf<String>())
                 .addModifiers(KModifier.OVERRIDE)
