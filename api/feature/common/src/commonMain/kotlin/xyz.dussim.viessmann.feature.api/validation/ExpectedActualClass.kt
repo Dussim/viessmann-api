@@ -29,77 +29,131 @@ import kotlin.reflect.KClass
 internal const val stringValueClassIndex = 0
 
 @PublishedApi
+internal val stringValueClass = StringValue::class
+
+@PublishedApi
 internal const val booleanValueClassIndex = 1
+
+@PublishedApi
+internal val booleanValueClass = BooleanValue::class
 
 @PublishedApi
 internal const val doubleValueClassIndex = 2
 
 @PublishedApi
+internal val doubleValueClass = DoubleValue::class
+
+@PublishedApi
 internal const val listDoubleValueClassIndex = 3
+
+@PublishedApi
+internal val listDoubleValueClass = ListDoubleValue::class
 
 @PublishedApi
 internal const val listStringValueClassIndex = 4
 
 @PublishedApi
+internal val listStringValueClass = ListStringValue::class
+
+@PublishedApi
 internal const val listDeviceErrorValueClassIndex = 5
+
+@PublishedApi
+internal val listDeviceErrorValueClass = ListDeviceErrorValue::class
 
 @PublishedApi
 internal const val listZigbeeDeviceStatusValueClassIndex = 6
 
 @PublishedApi
+internal val listZigbeeDeviceStatusValueClass = ListZigbeeDeviceStatusValue::class
+
+@PublishedApi
 internal const val listRoomActorValueClassIndex = 7
+
+@PublishedApi
+internal val listRoomActorValueClass = ListRoomActorValue::class
 
 @PublishedApi
 internal const val listDeviceValueClassIndex = 8
 
 @PublishedApi
+internal val listDeviceValueClass = ListDeviceValue::class
+
+@PublishedApi
 internal const val objectOtherRoomConfigurationValueClassIndex = 9
+
+@PublishedApi
+internal val objectOtherRoomConfigurationValueClass = ObjectOtherRoomConfigurationValue::class
 
 @PublishedApi
 internal const val scheduleValueClassIndex = 10
 
 @PublishedApi
+internal val scheduleValueClass = ScheduleValue::class
+
+@PublishedApi
 internal const val listEmptyValueClassIndex = 11
+
+@PublishedApi
+internal val listEmptyValueClass = ListEmptyValue::class
 
 @PublishedApi
 internal const val unknownValueClassIndex = 12
 
 @PublishedApi
+internal val unknownValueClass = UnknownValue::class
+
+@PublishedApi
 internal const val booleanConstraintsClassIndex = 13
+
+@PublishedApi
+internal val booleanConstraintsClass = BooleanConstraints::class
 
 @PublishedApi
 internal const val numberConstraintsClassIndex = 14
 
 @PublishedApi
+internal val numberConstraintsClass = NumberConstraints::class
+
+@PublishedApi
 internal const val stringConstraintsClassIndex = 15
+
+@PublishedApi
+internal val stringConstraintsClass = StringConstraints::class
 
 @PublishedApi
 internal const val scheduleConstraintsClassIndex = 16
 
 @PublishedApi
+internal val scheduleConstraintsClass = ScheduleConstraints::class
+
+@PublishedApi
 internal const val unknownConstraintsClassIndex = 17
+
+@PublishedApi
+internal val unknownConstraintsClass = UnknownConstraints::class
 
 private val EXPECTED_ACTUAL_CLASSES by lazy {
     val all =
         listOf(
-            StringValue::class,
-            BooleanValue::class,
-            DoubleValue::class,
-            ListDoubleValue::class,
-            ListStringValue::class,
-            ListDeviceErrorValue::class,
-            ListZigbeeDeviceStatusValue::class,
-            ListRoomActorValue::class,
-            ListDeviceValue::class,
-            ObjectOtherRoomConfigurationValue::class,
-            ScheduleValue::class,
-            ListEmptyValue::class,
-            UnknownValue::class,
-            BooleanConstraints::class,
-            NumberConstraints::class,
-            StringConstraints::class,
-            ScheduleConstraints::class,
-            UnknownConstraints::class,
+            stringValueClass,
+            booleanValueClass,
+            doubleValueClass,
+            listDoubleValueClass,
+            listStringValueClass,
+            listDeviceErrorValueClass,
+            listZigbeeDeviceStatusValueClass,
+            listRoomActorValueClass,
+            listDeviceValueClass,
+            objectOtherRoomConfigurationValueClass,
+            scheduleValueClass,
+            listEmptyValueClass,
+            unknownValueClass,
+            booleanConstraintsClass,
+            numberConstraintsClass,
+            stringConstraintsClass,
+            scheduleConstraintsClass,
+            unknownConstraintsClass,
         )
 
     buildList(all.size * all.size) {
