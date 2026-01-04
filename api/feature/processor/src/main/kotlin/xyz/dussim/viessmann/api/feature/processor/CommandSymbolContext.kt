@@ -71,6 +71,10 @@ data class CommandSymbolContext(
     val superInterface = command.toClassName()
     val implType = parentContext.implName.nestedClass(implName)
 
+    val isParameterLess by lazy {
+        constraintsProperties.isEmpty()
+    }
+
     val constraintsProperties by lazy {
         command
             .getDeclaredProperties()
