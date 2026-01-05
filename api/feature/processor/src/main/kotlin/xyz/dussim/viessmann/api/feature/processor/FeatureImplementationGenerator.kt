@@ -88,7 +88,7 @@ fun initBlock(): CodeBlock {
 context(context: SymbolContext)
 private fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
     val (name, type, _, isListProperty, isEnumProperty) = property
-    val combined = combineToLong(name.hashCode(), name.length)
+    val combined = propertyHash(name.hashCode(), name.length)
     when {
         isEnumProperty -> {
             add("$name = %T(properties[%S, %L]!!.value as %T)\n", type, name, combined, property.underlyingType)
@@ -109,9 +109,9 @@ private fun CodeBlock.Builder.addPropertyInitialization(property: ParameterPrope
  */
 context(context: SymbolContext)
 private fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty) {
-    val (name, type, _) = property
-    val combined = combineToLong(name.hashCode(), name.length)
-    add("$name = %T.factory(delegate.commands[%S, %L]!!)\n", type, name, combined)
+    val name = property.name
+    val propertyHash = propertyHash(name.hashCode(), name.length)
+    add("$name = %T(delegate.commands[%S, %L]!!)\n", property.implType, name, propertyHash)
 }
 
 /**
@@ -380,53 +380,6 @@ fun internalCommandFactoryProperties(): List<PropertySpec> =
         }
 
 /**
- * Generates extension properties for command companion objects (factory and validationRule).
- */
-context(context: SymbolContext)
-fun commandExtensions(): List<PropertySpec> =
-    context
-        .nestedCommands
-        .map { commandContext ->
-            val commandName = commandContext.implType.simpleName.replaceFirstChar { it.lowercase() }
-            val factoryName = generateCommandFactoryName(context.implName, commandName)
-            val factoryType =
-                LambdaTypeName.get(
-                    parameters = listOf(ParameterSpec.unnamed(typeNameOf<Command>())),
-                    returnType = commandContext.superInterface,
-                )
-
-            listOf(
-                PropertySpec
-                    .builder("factory", factoryType)
-                    .receiver(commandContext.superInterface.nestedClass("Companion"))
-                    .getter(
-                        FunSpec
-                            .getterBuilder()
-                            .addModifiers(KModifier.INLINE)
-                            .addStatement("return %N", factoryName)
-                            .build(),
-                    ).build(),
-                PropertySpec
-                    .builder(
-                        "validationRule",
-                        ValidationRule::class
-                            .asClassName()
-                            .parameterizedBy(
-                                typeNameOf<Command>(),
-                                typeNameOf<ValidationError>(),
-                            ),
-                    ).receiver(commandContext.superInterface.nestedClass("Companion"))
-                    .getter(
-                        FunSpec
-                            .getterBuilder()
-                            .addModifiers(KModifier.INLINE)
-                            .addStatement("return %T ", commandContext.implType)
-                            .build(),
-                    ).build(),
-            )
-        }.flatten()
-
-/**
  * Generates extension properties for feature companion objects.
  * Includes factory, validationRule, featureName, matchers, and utils properties.
  */
@@ -455,26 +408,7 @@ fun featureExtensions(): List<PropertySpec> {
             .getter(funSpec)
             .build()
 
-    val validationRuleProperty =
-        PropertySpec
-            .builder(
-                "validationRule",
-                ValidationRule::class
-                    .asClassName()
-                    .parameterizedBy(
-                        typeNameOf<Feature>(),
-                        typeNameOf<ValidationError>(),
-                    ),
-            ).receiver(context.superInterfaceCompanion)
-            .getter(
-                FunSpec
-                    .getterBuilder()
-                    .addModifiers(KModifier.INLINE)
-                    .addStatement("return %T", context.implCompanion)
-                    .build(),
-            ).build()
-
-    val baseProperties = listOf(factoryProperty, validationRuleProperty)
+    val baseProperties = listOf(factoryProperty)
 
     val matchersName = generateMatchersName(context.implName)
     val matchersType = indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS)
@@ -603,9 +537,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
                 addProperty(internalFactoryProperty())
                 addProperty(internalMatchersProperty())
                 addProperty(internalUtilsProperty())
-            }.addProperties(internalCommandFactoryProperties())
-            .addProperties(commandExtensions())
-            .addProperties(featureExtensions())
+            }.addProperties(featureExtensions())
             .build()
     }
 
@@ -613,7 +545,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
  * Combines two integers into a single long value for efficient map lookups.
  * Used for property/command name hashing.
  */
-internal fun combineToLong(
+internal fun propertyHash(
     high: Int,
     low: Int,
 ): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)

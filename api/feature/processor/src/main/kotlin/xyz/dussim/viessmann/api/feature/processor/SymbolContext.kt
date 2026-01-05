@@ -217,12 +217,21 @@ data class ParameterProperty(
 data class CommandProperty(
     val name: String,
     val type: TypeName,
+    val implType: TypeName,
     val command: KSClassDeclaration,
 ) : ConvertibleToPropertySpec {
     companion object {
+        context(context: SymbolContext)
         fun from(property: KSPropertyDeclaration): CommandProperty {
             val type = property.type.resolve().toTypeName()
-            return CommandProperty(property.simpleName.asString(), type, property.parentDeclaration as KSClassDeclaration)
+            val superType = type.toString().substringAfterLast(".")
+            val implType = context.implName.nestedClass("${superType}Impl")
+            return CommandProperty(
+                name = property.simpleName.asString(),
+                type = type,
+                implType = implType,
+                command = property.parentDeclaration as KSClassDeclaration,
+            )
         }
     }
 
@@ -328,7 +337,7 @@ fun commandProperties(): List<CommandProperty> =
         .symbol
         .getDeclaredProperties()
         .filter { it.type.implementsInterface(OfCommand::class) }
-        .map(CommandProperty::from)
+        .map { CommandProperty.from(it) }
         .toList()
 
 context(context: SymbolContext)
