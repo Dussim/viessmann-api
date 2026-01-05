@@ -2,15 +2,29 @@ package xyz.dussim.viessmann.api.feature.processor
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.MemberName.Companion.member
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
+import xyz.dussim.viessmann.feature.api.Command
+import xyz.dussim.viessmann.feature.api.Feature
+import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.FeatureMatchers
 import xyz.dussim.viessmann.feature.api.FeatureUtils
 import xyz.dussim.viessmann.feature.api.IndexedFeatureMatchersFactory
 import xyz.dussim.viessmann.feature.api.IndexedFeatureUtilsFactory
+import xyz.dussim.viessmann.feature.api.validation.Valid
+import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
+import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 
 const val VALIDATION_PACKAGE = "xyz.dussim.viessmann.feature.api.validation"
 private const val FEATURE_API_PACKAGE = "xyz.dussim.viessmann.feature.api"
@@ -22,7 +36,6 @@ private const val IMPL_SUFFIX = "Impl"
 private const val FACTORY_SUFFIX = "Factory"
 private const val MATCHERS_SUFFIX = "Matchers"
 private const val UTILS_SUFFIX = "Utils"
-private const val RULE_SUFFIX = "Rule"
 private const val PROPERTY_RULE_SUFFIX = "PropertyRule"
 private const val CONSTRAINT_RULE_SUFFIX = "ConstraintRule"
 
@@ -31,17 +44,185 @@ val FEATURE_MATCHERS_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureMatchers")
 val FEATURE_UTILS_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureUtils")
 
 // Common member names
-val validateAll = MemberName(VALIDATION_PACKAGE, "validateAll")
-val commandRule = MemberName(VALIDATION_PACKAGE, "commandRule")
-val validationResultOf = ValidationResult.Companion::class.member("of")
+val COMMAND_RULE = MemberName(VALIDATION_PACKAGE, "commandRule")
+val EQUALS_IMPL = MemberName(FEATURE_API_PACKAGE, "equalsImpl")
+val VALIDATION_RESULT_OF = ValidationResult.Companion::class.member("of")
+
+val DEVICE_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "deviceFeatureRule")
+val GATEWAY_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "gatewayFeatureRule")
+val GEOFENCING_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "geofencingFeatureRule")
+
+val FEATURE_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Feature>())
+val COMMAND_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Command>())
+
+/**
+ * Creates a validation rule type for a given target type.
+ */
+fun validationRuleType(targetType: TypeName): TypeName =
+    ValidationRule::class
+        .asClassName()
+        .parameterizedBy(
+            targetType,
+            typeNameOf<ValidationError>(),
+        )
+
+/**
+ * Creates a feature factory type for a given interface type.
+ */
+fun featureFactoryType(interfaceType: TypeName): TypeName =
+    FeatureFactory::class
+        .asClassName()
+        .parameterizedBy(interfaceType)
 
 /**
  * Creates the PublishedApi annotation spec.
  */
-val publishedApiAnnotation: AnnotationSpec =
+val PUBLISHED_API_ANNOTATION: AnnotationSpec =
     AnnotationSpec
         .builder(PublishedApi::class)
         .build()
+
+/**
+ * Combines two integers into a single long value for efficient map lookups.
+ * Used for property/command name hashing.
+ */
+fun propertyHash(
+    high: Int,
+    low: Int,
+): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)
+
+/**
+ * Creates a validation rule member name.
+ */
+fun validationRule(name: String) = MemberName(VALIDATION_PACKAGE, name)
+
+/**
+ * Creates a validation rule from a predicate.
+ */
+fun <T, E> booleanRule(
+    errorProvider: (T) -> E,
+    predicate: (T) -> Boolean,
+): ValidationRule<T, E> =
+    ValidationRule { value ->
+        if (predicate(value)) Valid() else ValidationResult.of(errorProvider(value))
+    }
+
+/**
+ * Creates a variable-argument function call CodeBlock.
+ * Useful for generating validation result aggregation calls.
+ */
+fun varArgFunctionCall(
+    function: MemberName,
+    args: List<CodeBlock>,
+): CodeBlock =
+    CodeBlock
+        .builder()
+        .add("%M(\n", function)
+        .indent()
+        .apply { args.forEach(::add) }
+        .unindent()
+        .add(")\n")
+        .build()
+
+/**
+ * Creates a private validation rule property.
+ */
+fun ruleProperty(
+    name: String,
+    ruleType: TypeName,
+    initializer: CodeBlock,
+): PropertySpec =
+    PropertySpec
+        .builder(name, ruleType)
+        .addModifiers(KModifier.PRIVATE)
+        .initializer(initializer)
+        .build()
+
+/**
+ * Generates an override validate function that aggregates results from multiple rules.
+ */
+fun generateValidateFunction(
+    targetType: TypeName,
+    ruleProperties: List<PropertySpec>,
+): FunSpec =
+    FunSpec
+        .builder("validate")
+        .addModifiers(KModifier.OVERRIDE)
+        .addParameter(ParameterSpec.builder("value", targetType).build())
+        .returns(
+            ValidationResult::class
+                .asTypeName()
+                .parameterizedBy(typeNameOf<ValidationError>()),
+        ).addCode(
+            CodeBlock
+                .builder()
+                .add("return ")
+                .add(
+                    varArgFunctionCall(
+                        VALIDATION_RESULT_OF,
+                        ruleProperties.map { CodeBlock.of("${it.name}.validate(value),\n") },
+                    ),
+                ).build(),
+        ).build()
+
+/**
+ * Creates a CodeBlock that handles both indexed and non-indexed feature cases.
+ */
+fun indexedOrDirectCodeBlock(
+    isIndexed: Boolean,
+    block: (isIndexed: Boolean) -> CodeBlock,
+): CodeBlock =
+    if (isIndexed) {
+        CodeBlock
+            .builder()
+            .add("{ index ->\n")
+            .indent()
+            .add(block(true))
+            .unindent()
+            .add("\n}")
+            .build()
+    } else {
+        block(false)
+    }
+
+/**
+ * Creates an inline extension property with a getter.
+ */
+fun extensionProperty(
+    name: String,
+    receiver: TypeName,
+    type: TypeName,
+    statement: String,
+    vararg args: Any,
+): PropertySpec =
+    PropertySpec
+        .builder(name, type)
+        .receiver(receiver)
+        .getter(
+            FunSpec
+                .getterBuilder()
+                .addModifiers(KModifier.INLINE)
+                .addStatement(statement, *args)
+                .build(),
+        ).build()
+
+/**
+ * Creates an override property.
+ */
+fun overrideProperty(
+    name: String,
+    type: TypeName,
+    initializer: Any? = null,
+): PropertySpec =
+    PropertySpec
+        .builder(name, type)
+        .addModifiers(KModifier.OVERRIDE)
+        .apply {
+            when (initializer) {
+                is String -> initializer(initializer)
+                is CodeBlock -> initializer(initializer)
+            }
+        }.build()
 
 /**
  * Creates a type that is either a lambda (Int) -> T for indexed features,
@@ -103,18 +284,3 @@ fun generatePropertyRuleName(propertyName: String): String = propertyName + PROP
  * Example: "temperature" -> "temperatureConstraintRule"
  */
 fun generateConstraintRuleName(propertyName: String): String = propertyName + CONSTRAINT_RULE_SUFFIX
-
-/**
- * Generates a command factory name from a feature and command name.
- * Example: ("myFeature", "setTemperature") -> "myFeatureSetTemperatureFactory"
- */
-fun generateCommandFactoryName(
-    featureClassName: ClassName,
-    commandName: String,
-): String {
-    val featurePrefix =
-        featureClassName.simpleName
-            .replaceFirstChar { it.lowercase() }
-            .removeSuffix(IMPL_SUFFIX)
-    return featurePrefix + commandName.replaceFirstChar { it.uppercase() } + FACTORY_SUFFIX
-}

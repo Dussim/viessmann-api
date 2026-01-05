@@ -4,7 +4,6 @@ package xyz.dussim.viessmann.api.feature.processor
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAllSuperTypes
-import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.isAnnotationPresent
@@ -17,7 +16,6 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -55,7 +53,6 @@ import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.UnknownValue
 import xyz.dussim.viessmann.feature.api.validation.Valid
-import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 import xyz.dussim.viessmann.feature.api.validation.onError
@@ -70,88 +67,78 @@ class FeatureImplementationProcessor(
     private val logger: KSPLogger,
 ) : SymbolProcessor {
     companion object {
-        private val annotationName = GenerateFeatureImplementation::class.qualifiedName!!
+        private val ANNOTATION_NAME = GenerateFeatureImplementation::class.qualifiedName!!
 
-        private val propertyToKSClassDeclaration = { property: KSPropertyDeclaration ->
+        private val FEATURE_SUBTYPES =
+            listOf(
+                Feature.Device::class,
+                Feature.Gateway::class,
+                Feature.Geofencing::class,
+            )
+
+        private val PROPERTY_PRIMITIVE_VALUES =
+            listOf(
+                UnknownValue::class,
+                BooleanValue::class,
+                DoubleValue::class,
+                StringValue::class,
+                ListDoubleValue::class,
+                ListStringValue::class,
+                ListDeviceErrorValue::class,
+                ListZigbeeDeviceStatusValue::class,
+                ListRoomActorValue::class,
+                ListDeviceValue::class,
+                ObjectOtherRoomConfigurationValue::class,
+                ScheduleValue::class,
+            )
+
+        private val PROPERTY_COMMAND_TYPES =
+            listOf(
+                Command0::class,
+                Command1::class,
+                Command2::class,
+                Command3::class,
+                Command4::class,
+                Command5::class,
+                Command6::class,
+            )
+
+        private val PROPERTY_TO_KS_CLASS_DECLARATION = { property: KSPropertyDeclaration ->
             property.type.resolve().declaration as KSClassDeclaration
         }
 
-        private val isInterface: SymbolRule =
-            ValidationRule {
-                when (it.classKind == ClassKind.INTERFACE) {
-                    true -> Valid()
-                    false -> ValidationResult.of(NotInterface(it))
-                }
-            }
+        private val IS_INTERFACE_RULE: SymbolRule =
+            booleanRule(NotInterface) { it.classKind == ClassKind.INTERFACE }
 
-        private val hasPublicCompanionObject: SymbolRule =
-            ValidationRule { symbol ->
-                when (symbol.declarations.any { it is KSClassDeclaration && it.isCompanionObject && it.isPublic() }) {
-                    true -> Valid()
-                    false -> ValidationResult.of(MissingPublicCompanionObject(symbol))
-                }
+        private val HAS_PUBLIC_COMPANION_OBJECT_RULE: SymbolRule =
+            booleanRule(MissingPublicCompanionObject) { symbol ->
+                symbol.declarations.any { it is KSClassDeclaration && it.isCompanionObject && it.isPublic() }
             }
 
         private fun isDirectSubtypeOf(declarations: List<KSClassDeclaration>): SymbolRule =
-            ValidationRule {
-                when (it.superTypes.any { type -> type.resolve().declaration in declarations }) {
-                    true -> Valid()
-                    false -> ValidationResult.of(NotImplementingCorrectInterface(it))
-                }
+            booleanRule(NotImplementingCorrectInterface) { symbol ->
+                symbol.superTypes.any { type -> type.resolve().declaration in declarations }
             }
 
         private fun isTypeOf(declarations: List<KSClassDeclaration>): SymbolRule =
-            ValidationRule {
-                when (it in declarations) {
-                    true -> Valid()
-                    false -> ValidationResult.of(IsUnsupportedType(it))
-                }
+            booleanRule(IsUnsupportedType) { symbol ->
+                symbol in declarations
             }
 
         private fun isPropertyTypeOf(declarations: List<KSClassDeclaration>) =
             isTypeOf(declarations)
-                .transform(propertyToKSClassDeclaration)
+                .transform(PROPERTY_TO_KS_CLASS_DECLARATION)
 
         private fun isPropertyDirectSubtypeOf(declarations: List<KSClassDeclaration>) =
             isDirectSubtypeOf(declarations)
-                .transform(propertyToKSClassDeclaration)
+                .transform(PROPERTY_TO_KS_CLASS_DECLARATION)
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> =
         context(resolver, logger) {
-            val featureDeclarations =
-                listOf(
-                    Feature.Device::class.declaration,
-                    Feature.Gateway::class.declaration,
-                    Feature.Geofencing::class.declaration,
-                )
-
-            val propertiesSupportedPrimitiveTypes =
-                listOf(
-                    UnknownValue::class.declaration,
-                    BooleanValue::class.declaration,
-                    DoubleValue::class.declaration,
-                    StringValue::class.declaration,
-                    ListDoubleValue::class.declaration,
-                    ListStringValue::class.declaration,
-                    ListDeviceErrorValue::class.declaration,
-                    ListZigbeeDeviceStatusValue::class.declaration,
-                    ListRoomActorValue::class.declaration,
-                    ListDeviceValue::class.declaration,
-                    ObjectOtherRoomConfigurationValue::class.declaration,
-                    ScheduleValue::class.declaration,
-                )
-
-            val propertiesSupportedSuperTypes =
-                listOf(
-                    Command0::class.declaration,
-                    Command1::class.declaration,
-                    Command2::class.declaration,
-                    Command3::class.declaration,
-                    Command4::class.declaration,
-                    Command5::class.declaration,
-                    Command6::class.declaration,
-                )
+            val featureDeclarations = FEATURE_SUBTYPES.map { it.declaration }
+            val propertiesSupportedPrimitiveTypes = PROPERTY_PRIMITIVE_VALUES.map { it.declaration }
+            val propertiesSupportedSuperTypes = PROPERTY_COMMAND_TYPES.map { it.declaration }
 
             val featureEnumFactory = FeatureEnumFactory::class.declaration
 
@@ -159,47 +146,13 @@ class FeatureImplementationProcessor(
                 ValidationRule.or(
                     isPropertyTypeOf(propertiesSupportedPrimitiveTypes),
                     isPropertyDirectSubtypeOf(propertiesSupportedSuperTypes),
-                    { property ->
-                        val declaration = property.type.resolve().declaration as? KSClassDeclaration ?: return@or Invalid(IsUnsupportedType(property))
-
-                        declaration.isAnnotationPresent(FeatureEnum::class) || return@or Invalid(MissingFeatureEnumAnnotation(property))
-
-                        val companion =
-                            declaration
-                                .declarations
-                                .filterIsInstance<KSClassDeclaration>()
-                                .firstOrNull { it.isCompanionObject } ?: return@or Invalid(MissingCompanionObject(property))
-
-                        companion
-                            .getAnnotationsByType(FeatureEnum.Factory::class)
-                            .toList()
-                            .takeIf { it.isNotEmpty() } ?: return@or Invalid(MissingFeatureEnumFactoryAnnotation(property))
-
-                        val companionImplementsInterface =
-                            companion
-                                .superTypes
-                                .map { it.resolve() }
-                                .firstOrNull { superType -> superType.declaration == featureEnumFactory } ?: return@or Invalid(CompanionNotImplementingFeatureEnumFactory(property))
-
-                        val propertyValueType =
-                            companionImplementsInterface
-                                .arguments
-                                .first()
-                                .type
-                                ?.resolve()
-                                ?.declaration as? KSClassDeclaration ?: return@or Invalid(InvalidFeatureEnumFactoryTypeArgument(property))
-
-                        SymbolContext.ENUM_VALUES_TO_VALIDATION_RULE[declaration.toClassName()] = PROPERTY_VALIDATION_FUNCTIONS.getValue(propertyValueType.toClassName())
-                        SymbolContext.ENUM_VALUES_TO_TYPE[declaration.toClassName()] = propertyValueType.toClassName()
-
-                        Valid()
-                    },
+                    featureEnumValidation(featureEnumFactory),
                 )
 
             val symbolValidationRule: SymbolRule =
                 ValidationRule.and(
-                    isInterface,
-                    hasPublicCompanionObject,
+                    IS_INTERFACE_RULE,
+                    HAS_PUBLIC_COMPANION_OBJECT_RULE,
                     isDirectSubtypeOf(featureDeclarations),
                     { symbol ->
                         propertyValidation.validateAll(symbol.getDeclaredProperties())
@@ -208,7 +161,7 @@ class FeatureImplementationProcessor(
 
             val symbols =
                 resolver
-                    .getSymbolsWithAnnotation(annotationName)
+                    .getSymbolsWithAnnotation(ANNOTATION_NAME)
                     .filterIsInstance<KSClassDeclaration>()
                     .toList()
                     .let { symbols ->
@@ -286,3 +239,45 @@ fun KSTypeReference.implementsInterface(interfaceClass: KClass<*>): Boolean {
             superType.declaration.qualifiedName?.asString() == interfaceQualifiedName
         }
 }
+
+private fun featureEnumValidation(featureEnumFactory: KSClassDeclaration): ValidationRule<KSPropertyDeclaration, SymbolErrorMetadata> =
+    ValidationRule { property ->
+        val declaration =
+            property.type.resolve().declaration as? KSClassDeclaration
+                ?: return@ValidationRule Invalid(IsUnsupportedType(property))
+
+        if (!declaration.isAnnotationPresent(FeatureEnum::class)) {
+            return@ValidationRule Invalid(MissingFeatureEnumAnnotation(property))
+        }
+
+        val companion =
+            declaration.declarations
+                .filterIsInstance<KSClassDeclaration>()
+                .firstOrNull { it.isCompanionObject }
+                ?: return@ValidationRule Invalid(MissingCompanionObject(property))
+
+        if (!companion.isAnnotationPresent(FeatureEnum.Factory::class)) {
+            return@ValidationRule Invalid(MissingFeatureEnumFactoryAnnotation(property))
+        }
+
+        val companionImplementsInterface =
+            companion.superTypes
+                .map { it.resolve() }
+                .firstOrNull { it.declaration == featureEnumFactory }
+                ?: return@ValidationRule Invalid(CompanionNotImplementingFeatureEnumFactory(property))
+
+        val propertyValueType =
+            companionImplementsInterface.arguments
+                .firstOrNull()
+                ?.type
+                ?.resolve()
+                ?.declaration as? KSClassDeclaration
+                ?: return@ValidationRule Invalid(InvalidFeatureEnumFactoryTypeArgument(property))
+
+        SymbolContext.ENUM_VALUES_TO_VALIDATION_RULE[declaration.toClassName()] =
+            PROPERTY_VALIDATION_FUNCTIONS.getValue(propertyValueType.toClassName())
+        SymbolContext.ENUM_VALUES_TO_TYPE[declaration.toClassName()] =
+            propertyValueType.toClassName()
+
+        Valid()
+    }

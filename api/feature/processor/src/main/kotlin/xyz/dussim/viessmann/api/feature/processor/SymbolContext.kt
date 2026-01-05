@@ -8,7 +8,6 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -41,40 +40,30 @@ import kotlin.time.Instant
 
 val PROPERTY_VALIDATION_FUNCTIONS =
     mapOf(
-        typeNameOf<StringValue>() to MemberName(VALIDATION_PACKAGE, "stringPropertyRule"),
-        typeNameOf<BooleanValue>() to MemberName(VALIDATION_PACKAGE, "booleanPropertyRule"),
-        typeNameOf<DoubleValue>() to MemberName(VALIDATION_PACKAGE, "doublePropertyRule"),
-        typeNameOf<ListDoubleValue>() to MemberName(VALIDATION_PACKAGE, "listDoublePropertyRule"),
-        typeNameOf<ListStringValue>() to MemberName(VALIDATION_PACKAGE, "listStringPropertyRule"),
-        typeNameOf<ListDeviceErrorValue>() to MemberName(VALIDATION_PACKAGE, "listDeviceErrorPropertyRule"),
-        typeNameOf<ListZigbeeDeviceStatusValue>() to MemberName(VALIDATION_PACKAGE, "listZigbeeDeviceStatusPropertyRule"),
-        typeNameOf<ListRoomActorValue>() to MemberName(VALIDATION_PACKAGE, "listRoomActorPropertyRule"),
-        typeNameOf<ListDeviceValue>() to MemberName(VALIDATION_PACKAGE, "listDevicePropertyRule"),
-        typeNameOf<ObjectOtherRoomConfigurationValue>() to MemberName(VALIDATION_PACKAGE, "objectOtherRoomConfigurationPropertyRule"),
-        typeNameOf<ScheduleValue>() to MemberName(VALIDATION_PACKAGE, "schedulePropertyRule"),
+        typeNameOf<StringValue>() to validationRule("stringPropertyRule"),
+        typeNameOf<BooleanValue>() to validationRule("booleanPropertyRule"),
+        typeNameOf<DoubleValue>() to validationRule("doublePropertyRule"),
+        typeNameOf<ListDoubleValue>() to validationRule("listDoublePropertyRule"),
+        typeNameOf<ListStringValue>() to validationRule("listStringPropertyRule"),
+        typeNameOf<ListDeviceErrorValue>() to validationRule("listDeviceErrorPropertyRule"),
+        typeNameOf<ListZigbeeDeviceStatusValue>() to validationRule("listZigbeeDeviceStatusPropertyRule"),
+        typeNameOf<ListRoomActorValue>() to validationRule("listRoomActorPropertyRule"),
+        typeNameOf<ListDeviceValue>() to validationRule("listDevicePropertyRule"),
+        typeNameOf<ObjectOtherRoomConfigurationValue>() to validationRule("objectOtherRoomConfigurationPropertyRule"),
+        typeNameOf<ScheduleValue>() to validationRule("schedulePropertyRule"),
     )
 
 private val SUPERINTERFACE_PROPERTIES =
     mapOf(
         "feature" to typeNameOf<String>(),
         "wildcardFeature" to typeNameOf<String>(),
-        //
         "isEnabled" to typeNameOf<Boolean>(),
         "isReady" to typeNameOf<Boolean>(),
-        //
         "apiVersion" to typeNameOf<Int>(),
         "timestamp" to typeNameOf<Instant>(),
         "uri" to typeNameOf<String>(),
-        //
-        "properties" to
-            EfficientStringKeyMap::class.asClassName().parameterizedBy(
-                typeNameOf<Property>(),
-            ),
-        "commands" to
-            EfficientStringKeyMap::class.asClassName().parameterizedBy(
-                typeNameOf<Command>(),
-            ),
-        //
+        "properties" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Property>()),
+        "commands" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Command>()),
         "deviceId" to typeNameOf<String?>(),
         "gatewayId" to typeNameOf<String?>(),
         "isActive" to typeNameOf<Boolean?>(),
@@ -140,12 +129,7 @@ data class SuperInterfaceProperty(
             )
     }
 
-    override fun asPropertySpec() =
-        PropertySpec
-            .builder(name, type)
-            .addModifiers(KModifier.OVERRIDE)
-            .initializer(name)
-            .build()
+    override fun asPropertySpec() = overrideProperty(name, type, name)
 
     override fun asParameterSpec() =
         ParameterSpec
@@ -203,11 +187,7 @@ data class ParameterProperty(
         }
     }
 
-    override fun asPropertySpec() =
-        PropertySpec
-            .builder(name, type)
-            .addModifiers(KModifier.OVERRIDE)
-            .build()
+    override fun asPropertySpec() = overrideProperty(name, type)
 }
 
 /**
@@ -235,11 +215,7 @@ data class CommandProperty(
         }
     }
 
-    override fun asPropertySpec() =
-        PropertySpec
-            .builder(name, type)
-            .addModifiers(KModifier.OVERRIDE)
-            .build()
+    override fun asPropertySpec() = overrideProperty(name, type)
 }
 
 /**
@@ -277,8 +253,6 @@ data class SymbolContext(
     val featureProperties by lazy { featureProperties() }
     val parameterProperties by lazy { parameterProperties(nestedEnums) }
     val commandProperties by lazy { commandProperties() }
-
-    val allProperties by lazy { featureProperties + parameterProperties + commandProperties }
 
     val featurePropertiesImpl by lazy { featureProperties.map { it.asPropertySpec() } }
     val parameterPropertiesImpl by lazy { parameterProperties.map { it.asPropertySpec() } }
