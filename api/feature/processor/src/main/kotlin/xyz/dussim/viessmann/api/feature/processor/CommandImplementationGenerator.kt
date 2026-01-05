@@ -85,7 +85,7 @@ fun companionObject(): TypeSpec {
                 ruleProperty(
                     "numberOfParametersRule",
                     COMMAND_VALIDATION_RULE_TYPE,
-                    CodeBlock.of("%M(%L, commandName)", NUMBER_OF_PARAMETERS_RULE, context.constraintsProperties.size),
+                    CodeBlock.of("%M(%L, %S)", NUMBER_OF_PARAMETERS_RULE, context.constraintsProperties.size, context.lowerCaseName),
                 ),
             )
 
@@ -101,9 +101,7 @@ fun companionObject(): TypeSpec {
         .addSuperinterface(typeNameOf<CommandValidationRule>())
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
         .addProperty(commandRuleProperty)
-        .addProperty(
-            overrideProperty("commandName", typeNameOf<String>(), CodeBlock.of("%S", context.lowerCaseName)),
-        ).addProperties(properties)
+        .addProperties(properties)
         .addFunction(generateValidateFunction(typeNameOf<Command>(), properties))
         .build()
 }
