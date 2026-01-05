@@ -69,7 +69,7 @@ fun initBlock() =
         .apply {
             context.constraintsProperties
                 .forEach {
-                    val combined = combineToLong(it.name.hashCode(), it.name.length)
+                    val combined = propertyHash(it.name.hashCode(), it.name.length)
                     add("${it.name} = command.params[%S, %L]!!.constraints as %T\n", it.name, combined, it.type)
                 }
         }.nextControlFlow("catch (_: Exception)")
