@@ -16,8 +16,7 @@ value class ValidationResult<out T>
             get() =
                 when (value) {
                     null -> 0
-                    !is Array<*> -> 1
-                    else -> value.size
+                    else -> (value as? Array<*>)?.size ?: 1
                 }
 
         inline val isInvalid: Boolean

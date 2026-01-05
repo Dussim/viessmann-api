@@ -1,7 +1,7 @@
 package xyz.dussim.viessmann.feature.api
 
+import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
-import xyz.dussim.viessmann.feature.api.validation.invoke
 import kotlin.jvm.JvmRecord
 
 // TODO this should be refactored, first of all exceptions are expensive so it should rather default to getOrNull
@@ -91,6 +91,7 @@ data class FeatureMatchers(
     val byName: FeatureMatcher,
     val byWildcardName: FeatureMatcher,
     val byValidation: FeatureMatcher,
+    val byNameAndValidation: FeatureMatcher = byName andThen byValidation,
 )
 
 fun interface IndexedFeatureMatchersFactory {
@@ -101,7 +102,7 @@ fun interface IndexedFeatureMatchersFactory {
 data class FeatureUtils(
     val factory: FeatureFactory<*>,
     val matchers: FeatureMatchers,
-    val validation: ValidationRule<Feature, *>,
+    val validation: ValidationRule<Feature, ValidationError>,
 )
 
 fun interface IndexedFeatureUtilsFactory {

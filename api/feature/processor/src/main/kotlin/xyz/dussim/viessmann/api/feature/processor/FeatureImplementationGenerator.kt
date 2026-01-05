@@ -4,8 +4,8 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterSpec
@@ -17,7 +17,6 @@ import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.typeNameOf
-import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.FeatureMatcher
@@ -54,6 +53,7 @@ fun constructor() =
                 .builder(DELEGATE, context.baseFeature.delegate)
                 .build(),
         ).addParameters(context.featureParametersImpl)
+        .addParameter(ParameterSpec("hashCode", INT))
         .build()
 
 /**
@@ -250,6 +250,7 @@ fun internalFactoryProperty(): PropertySpec {
                 add("deviceId = feature.deviceId,\n")
                 add("gatewayId = feature.gatewayId,\n")
                 add("isActive = feature.isActive,\n")
+                add("hashCode = feature.hashCode(),\n")
                 add(")\n")
                 unindent()
                 unindent()
@@ -356,30 +357,6 @@ fun internalUtilsProperty(): PropertySpec {
 }
 
 /**
- * Generates internal command factory properties for each nested command.
- */
-context(context: SymbolContext)
-fun internalCommandFactoryProperties(): List<PropertySpec> =
-    context
-        .nestedCommands
-        .map { commandContext ->
-            val commandName = commandContext.implType.simpleName.replaceFirstChar { it.lowercase() }
-            val factoryName = generateCommandFactoryName(context.implName, commandName)
-            val factoryType =
-                LambdaTypeName.get(
-                    parameters = listOf(ParameterSpec.unnamed(typeNameOf<Command>())),
-                    returnType = commandContext.superInterface,
-                )
-
-            PropertySpec
-                .builder(factoryName, factoryType)
-                .addModifiers(KModifier.INTERNAL)
-                .addAnnotation(publishedApiAnnotation)
-                .initializer("%L", commandContext.implType.constructorReference())
-                .build()
-        }
-
-/**
  * Generates extension properties for feature companion objects.
  * Includes factory, validationRule, featureName, matchers, and utils properties.
  */
@@ -413,18 +390,6 @@ fun featureExtensions(): List<PropertySpec> {
     val matchersName = generateMatchersName(context.implName)
     val matchersType = indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS)
 
-    val featureNameProperty =
-        PropertySpec
-            .builder("featureName", String::class)
-            .receiver(context.superInterfaceCompanion)
-            .getter(
-                FunSpec
-                    .getterBuilder()
-                    .addModifiers(KModifier.INLINE)
-                    .addStatement("return %S", context.featureName)
-                    .build(),
-            ).build()
-
     val matchersProperty =
         PropertySpec
             .builder("matchers", matchersType)
@@ -452,7 +417,7 @@ fun featureExtensions(): List<PropertySpec> {
                     .build(),
             ).build()
 
-    return baseProperties + listOf(featureNameProperty, matchersProperty, utilsProperty)
+    return baseProperties + listOf(matchersProperty, utilsProperty)
 }
 
 /**
@@ -486,13 +451,8 @@ fun generateFeatureImplementation(context: SymbolContext) =
                         .nestedCommands
                         .map(::generateCommandImplementation),
                 ).addType(companionObject())
-                .addProperty(
-                    PropertySpec
-                        .builder("delegate", context.baseFeature.delegate)
-                        .addModifiers(KModifier.PRIVATE)
-                        .initializer("delegate")
-                        .build(),
-                ).addProperties(properties)
+                .addProperties(properties)
+                .addProperty(PropertySpec.builder("hashCode", INT, KModifier.PRIVATE).initializer("hashCode").build())
                 .apply {
                     if (initBlock.isNotEmpty()) {
                         addInitializerBlock(initBlock)
@@ -503,30 +463,14 @@ fun generateFeatureImplementation(context: SymbolContext) =
                         .addModifiers(KModifier.OVERRIDE)
                         .addParameter("other", Any::class.asClassName().copy(nullable = true))
                         .returns(Boolean::class)
-                        .addStatement("if (other === this) return true")
-                        .addStatement("if (other !is %T) return false", typeNameOf<Feature>())
-                        .addStatement(
-                            """
-                            return feature == other.feature &&
-                                   wildcardFeature == other.wildcardFeature &&
-                                   isEnabled == other.isEnabled &&
-                                   isReady == other.isReady &&
-                                   apiVersion == other.apiVersion &&
-                                   timestamp == other.timestamp &&
-                                   uri == other.uri &&
-                                   properties == other.properties &&
-                                   commands == other.commands &&
-                                   deviceId == other.deviceId &&
-                                   gatewayId == other.gatewayId &&
-                                   isActive == other.isActive
-                            """.trimIndent(),
-                        ).build(),
+                        .addStatement("return %M(other)", MemberName("xyz.dussim.viessmann.feature.api", "equalsImpl"))
+                        .build(),
                 ).addFunction(
                     FunSpec
                         .builder("hashCode")
                         .addModifiers(KModifier.OVERRIDE)
                         .returns(Int::class)
-                        .addStatement("return delegate.hashCode()")
+                        .addStatement("return hashCode")
                         .build(),
                 ).build()
 

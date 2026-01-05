@@ -94,6 +94,23 @@ data class GeofencingFeature(
     override val gatewayId: String?,
 ) : Feature.Geofencing
 
+fun Feature.equalsImpl(other: Any?): Boolean {
+    if (other === this) return true
+    if (other !is Feature) return false
+    return feature == other.feature &&
+        wildcardFeature == other.wildcardFeature &&
+        isEnabled == other.isEnabled &&
+        isReady == other.isReady &&
+        apiVersion == other.apiVersion &&
+        timestamp == other.timestamp &&
+        uri == other.uri &&
+        properties == other.properties &&
+        commands == other.commands &&
+        deviceId == other.deviceId &&
+        gatewayId == other.gatewayId &&
+        isActive == other.isActive
+}
+
 private fun String.toWildcardFeature(): String =
     split(".").joinToString(".") { segment ->
         if (segment.isNotEmpty() && segment.all { it.isDigit() }) "{}" else segment
