@@ -74,7 +74,7 @@ fun initBlock() =
                 }
         }.nextControlFlow("catch (_: Exception)")
         .add(
-            "throw %T(%S, validate(command).map { it.toString() })\n",
+            "throw %T(%S, validate(command))\n",
             CommandValidationException::class.asTypeName(),
             context.superInterface,
         ).endControlFlow()
