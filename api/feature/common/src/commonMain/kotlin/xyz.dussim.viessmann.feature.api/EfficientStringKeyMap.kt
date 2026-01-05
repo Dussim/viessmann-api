@@ -70,10 +70,10 @@ private data object Empty : EfficientStringKeyMap<Nothing>(emptyMap()) {
 
 private data class OneElement<T>(
     private val originalMap: Map<String, T>,
-    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("One element map must have at least one element"),
-    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("One element map must have at least one element"),
-    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
-    override val size: Int = 1,
+    private val key1: String,
+    private val value1: T,
+    private val precomputedHash1: Long,
+    override val size: Int,
 ) : EfficientStringKeyMap<T>(originalMap) {
     override fun get(
         key: String,
@@ -89,13 +89,13 @@ private data class OneElement<T>(
 
 private data class TwoElements<T>(
     private val originalMap: Map<String, T>,
-    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("Two elements map must have at least two elements"),
-    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("Two elements map must have at least two elements"),
-    private val key2: String = originalMap.keys.elementAtOrNull(1) ?: error("Two elements map must have at least two elements"),
-    private val value2: T = originalMap.values.elementAtOrNull(1) ?: error("Two elements map must have at least two elements"),
-    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
-    private val precomputedHash2: Long = propertyHash(key2.hashCode(), key2.length),
-    override val size: Int = 2,
+    private val key1: String,
+    private val value1: T,
+    private val key2: String,
+    private val value2: T,
+    private val precomputedHash1: Long,
+    private val precomputedHash2: Long,
+    override val size: Int,
 ) : EfficientStringKeyMap<T>(originalMap) {
     override fun get(
         key: String,
@@ -112,16 +112,16 @@ private data class TwoElements<T>(
 
 private data class ThreeElements<T>(
     private val originalMap: Map<String, T>,
-    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("Three elements map must have at least three elements"),
-    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("Three elements map must have at least three elements"),
-    private val key2: String = originalMap.keys.elementAtOrNull(1) ?: error("Three elements map must have at least three elements"),
-    private val value2: T = originalMap.values.elementAtOrNull(1) ?: error("Three elements map must have at least three elements"),
-    private val key3: String = originalMap.keys.elementAtOrNull(2) ?: error("Three elements map must have at least three elements"),
-    private val value3: T = originalMap.values.elementAtOrNull(2) ?: error("Three elements map must have at least three elements"),
-    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
-    private val precomputedHash2: Long = propertyHash(key2.hashCode(), key2.length),
-    private val precomputedHash3: Long = propertyHash(key3.hashCode(), key3.length),
-    override val size: Int = 3,
+    private val key1: String,
+    private val value1: T,
+    private val key2: String,
+    private val value2: T,
+    private val key3: String,
+    private val value3: T,
+    private val precomputedHash1: Long,
+    private val precomputedHash2: Long,
+    private val precomputedHash3: Long,
+    override val size: Int,
 ) : EfficientStringKeyMap<T>(originalMap) {
     override fun get(
         key: String,
@@ -139,19 +139,19 @@ private data class ThreeElements<T>(
 
 private data class FourElements<T>(
     private val originalMap: Map<String, T>,
-    private val key1: String = originalMap.keys.elementAtOrNull(0) ?: error("Four elements map must have at least four elements"),
-    private val value1: T = originalMap.values.elementAtOrNull(0) ?: error("Four elements map must have at least four elements"),
-    private val key2: String = originalMap.keys.elementAtOrNull(1) ?: error("Four elements map must have at least four elements"),
-    private val value2: T = originalMap.values.elementAtOrNull(1) ?: error("Four elements map must have at least four elements"),
-    private val key3: String = originalMap.keys.elementAtOrNull(2) ?: error("Four elements map must have at least four elements"),
-    private val value3: T = originalMap.values.elementAtOrNull(2) ?: error("Four elements map must have at least four elements"),
-    private val key4: String = originalMap.keys.elementAtOrNull(3) ?: error("Four elements map must have at least four elements"),
-    private val value4: T = originalMap.values.elementAtOrNull(3) ?: error("Four elements map must have at least four elements"),
-    private val precomputedHash1: Long = propertyHash(key1.hashCode(), key1.length),
-    private val precomputedHash2: Long = propertyHash(key2.hashCode(), key2.length),
-    private val precomputedHash3: Long = propertyHash(key3.hashCode(), key3.length),
-    private val precomputedHash4: Long = propertyHash(key4.hashCode(), key4.length),
-    override val size: Int = 4,
+    private val key1: String,
+    private val value1: T,
+    private val key2: String,
+    private val value2: T,
+    private val key3: String,
+    private val value3: T,
+    private val key4: String,
+    private val value4: T,
+    private val precomputedHash1: Long,
+    private val precomputedHash2: Long,
+    private val precomputedHash3: Long,
+    private val precomputedHash4: Long,
+    override val size: Int,
 ) : EfficientStringKeyMap<T>(originalMap) {
     override fun get(
         key: String,
@@ -171,26 +171,13 @@ private data class FourElements<T>(
 @Suppress("ArrayInDataClass")
 private data class NElements<T>(
     private val originalMap: Map<String, T>,
-    private val arrayKeys: Array<String> = originalMap.keys.sortedBy { it.length }.toTypedArray(),
-    private val arrayValues: Array<Any?> = Array(arrayKeys.size) { originalMap[arrayKeys[it]] },
-    private val arrayHashes: LongArray = LongArray(arrayKeys.size) { propertyHash(arrayKeys[it].hashCode(), arrayKeys[it].length) },
-    private val startIndexJumpTable: IntArray =
-        IntArray(arrayKeys.maxOf { it.length } + 1) {
-            arrayKeys.indexOfFirst { key -> key.length == it }
-        },
-    private val endIndexJumpTable: IntArray =
-        IntArray(startIndexJumpTable.size) {
-            val jump = startIndexJumpTable[it]
-            if (jump == -1) {
-                -1
-            } else {
-                val length = arrayKeys[jump].length
-                val index = arrayKeys.indexOfFirst { key -> key.length > length }
-                if (index == -1) arrayKeys.size else index
-            }
-        },
-    private val lengthBitset: Int = originalMap.keys.fold(0) { acc, key -> acc or (1 shl key.length) },
-    override val size: Int = originalMap.size,
+    private val arrayKeys: Array<String>,
+    private val arrayValues: Array<Any?>,
+    private val arrayHashes: LongArray,
+    private val startIndexJumpTable: IntArray,
+    private val endIndexJumpTable: IntArray,
+    private val lengthBitset: Int,
+    override val size: Int,
 ) : EfficientStringKeyMap<T>(originalMap) {
     override fun get(
         key: String,
@@ -221,3 +208,66 @@ data object ParametersSerializer : EfficientStringKeyMap.Serializer<Parameter>(P
 data object PropertiesSerializer : EfficientStringKeyMap.Serializer<Property>(Property.serializer())
 
 data object CommandsSerializer : EfficientStringKeyMap.Serializer<Command>(Command.serializer())
+
+private fun <T> OneElement(originalMap: Map<String, T>): OneElement<T> {
+    val (key1, value1) = originalMap.entries.first()
+    val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
+    return OneElement(originalMap, key1, value1, precomputedHash1, 1)
+}
+
+private fun <T> TwoElements(originalMap: Map<String, T>): TwoElements<T> {
+    val entries = originalMap.entries.iterator()
+    val (key1, value1) = entries.next()
+    val (key2, value2) = entries.next()
+    val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
+    val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
+    return TwoElements(originalMap, key1, value1, key2, value2, precomputedHash1, precomputedHash2, 2)
+}
+
+private fun <T> ThreeElements(originalMap: Map<String, T>): ThreeElements<T> {
+    val entries = originalMap.entries.iterator()
+    val (key1, value1) = entries.next()
+    val (key2, value2) = entries.next()
+    val (key3, value3) = entries.next()
+    val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
+    val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
+    val precomputedHash3 = propertyHash(key3.hashCode(), key3.length)
+    return ThreeElements(originalMap, key1, value1, key2, value2, key3, value3, precomputedHash1, precomputedHash2, precomputedHash3, 3)
+}
+
+private fun <T> FourElements(originalMap: Map<String, T>): FourElements<T> {
+    val entries = originalMap.entries.iterator()
+    val (key1, value1) = entries.next()
+    val (key2, value2) = entries.next()
+    val (key3, value3) = entries.next()
+    val (key4, value4) = entries.next()
+    val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
+    val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
+    val precomputedHash3 = propertyHash(key3.hashCode(), key3.length)
+    val precomputedHash4 = propertyHash(key4.hashCode(), key4.length)
+    return FourElements(originalMap, key1, value1, key2, value2, key3, value3, key4, value4, precomputedHash1, precomputedHash2, precomputedHash3, precomputedHash4, 4)
+}
+
+private fun <T> NElements(originalMap: Map<String, T>): NElements<T> {
+    val sortedEntries = originalMap.entries.sortedBy { it.key.length }
+    val arrayKeys = Array(sortedEntries.size) { sortedEntries[it].key }
+    val arrayValues = Array<Any?>(sortedEntries.size) { sortedEntries[it].value }
+    val arrayHashes = LongArray(sortedEntries.size) { propertyHash(arrayKeys[it].hashCode(), arrayKeys[it].length) }
+    val startIndexJumpTable =
+        IntArray(arrayKeys.maxOf { it.length } + 1) {
+            arrayKeys.indexOfFirst { key -> key.length == it }
+        }
+    val endIndexJumpTable =
+        IntArray(startIndexJumpTable.size) {
+            val jump = startIndexJumpTable[it]
+            if (jump == -1) {
+                -1
+            } else {
+                val length = arrayKeys[jump].length
+                val index = arrayKeys.indexOfFirst { key -> key.length > length }
+                if (index == -1) arrayKeys.size else index
+            }
+        }
+    val lengthBitset = arrayKeys.fold(0) { acc, key -> acc or (1 shl key.length) }
+    return NElements(originalMap, arrayKeys, arrayValues, arrayHashes, startIndexJumpTable, endIndexJumpTable, lengthBitset, originalMap.size)
+}
