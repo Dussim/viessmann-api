@@ -1,15 +1,12 @@
 package xyz.dussim.viessmann.api.feature.processor
 
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
@@ -21,25 +18,6 @@ import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.FeatureMatcher
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
-import xyz.dussim.viessmann.feature.api.validation.ValidationError
-import xyz.dussim.viessmann.feature.api.validation.ValidationResult
-import xyz.dussim.viessmann.feature.api.validation.ValidationRule
-
-/**
- * Creates a variable-argument function call CodeBlock.
- * Useful for generating validation result aggregation calls.
- */
-fun varArgFunctionCall(
-    function: MemberName,
-    args: List<CodeBlock>,
-) = CodeBlock
-    .builder()
-    .add("%M(\n", function)
-    .indent()
-    .apply { args.forEach(::add) }
-    .unindent()
-    .add(")\n")
-    .build()
 
 /**
  * Generates constructor accepting a delegate feature.
@@ -133,86 +111,47 @@ context(context: SymbolContext)
 fun companionObject(): TypeSpec {
     val subTypeValidationMember =
         when (context.baseFeature.delegate) {
-            typeNameOf<Feature.Device>() -> MemberName("xyz.dussim.viessmann.feature.api.validation", "deviceFeatureRule")
-            typeNameOf<Feature.Gateway>() -> MemberName("xyz.dussim.viessmann.feature.api.validation", "gatewayFeatureRule")
-            typeNameOf<Feature.Geofencing>() -> MemberName("xyz.dussim.viessmann.feature.api.validation", "geofencingFeatureRule")
+            typeNameOf<Feature.Device>() -> DEVICE_FEATURE_RULE
+            typeNameOf<Feature.Gateway>() -> GATEWAY_FEATURE_RULE
+            typeNameOf<Feature.Geofencing>() -> GEOFENCING_FEATURE_RULE
             else -> error("Unreachable")
         }
 
-    val featureValidationRuleType =
-        ValidationRule::class
-            .asClassName()
-            .parameterizedBy(
-                typeNameOf<Feature>(),
-                typeNameOf<ValidationError>(),
-            )
-
     val properties =
         listOf(
-            PropertySpec
-                .builder(
-                    "subTypeRule",
-                    featureValidationRuleType,
-                ).addModifiers(KModifier.PRIVATE)
-                .initializer("%M(%S)", subTypeValidationMember, context.implName)
-                .build(),
+            ruleProperty(
+                "subTypeRule",
+                FEATURE_VALIDATION_RULE_TYPE,
+                CodeBlock.of("%M(%S)", subTypeValidationMember, context.implName),
+            ),
         ).plus(
             context
                 .parameterProperties
                 .map {
-                    PropertySpec
-                        .builder(
-                            generatePropertyRuleName(it.name),
-                            featureValidationRuleType,
-                        ).addModifiers(KModifier.PRIVATE)
-                        .initializer("%M(%S)", it.validationFunction, it.name)
-                        .build()
+                    ruleProperty(
+                        generatePropertyRuleName(it.name),
+                        FEATURE_VALIDATION_RULE_TYPE,
+                        CodeBlock.of("%M(%S)", it.validationFunction, it.name),
+                    )
                 },
         ).plus(
             context
                 .nestedCommands
                 .map {
-                    PropertySpec
-                        .builder(
-                            generatePropertyRuleName(it.lowerCaseName),
-                            featureValidationRuleType,
-                        ).addModifiers(KModifier.PRIVATE)
-                        .initializer("${it.implName}.rule")
-                        .build()
+                    ruleProperty(
+                        generatePropertyRuleName(it.lowerCaseName),
+                        FEATURE_VALIDATION_RULE_TYPE,
+                        CodeBlock.of("${it.implName}.rule"),
+                    )
                 },
         )
 
     return TypeSpec
         .companionObjectBuilder()
-        .addSuperinterface(
-            featureValidationRuleType,
-        ).addProperties(properties)
-        .addFunction(
-            FunSpec
-                .builder("validate")
-                .addModifiers(KModifier.OVERRIDE)
-                .addParameter(
-                    ParameterSpec
-                        .builder("value", typeNameOf<Feature>())
-                        .build(),
-                ).returns(
-                    ValidationResult::class
-                        .asTypeName()
-                        .parameterizedBy(
-                            typeNameOf<ValidationError>(),
-                        ),
-                ).addCode(
-                    CodeBlock
-                        .builder()
-                        .add("return ")
-                        .add(
-                            varArgFunctionCall(
-                                validationResultOf,
-                                properties.map { CodeBlock.of("${it.name}.validate(value),\n") },
-                            ),
-                        ).build(),
-                ).build(),
-        ).build()
+        .addSuperinterface(FEATURE_VALIDATION_RULE_TYPE)
+        .addProperties(properties)
+        .addFunction(generateValidateFunction(typeNameOf<Feature>(), properties))
+        .build()
 }
 
 /**
@@ -220,17 +159,14 @@ fun companionObject(): TypeSpec {
  */
 context(context: SymbolContext)
 fun internalFactoryProperty(): PropertySpec {
-    val factoryType =
-        FeatureFactory::class
-            .asTypeName()
-            .parameterizedBy(context.superInterface)
+    val factoryType = featureFactoryType(context.superInterface)
 
     val factoryName = generateFactoryName(context.implName)
 
     return PropertySpec
         .builder(factoryName, factoryType)
         .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(publishedApiAnnotation)
+        .addAnnotation(PUBLISHED_API_ANNOTATION)
         .initializer(
             buildCodeBlock {
                 add("%T { feature ->\n", FeatureFactory::class)
@@ -238,18 +174,9 @@ fun internalFactoryProperty(): PropertySpec {
                 add("feature as? %T ?: %T(\n", context.superInterface, context.implName)
                 indent()
                 add("delegate = feature as %T,\n", context.baseFeature.delegate)
-                add("feature = feature.feature,\n")
-                add("wildcardFeature = feature.wildcardFeature,\n")
-                add("isEnabled = feature.isEnabled,\n")
-                add("isReady = feature.isReady,\n")
-                add("apiVersion = feature.apiVersion,\n")
-                add("timestamp = feature.timestamp,\n")
-                add("uri = feature.uri,\n")
-                add("properties = feature.properties,\n")
-                add("commands = feature.commands,\n")
-                add("deviceId = feature.deviceId,\n")
-                add("gatewayId = feature.gatewayId,\n")
-                add("isActive = feature.isActive,\n")
+                context.featureProperties.forEach {
+                    add("${it.name} = feature.${it.name},\n")
+                }
                 add("hashCode = feature.hashCode(),\n")
                 add(")\n")
                 unindent()
@@ -272,28 +199,18 @@ fun internalMatchersProperty(): PropertySpec {
     val propertyType = indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS)
 
     val initializer =
-        if (context.isIndexed) {
-            CodeBlock
-                .builder()
-                .add("{ index ->\n")
-                .indent()
-                .add("%T(\n", FEATURE_MATCHERS_CLASS)
-                .indent()
-                .add("byName = %M(%S.replace(\"{}\", index.toString())),\n", featureMatcherMemberByName, context.featureName)
-                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByWildcardName, context.featureName)
-                .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
-                .unindent()
-                .add(")")
-                .unindent()
-                .add("\n}")
-                .build()
-        } else {
+        indexedOrDirectCodeBlock(context.isIndexed) { isIndexed ->
             CodeBlock
                 .builder()
                 .add("%T(\n", FEATURE_MATCHERS_CLASS)
                 .indent()
-                .add("byName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
-                .add("byWildcardName = %M(%S),\n", featureMatcherMemberByWildcardName, context.featureName)
+                .apply {
+                    if (isIndexed) {
+                        add("byName = %M(%S.replace(\"{}\", index.toString())),\n", featureMatcherMemberByName, context.featureName)
+                    } else {
+                        add("byName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
+                    }
+                }.add("byWildcardName = %M(%S),\n", featureMatcherMemberByWildcardName, context.featureName)
                 .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
                 .unindent()
                 .add(")")
@@ -303,7 +220,7 @@ fun internalMatchersProperty(): PropertySpec {
     return PropertySpec
         .builder(matchersName, propertyType)
         .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(publishedApiAnnotation)
+        .addAnnotation(PUBLISHED_API_ANNOTATION)
         .initializer(initializer)
         .build()
 }
@@ -320,29 +237,19 @@ fun internalUtilsProperty(): PropertySpec {
     val propertyType = indexedOrDirectType(context.isIndexed, FEATURE_UTILS_CLASS)
 
     val initializer =
-        if (context.isIndexed) {
-            CodeBlock
-                .builder()
-                .add("{ index ->\n")
-                .indent()
-                .add("%T(\n", FEATURE_UTILS_CLASS)
-                .indent()
-                .add("factory = %N,\n", factoryName)
-                .add("matchers = %N(index),\n", matchersName)
-                .add("validation = %T,\n", context.implCompanion)
-                .unindent()
-                .add(")")
-                .unindent()
-                .add("\n}")
-                .build()
-        } else {
+        indexedOrDirectCodeBlock(context.isIndexed) { isIndexed ->
             CodeBlock
                 .builder()
                 .add("%T(\n", FEATURE_UTILS_CLASS)
                 .indent()
                 .add("factory = %N,\n", factoryName)
-                .add("matchers = %N,\n", matchersName)
-                .add("validation = %T,\n", context.implCompanion)
+                .apply {
+                    if (isIndexed) {
+                        add("matchers = %N(index),\n", matchersName)
+                    } else {
+                        add("matchers = %N,\n", matchersName)
+                    }
+                }.add("validation = %T,\n", context.implCompanion)
                 .unindent()
                 .add(")")
                 .build()
@@ -351,7 +258,7 @@ fun internalUtilsProperty(): PropertySpec {
     return PropertySpec
         .builder(utilsName, propertyType)
         .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(publishedApiAnnotation)
+        .addAnnotation(PUBLISHED_API_ANNOTATION)
         .initializer(initializer)
         .build()
 }
@@ -362,62 +269,54 @@ fun internalUtilsProperty(): PropertySpec {
  */
 context(context: SymbolContext)
 fun featureExtensions(): List<PropertySpec> {
-    val baseType =
-        FeatureFactory::class
-            .asTypeName()
-            .parameterizedBy(context.superInterface)
-
-    val factoryName = generateFactoryName(context.implName)
-
-    val funSpec =
-        FunSpec
-            .getterBuilder()
-            .addStatement("return %N", factoryName)
-            .addModifiers(KModifier.INLINE)
-            .build()
+    val superCompanion = context.superInterfaceCompanion
 
     val factoryProperty =
-        PropertySpec
-            .builder(
-                "factory",
-                baseType,
-            ).receiver(context.superInterfaceCompanion)
-            .getter(funSpec)
-            .build()
+        extensionProperty(
+            "factory",
+            superCompanion,
+            featureFactoryType(context.superInterface),
+            "return %N",
+            generateFactoryName(context.implName),
+        )
 
-    val baseProperties = listOf(factoryProperty)
+    val validationRuleProperty =
+        extensionProperty(
+            "validationRule",
+            superCompanion,
+            FEATURE_VALIDATION_RULE_TYPE,
+            "return %T",
+            context.implCompanion,
+        )
 
-    val matchersName = generateMatchersName(context.implName)
-    val matchersType = indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS)
+    val featureNameProperty =
+        extensionProperty(
+            "featureName",
+            superCompanion,
+            typeNameOf<String>(),
+            "return %S",
+            context.featureName,
+        )
 
     val matchersProperty =
-        PropertySpec
-            .builder("matchers", matchersType)
-            .receiver(context.superInterfaceCompanion)
-            .getter(
-                FunSpec
-                    .getterBuilder()
-                    .addModifiers(KModifier.INLINE)
-                    .addStatement("return %N", matchersName)
-                    .build(),
-            ).build()
-
-    val utilsName = generateUtilsName(context.implName)
-    val utilsType = indexedOrDirectType(context.isIndexed, FEATURE_UTILS_CLASS)
+        extensionProperty(
+            "matchers",
+            superCompanion,
+            indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS),
+            "return %N",
+            generateMatchersName(context.implName),
+        )
 
     val utilsProperty =
-        PropertySpec
-            .builder("utils", utilsType)
-            .receiver(context.superInterfaceCompanion)
-            .getter(
-                FunSpec
-                    .getterBuilder()
-                    .addModifiers(KModifier.INLINE)
-                    .addStatement("return %N", utilsName)
-                    .build(),
-            ).build()
+        extensionProperty(
+            "utils",
+            superCompanion,
+            indexedOrDirectType(context.isIndexed, FEATURE_UTILS_CLASS),
+            "return %N",
+            generateUtilsName(context.implName),
+        )
 
-    return baseProperties + listOf(matchersProperty, utilsProperty)
+    return listOf(factoryProperty, validationRuleProperty, featureNameProperty, matchersProperty, utilsProperty)
 }
 
 /**
@@ -432,7 +331,6 @@ fun featureExtensions(): List<PropertySpec> {
  * @param context The symbol context with all feature information
  * @return FileSpec containing the complete feature implementation
  */
-@OptIn(DelicateKotlinPoetApi::class)
 fun generateFeatureImplementation(context: SymbolContext) =
     context(context) {
         val constructor = constructor()
@@ -443,7 +341,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
             TypeSpec
                 .classBuilder(context.implName)
                 .addModifiers(KModifier.INTERNAL)
-                .addAnnotation(publishedApiAnnotation)
+                .addAnnotation(PUBLISHED_API_ANNOTATION)
                 .primaryConstructor(constructor)
                 .addSuperinterface(context.symbol.toClassName())
                 .addTypes(
@@ -463,7 +361,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
                         .addModifiers(KModifier.OVERRIDE)
                         .addParameter("other", Any::class.asClassName().copy(nullable = true))
                         .returns(Boolean::class)
-                        .addStatement("return %M(other)", MemberName("xyz.dussim.viessmann.feature.api", "equalsImpl"))
+                        .addStatement("return %M(other)", EQUALS_IMPL)
                         .build(),
                 ).addFunction(
                     FunSpec
@@ -484,12 +382,3 @@ fun generateFeatureImplementation(context: SymbolContext) =
             }.addProperties(featureExtensions())
             .build()
     }
-
-/**
- * Combines two integers into a single long value for efficient map lookups.
- * Used for property/command name hashing.
- */
-internal fun propertyHash(
-    high: Int,
-    low: Int,
-): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)

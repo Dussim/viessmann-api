@@ -37,11 +37,7 @@ data class ConstraintProperty(
             )
     }
 
-    override fun asPropertySpec() =
-        PropertySpec
-            .builder(name, type)
-            .addModifiers(KModifier.OVERRIDE)
-            .build()
+    override fun asPropertySpec() = overrideProperty(name, type)
 
     override fun asConstraintPropertySpec(index: Int) =
         PropertySpec
