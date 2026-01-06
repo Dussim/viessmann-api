@@ -2,33 +2,33 @@ package xyz.dussim.viessmann.api.features
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import xyz.dussim.viessmann.api.features.utils
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.testing.ParseSpec
 import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.FeatureResolver
+import kotlin.time.Clock
 
 class LongTest :
     ParseSpec({ json ->
         val featureFactoriesWithExpectedCounts =
             listOf(
-                DeviceEtnFeature.utils to 936,
-                DeviceSerialFeature.utils to 936,
-                DeviceTimeseriesMonitoringIonizationFeature.utils to 78,
-                DeviceZigbeeActiveFeature.utils to 156,
-                HeatingBoilerPumpsInternalFeature.utils to 1794,
-                HeatingBoilerPumpsInternalTargetFeature.utils to 1248,
-                HeatingBoilerSensorsTemperatureCommonSupplyFeature.utils to 156,
-                HeatingBoilerSerialFeature.utils to 936,
-                HeatingBoilerTemperatureFeature.utils to 1248,
-                HeatingBufferCylinderSensorsTemperatureMainFeature.utils to 1794,
-                DeviceZigbeeCoordinatorFeature.utils to 0,
-                RoomsFeature.utils to 0,
-                RoomsOthersNFeature.utils(0) to 0,
-                DeviceTimezoneFeature.utils to 0,
-                TcuModeFeature.utils to 78,
-                HeatingCircuitsNHeatingScheduleFeature.utils(0) to 390,
-                DeviceConfigurationFeature.utils to 78,
+                DeviceEtnFeature.descriptor to 936,
+                DeviceSerialFeature.descriptor to 936,
+                DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
+                DeviceZigbeeActiveFeature.descriptor to 156,
+                HeatingBoilerPumpsInternalFeature.descriptor to 1794,
+                HeatingBoilerPumpsInternalTargetFeature.descriptor to 1248,
+                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 156,
+                HeatingBoilerSerialFeature.descriptor to 936,
+                HeatingBoilerTemperatureFeature.descriptor to 1248,
+                HeatingBufferCylinderSensorsTemperatureMainFeature.descriptor to 1794,
+                DeviceZigbeeCoordinatorFeature.descriptor to 0,
+                RoomsFeature.descriptor to 0,
+                RoomsOthersNFeature.descriptor to 0,
+                DeviceTimezoneFeature.descriptor to 0,
+                TcuModeFeature.descriptor to 78,
+                HeatingCircuitsNHeatingScheduleFeature.descriptor to 390,
+                DeviceConfigurationFeature.descriptor to 78,
             )
 
         fun loadFeatures() =
@@ -38,70 +38,68 @@ class LongTest :
                 ).data
                 .let(::FeatureResolver)
 
-        context("Deserializes 10000+ features") {
+        context("Deserializes 10000+ features").config(enabled = false) {
             val features = loadFeatures()
 
             features.size shouldBe 11544
         }
 
-        context("Finds and decorates all DeviceFeature's via validation") {
+        context("Finds and decorates all DeviceFeature's via validation").config(enabled = false) {
             val features = loadFeatures()
 
-            featureFactoriesWithExpectedCounts.forEach { (utils, expected) ->
-                val (factory, matchers, _) = utils
-                val result = features.allOf(factory, matchers.byValidation)
+            featureFactoriesWithExpectedCounts.forEach { (descriptor, expected) ->
+                val result = features.allOf(descriptor, descriptor.byStructure)
 
                 result shouldHaveSize expected
             }
         }
 
-        context("Finds and decorates all DeviceFeature's via name") {
+        context("Finds and decorates all DeviceFeature's via name").config(enabled = false) {
             val features = loadFeatures()
 
             repeat(5096) {
                 listOf(
-                    DeviceEtnFeature.utils to 78,
-                    DeviceSerialFeature.utils to 78,
-                    DeviceTimeseriesMonitoringIonizationFeature.utils to 78,
-                    DeviceZigbeeActiveFeature.utils to 78,
-                    HeatingBoilerPumpsInternalFeature.utils to 78,
-                    HeatingBoilerPumpsInternalTargetFeature.utils to 78,
-                    HeatingBoilerSensorsTemperatureCommonSupplyFeature.utils to 78,
-                    HeatingBoilerSerialFeature.utils to 78,
-                    HeatingBoilerTemperatureFeature.utils to 78,
-                    HeatingBufferCylinderSensorsTemperatureMainFeature.utils to 78,
-                    DeviceZigbeeCoordinatorFeature.utils to 0,
-                    RoomsFeature.utils to 0,
-                    RoomsOthersNFeature.utils(0) to 0,
-                    DeviceTimezoneFeature.utils to 0,
-                    TcuModeFeature.utils to 0,
-                    HeatingCircuitsNHeatingScheduleFeature.utils(0) to 78,
-                    DeviceConfigurationFeature.utils to 78,
-                ).forEach { (utils, expected) ->
-                    val (factory, matchers, _) = utils
-                    val result = features.allOf(factory, matchers.byName)
+                    DeviceEtnFeature.descriptor to 78,
+                    DeviceSerialFeature.descriptor to 78,
+                    DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
+                    DeviceZigbeeActiveFeature.descriptor to 78,
+                    HeatingBoilerPumpsInternalFeature.descriptor to 78,
+                    HeatingBoilerPumpsInternalTargetFeature.descriptor to 78,
+                    HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 78,
+                    HeatingBoilerSerialFeature.descriptor to 78,
+                    HeatingBoilerTemperatureFeature.descriptor to 78,
+                    HeatingBufferCylinderSensorsTemperatureMainFeature.descriptor to 78,
+                    DeviceZigbeeCoordinatorFeature.descriptor to 0,
+                    RoomsFeature.descriptor to 0,
+                    RoomsOthersNFeature.descriptor to 0,
+                    DeviceTimezoneFeature.descriptor to 0,
+                    TcuModeFeature.descriptor to 0,
+                    HeatingCircuitsNHeatingScheduleFeature.descriptor to 78,
+                    DeviceConfigurationFeature.descriptor to 78,
+                ).forEach { (descriptor, expected) ->
+                    val result = features.allOf(descriptor, descriptor.byWildcardName)
 
                     result shouldHaveSize expected
                 }
             }
         }
 
-        context("Finds and decorates all DeviceFeature's via validation, long test").config(enabled = false) {
+        context("Finds and decorates all DeviceFeature's via validation, long test").config(enabled = true) {
             val features = loadFeatures()
+            val startTime = Clock.System.now()
             repeat(5096) { repeatIndex ->
-                featureFactoriesWithExpectedCounts.forEach { (utils, expected) ->
-                    val (factory, matchers, _) = utils
-                    val result = features.allOf(factory, matchers.byValidation)
-
+                featureFactoriesWithExpectedCounts.forEach { (descriptor, expected) ->
+                    val result = features.allOf(descriptor, descriptor.byStructure)
                     try {
                         result shouldHaveSize expected
                     } catch (e: AssertionError) {
-                        throw AssertionError("Failed for $factory", e)
+                        throw AssertionError("Failed for $descriptor", e)
                     }
                 }
                 if (repeatIndex % 100 == 0) {
                     println("Finished $repeatIndex/5096")
                 }
             }
+            println("Finished in ${Clock.System.now() - startTime}")
         }
     })

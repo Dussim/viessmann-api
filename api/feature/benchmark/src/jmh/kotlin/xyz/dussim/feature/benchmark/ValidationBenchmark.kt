@@ -200,8 +200,8 @@ open class ValidationBenchmark {
                 encodeDefaults = true
             }
 
-        factory = DeviceTimeseriesMonitoringIonizationFeature.factory
-        validator = DeviceTimeseriesMonitoringIonizationFeature.validationRule
+        factory = DeviceTimeseriesMonitoringIonizationFeature.descriptor
+        validator = DeviceTimeseriesMonitoringIonizationFeature.descriptor.structureValidator
         feature =
             json.decodeFromString(
                 DeviceFeature.serializer(),

@@ -123,8 +123,8 @@ open class ValidationSmallFeatureBenchmark {
                 explicitNulls = false
                 encodeDefaults = true
             }
-        factory = DeviceZigbeeCoordinatorFeature.factory
-        validator = DeviceZigbeeCoordinatorFeature.validationRule
+        factory = DeviceZigbeeCoordinatorFeature.descriptor
+        validator = DeviceZigbeeCoordinatorFeature.descriptor.structureValidator
         feature =
             json.decodeFromString(
                 DeviceFeature.serializer(),
