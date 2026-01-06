@@ -17,10 +17,6 @@ import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
-import xyz.dussim.viessmann.feature.api.FeatureMatchers
-import xyz.dussim.viessmann.feature.api.FeatureUtils
-import xyz.dussim.viessmann.feature.api.IndexedFeatureMatchersFactory
-import xyz.dussim.viessmann.feature.api.IndexedFeatureUtilsFactory
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
@@ -33,20 +29,17 @@ const val COMMAND = "command"
 
 // Naming constants
 private const val IMPL_SUFFIX = "Impl"
-private const val FACTORY_SUFFIX = "Factory"
-private const val MATCHERS_SUFFIX = "Matchers"
-private const val UTILS_SUFFIX = "Utils"
+private const val DESCRIPTOR_SUFFIX = "Descriptor"
 private const val PROPERTY_RULE_SUFFIX = "PropertyRule"
 private const val CONSTRAINT_RULE_SUFFIX = "ConstraintRule"
 
-// Common class names
-val FEATURE_MATCHERS_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureMatchers")
-val FEATURE_UTILS_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureUtils")
+val FEATURE_DESCRIPTOR_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureDescriptor")
 
 // Common member names
 val COMMAND_RULE = MemberName(VALIDATION_PACKAGE, "commandRule")
 val EQUALS_IMPL = MemberName(FEATURE_API_PACKAGE, "equalsImpl")
 val VALIDATION_RESULT_OF = ValidationResult.Companion::class.member("of")
+val FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "FeatureDescriptor")
 
 val DEVICE_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "deviceFeatureRule")
 val GATEWAY_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "gatewayFeatureRule")
@@ -73,6 +66,23 @@ fun featureFactoryType(interfaceType: TypeName): TypeName =
     FeatureFactory::class
         .asClassName()
         .parameterizedBy(interfaceType)
+
+/**
+ * Creates a feature descriptor type for a given interface type.
+ * Handles indexed features.
+ */
+fun featureDescriptorType(
+    interfaceType: TypeName,
+    isIndexed: Boolean,
+): TypeName {
+    val base =
+        if (isIndexed) {
+            FEATURE_DESCRIPTOR_CLASS.nestedClass("Indexed")
+        } else {
+            FEATURE_DESCRIPTOR_CLASS.nestedClass("Static")
+        }
+    return base.parameterizedBy(interfaceType)
+}
 
 /**
  * Creates the PublishedApi annotation spec.
@@ -225,53 +235,13 @@ fun overrideProperty(
         }.build()
 
 /**
- * Creates a type that is either a lambda (Int) -> T for indexed features,
- * or just T for non-indexed features.
- *
- * @param isIndexed Whether the feature is indexed
- * @param returnType The return type (T)
- * @return LambdaTypeName if indexed, otherwise the returnType directly
+ * Generates a descriptor name from a class name.
+ * Example: "MyFeatureImpl" -> "myFeatureDescriptor"
  */
-fun indexedOrDirectType(
-    isIndexed: Boolean,
-    returnType: TypeName,
-): TypeName =
-    if (isIndexed) {
-        when (returnType) {
-            typeNameOf<FeatureUtils>() -> typeNameOf<IndexedFeatureUtilsFactory>()
-            typeNameOf<FeatureMatchers>() -> typeNameOf<IndexedFeatureMatchersFactory>()
-            else -> error("Unsupported return type for indexed feature: $returnType")
-        }
-    } else {
-        returnType
-    }
-
-/**
- * Generates a factory name from a class name.
- * Example: "MyFeatureImpl" -> "myFeatureFactory"
- */
-fun generateFactoryName(className: ClassName): String =
+fun generateDescriptorName(className: ClassName): String =
     className.simpleName
         .replaceFirstChar { it.lowercase() }
-        .removeSuffix(IMPL_SUFFIX) + FACTORY_SUFFIX
-
-/**
- * Generates a matchers name from a class name.
- * Example: "MyFeatureImpl" -> "myFeatureMatchers"
- */
-fun generateMatchersName(className: ClassName): String =
-    className.simpleName
-        .replaceFirstChar { it.lowercase() }
-        .removeSuffix(IMPL_SUFFIX) + MATCHERS_SUFFIX
-
-/**
- * Generates a utils name from a class name.
- * Example: "MyFeatureImpl" -> "myFeatureUtils"
- */
-fun generateUtilsName(className: ClassName): String =
-    className.simpleName
-        .replaceFirstChar { it.lowercase() }
-        .removeSuffix(IMPL_SUFFIX) + UTILS_SUFFIX
+        .removeSuffix(IMPL_SUFFIX) + DESCRIPTOR_SUFFIX
 
 /**
  * Generates a property rule name.

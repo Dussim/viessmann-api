@@ -2,7 +2,6 @@ package xyz.dussim.viessmann.feature.api
 
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
-import kotlin.jvm.JvmRecord
 
 // TODO this should be refactored, first of all exceptions are expensive so it should rather default to getOrNull
 
@@ -49,9 +48,16 @@ fun interface FeatureFactory<F : Feature> {
     operator fun invoke(feature: Feature): F = getOrThrow(feature)
 }
 
+interface NamedFeatureFactory<F : Feature> : FeatureFactory<F> {
+    /**
+     * This is the wildcard name for which this factory was created, but its usage is based mostly on used matcher.
+     */
+    val wildcardName: String
+}
+
 fun interface FeatureMatcher {
     companion object {
-        private class ByValidationImpl(
+        private class ByStructureImpl(
             private val rule: ValidationRule<Feature, *>,
         ) : FeatureMatcher {
             override fun matches(feature: Feature): Boolean = !rule.validate(feature).isInvalid
@@ -73,12 +79,7 @@ fun interface FeatureMatcher {
 
         fun byWildcardName(name: String): FeatureMatcher = ByWildcardNameImpl(name)
 
-        fun byValidation(rule: ValidationRule<Feature, *>): FeatureMatcher = ByValidationImpl(rule)
-
-        fun default(
-            name: String,
-            rule: ValidationRule<Feature, *>,
-        ) = byName(name) andThen byValidation(rule)
+        fun byStructure(rule: ValidationRule<Feature, ValidationError>): FeatureMatcher = ByStructureImpl(rule)
     }
 
     fun matches(feature: Feature): Boolean
@@ -86,27 +87,35 @@ fun interface FeatureMatcher {
 
 infix fun FeatureMatcher.andThen(other: FeatureMatcher): FeatureMatcher = FeatureMatcher { matches(it) && other.matches(it) }
 
-@JvmRecord
-data class FeatureMatchers(
-    val byName: FeatureMatcher,
-    val byWildcardName: FeatureMatcher,
-    val byValidation: FeatureMatcher,
-    val byNameAndValidation: FeatureMatcher = byName andThen byValidation,
-)
+sealed interface FeatureMatcherProvider {
+    val structureValidator: ValidationRule<Feature, ValidationError>
 
-fun interface IndexedFeatureMatchersFactory {
-    operator fun invoke(index: Int): FeatureMatchers
+    val byWildcardName: FeatureMatcher
+    val byStructure: FeatureMatcher
+    val byWildcardNameThenStructure: FeatureMatcher
 }
 
-@JvmRecord
-data class FeatureUtils(
-    val factory: FeatureFactory<*>,
-    val matchers: FeatureMatchers,
-    val validation: ValidationRule<Feature, ValidationError>,
-)
+sealed interface FeatureMatchers : FeatureMatcherProvider {
+    interface Static : FeatureMatchers
 
-fun interface IndexedFeatureUtilsFactory {
-    operator fun invoke(index: Int): FeatureUtils
+    interface Indexed : FeatureMatchers {
+        fun byName(index: Int): FeatureMatcher
+
+        fun byNameThenStructure(index: Int): FeatureMatcher
+    }
+}
+
+sealed interface FeatureDescriptor<F : Feature> :
+    FeatureFactory<F>,
+    ValidationRule<Feature, ValidationError>,
+    FeatureMatcherProvider {
+    interface Static<F : Feature> :
+        FeatureDescriptor<F>,
+        FeatureMatchers.Static
+
+    interface Indexed<F : Feature> :
+        FeatureDescriptor<F>,
+        FeatureMatchers.Indexed
 }
 
 class FeatureResolver(
@@ -142,12 +151,17 @@ class FeatureResolver(
         }
     }
 
-    operator fun get(matcher: FeatureMatcher) = first(matcher)
-
     operator fun <F : Feature> get(
         factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
     ) = firstOf(factory, matcher)
+
+    operator fun <F : Feature> get(descriptor: FeatureDescriptor.Static<F>) = firstOf(descriptor, descriptor.byWildcardNameThenStructure)
+
+    operator fun <F : Feature> get(
+        descriptor: FeatureDescriptor.Indexed<F>,
+        index: Int,
+    ) = firstOf(descriptor, descriptor.byNameThenStructure(index))
 
     private fun <F : Feature> FeatureFactory<F>.ofNullable(feature: Feature?) =
         when (feature) {

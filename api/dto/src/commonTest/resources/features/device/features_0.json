@@ -330,6 +330,10 @@
         "status": {
           "type": "string",
           "value": "error"
+        },
+        "value": {
+          "type": "number",
+          "value": 0
         }
       },
       "commands": {}

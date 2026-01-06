@@ -5,8 +5,8 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.MemberName.Companion.member
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
@@ -15,8 +15,6 @@ import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Feature
-import xyz.dussim.viessmann.feature.api.FeatureFactory
-import xyz.dussim.viessmann.feature.api.FeatureMatcher
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
 
 /**
@@ -155,21 +153,25 @@ fun companionObject(): TypeSpec {
 }
 
 /**
- * Generates internal factory property for creating feature implementations.
+ * Generates internal descriptor property for the feature.
  */
 context(context: SymbolContext)
-fun internalFactoryProperty(): PropertySpec {
-    val factoryType = featureFactoryType(context.superInterface)
-
-    val factoryName = generateFactoryName(context.implName)
+fun internalDescriptorProperty(): PropertySpec {
+    val descriptorName = generateDescriptorName(context.implName)
+    val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
 
     return PropertySpec
-        .builder(factoryName, factoryType)
+        .builder(descriptorName, descriptorType)
         .addModifiers(KModifier.INTERNAL)
         .addAnnotation(PUBLISHED_API_ANNOTATION)
         .initializer(
             buildCodeBlock {
-                add("%T { feature ->\n", FeatureFactory::class)
+                add("%M(\n", FEATURE_DESCRIPTOR_FACTORY)
+                indent()
+                add("wildcardName = %S,\n", context.featureName)
+                add("rule = %T,\n", context.implName)
+                unindent()
+                add(") { feature ->\n")
                 indent()
                 add("feature as? %T ?: %T(\n", context.superInterface, context.implName)
                 indent()
@@ -178,152 +180,41 @@ fun internalFactoryProperty(): PropertySpec {
                     add("${it.name} = feature.${it.name},\n")
                 }
                 add("hashCode = feature.hashCode(),\n")
+                unindent()
                 add(")\n")
                 unindent()
-                unindent()
                 add("}")
+                add(" as %T", descriptorType)
             },
         ).build()
 }
 
 /**
- * Generates internal matchers property for matching features by name and validation.
- */
-context(context: SymbolContext)
-fun internalMatchersProperty(): PropertySpec {
-    val featureMatcherMemberByName = FeatureMatcher.Companion::class.asClassName().member("byName")
-    val featureMatcherMemberByWildcardName = FeatureMatcher.Companion::class.asClassName().member("byWildcardName")
-    val featureMatcherMemberByValidation = FeatureMatcher.Companion::class.asClassName().member("byValidation")
-
-    val matchersName = generateMatchersName(context.implName)
-    val propertyType = indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS)
-
-    val initializer =
-        indexedOrDirectCodeBlock(context.isIndexed) { isIndexed ->
-            CodeBlock
-                .builder()
-                .add("%T(\n", FEATURE_MATCHERS_CLASS)
-                .indent()
-                .apply {
-                    if (isIndexed) {
-                        add("byName = %M(%S.replace(\"{}\", index.toString())),\n", featureMatcherMemberByName, context.featureName)
-                    } else {
-                        add("byName = %M(%S),\n", featureMatcherMemberByName, context.featureName)
-                    }
-                }.add("byWildcardName = %M(%S),\n", featureMatcherMemberByWildcardName, context.featureName)
-                .add("byValidation = %M(%T),\n", featureMatcherMemberByValidation, context.implCompanion)
-                .unindent()
-                .add(")")
-                .build()
-        }
-
-    return PropertySpec
-        .builder(matchersName, propertyType)
-        .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(PUBLISHED_API_ANNOTATION)
-        .initializer(initializer)
-        .build()
-}
-
-/**
- * Generates internal utils property combining factory, matchers, and validation.
- */
-context(context: SymbolContext)
-fun internalUtilsProperty(): PropertySpec {
-    val utilsName = generateUtilsName(context.implName)
-    val factoryName = generateFactoryName(context.implName)
-    val matchersName = generateMatchersName(context.implName)
-
-    val propertyType = indexedOrDirectType(context.isIndexed, FEATURE_UTILS_CLASS)
-
-    val initializer =
-        indexedOrDirectCodeBlock(context.isIndexed) { isIndexed ->
-            CodeBlock
-                .builder()
-                .add("%T(\n", FEATURE_UTILS_CLASS)
-                .indent()
-                .add("factory = %N,\n", factoryName)
-                .apply {
-                    if (isIndexed) {
-                        add("matchers = %N(index),\n", matchersName)
-                    } else {
-                        add("matchers = %N,\n", matchersName)
-                    }
-                }.add("validation = %T,\n", context.implCompanion)
-                .unindent()
-                .add(")")
-                .build()
-        }
-
-    return PropertySpec
-        .builder(utilsName, propertyType)
-        .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(PUBLISHED_API_ANNOTATION)
-        .initializer(initializer)
-        .build()
-}
-
-/**
  * Generates extension properties for feature companion objects.
- * Includes factory, validationRule, featureName, matchers, and utils properties.
+ * Includes descriptor property.
  */
 context(context: SymbolContext)
 fun featureExtensions(): List<PropertySpec> {
-    val superCompanion = context.superInterfaceCompanion
-
-    val factoryProperty =
-        extensionProperty(
-            "factory",
-            superCompanion,
-            featureFactoryType(context.superInterface),
-            "return %N",
-            generateFactoryName(context.implName),
-        )
-
-    val validationRuleProperty =
-        extensionProperty(
-            "validationRule",
-            superCompanion,
-            FEATURE_VALIDATION_RULE_TYPE,
-            "return %T",
-            context.implCompanion,
-        )
-
-    val featureNameProperty =
-        extensionProperty(
-            "featureName",
-            superCompanion,
-            typeNameOf<String>(),
-            "return %S",
-            context.featureName,
-        )
-
-    val matchersProperty =
-        extensionProperty(
-            "matchers",
-            superCompanion,
-            indexedOrDirectType(context.isIndexed, FEATURE_MATCHERS_CLASS),
-            "return %N",
-            generateMatchersName(context.implName),
-        )
-
-    val utilsProperty =
-        extensionProperty(
-            "utils",
-            superCompanion,
-            indexedOrDirectType(context.isIndexed, FEATURE_UTILS_CLASS),
-            "return %N",
-            generateUtilsName(context.implName),
-        )
-
-    return listOf(factoryProperty, validationRuleProperty, featureNameProperty, matchersProperty, utilsProperty)
+    val descriptorName = generateDescriptorName(context.implName)
+    val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
+    return listOf(
+        PropertySpec
+            .builder("descriptor", descriptorType)
+            .receiver(context.superInterfaceCompanion)
+            .getter(
+                FunSpec
+                    .getterBuilder()
+                    .addModifiers(KModifier.INLINE)
+                    .addStatement("return %N", descriptorName)
+                    .build(),
+            ).build(),
+    )
 }
 
 /**
  * Generates complete feature implementation including:
  * - Main implementation class
  * - Factory functions
- * - Matchers for feature lookup
  * - Utils combining factory, matchers, and validation
  * - Command implementations
  * - Extension properties
@@ -376,9 +267,7 @@ fun generateFeatureImplementation(context: SymbolContext) =
             .builder(context.implName)
             .addType(classImpl)
             .apply {
-                addProperty(internalFactoryProperty())
-                addProperty(internalMatchersProperty())
-                addProperty(internalUtilsProperty())
+                addProperty(internalDescriptorProperty())
             }.addProperties(featureExtensions())
             .build()
     }
