@@ -50,17 +50,17 @@ fun FeatureMatchers(
 
 fun <F : Feature> FeatureDescriptor(
     matchers: FeatureMatchers,
-    factory: NamedFeatureFactory<F>,
+    factory: FeatureFactory<F>,
     rule: ValidationRule<Feature, ValidationError>,
 ): FeatureDescriptor<F> =
     when (matchers) {
         is FeatureMatchers.Indexed -> {
-            object : FeatureDescriptor.Indexed<F>, NamedFeatureFactory<F> by factory, FeatureMatchers.Indexed by matchers, ValidationRule<Feature, ValidationError> by rule {
+            object : FeatureDescriptor.Indexed<F>, FeatureFactory<F> by factory, FeatureMatchers.Indexed by matchers, ValidationRule<Feature, ValidationError> by rule {
             }
         }
 
         is FeatureMatchers.Static -> {
-            object : FeatureDescriptor.Static<F>, NamedFeatureFactory<F> by factory, FeatureMatchers.Static by matchers, ValidationRule<Feature, ValidationError> by rule {
+            object : FeatureDescriptor.Static<F>, FeatureFactory<F> by factory, FeatureMatchers.Static by matchers, ValidationRule<Feature, ValidationError> by rule {
             }
         }
     }
@@ -72,6 +72,6 @@ fun <F : Feature> FeatureDescriptor(
 ): FeatureDescriptor<F> =
     FeatureDescriptor(
         matchers = FeatureMatchers(wildcardName, rule),
-        factory = NamedFeatureFactory(wildcardName, factory),
+        factory = factory,
         rule = rule,
     )
