@@ -2,6 +2,7 @@ plugins {
     alias(conventions.plugins.xyz.dussim.kotlin.jvm.common)
     alias(libs.plugins.ksp)
     id("me.champeau.jmh") version "0.7.3"
+    id("xyz.dussim.jmhreport") version "0.10.1"
 }
 
 dependencies {
@@ -35,6 +36,10 @@ jmh {
 
     // exclude map benchmark as I already established performance
 //    excludes.addAll(".*MapBenchmark.*")
+}
+
+tasks.jmh {
+    finalizedBy(tasks.jmhReport)
 }
 
 group = "xyz.dussim.feature.benchmark"
