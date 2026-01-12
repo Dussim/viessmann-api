@@ -26,134 +26,80 @@ import kotlin.jvm.JvmRecord
 import kotlin.reflect.KClass
 
 @PublishedApi
-internal const val stringValueClassIndex = 0
+internal const val STRING_VALUE_CLASS_INDEX = 0
 
 @PublishedApi
-internal val stringValueClass = StringValue::class
+internal const val BOOLEAN_VALUE_CLASS_INDEX = 1
 
 @PublishedApi
-internal const val booleanValueClassIndex = 1
+internal const val DOUBLE_VALUE_CLASS_INDEX = 2
 
 @PublishedApi
-internal val booleanValueClass = BooleanValue::class
+internal const val LIST_DOUBLE_VALUE_CLASS_INDEX = 3
 
 @PublishedApi
-internal const val doubleValueClassIndex = 2
+internal const val LIST_STRING_VALUE_CLASS_INDEX = 4
 
 @PublishedApi
-internal val doubleValueClass = DoubleValue::class
+internal const val LIST_DEVICE_ERROR_VALUE_CLASS_INDEX = 5
 
 @PublishedApi
-internal const val listDoubleValueClassIndex = 3
+internal const val LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX = 6
 
 @PublishedApi
-internal val listDoubleValueClass = ListDoubleValue::class
+internal const val LIST_ROOM_ACTOR_VALUE_CLASS_INDEX = 7
 
 @PublishedApi
-internal const val listStringValueClassIndex = 4
+internal const val LIST_DEVICE_VALUE_CLASS_INDEX = 8
 
 @PublishedApi
-internal val listStringValueClass = ListStringValue::class
+internal const val OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX = 9
 
 @PublishedApi
-internal const val listDeviceErrorValueClassIndex = 5
+internal const val SCHEDULE_VALUE_CLASS_INDEX = 10
 
 @PublishedApi
-internal val listDeviceErrorValueClass = ListDeviceErrorValue::class
+internal const val LIST_EMPTY_VALUE_CLASS_INDEX = 11
 
 @PublishedApi
-internal const val listZigbeeDeviceStatusValueClassIndex = 6
+internal const val UNKNOWN_VALUE_CLASS_INDEX = 12
 
 @PublishedApi
-internal val listZigbeeDeviceStatusValueClass = ListZigbeeDeviceStatusValue::class
+internal const val BOOLEAN_CONSTRAINTS_CLASS_INDEX = 13
 
 @PublishedApi
-internal const val listRoomActorValueClassIndex = 7
+internal const val NUMBER_CONSTRAINTS_CLASS_INDEX = 14
 
 @PublishedApi
-internal val listRoomActorValueClass = ListRoomActorValue::class
+internal const val STRING_CONSTRAINTS_CLASS_INDEX = 15
 
 @PublishedApi
-internal const val listDeviceValueClassIndex = 8
+internal const val SCHEDULE_CONSTRAINTS_CLASS_INDEX = 16
 
 @PublishedApi
-internal val listDeviceValueClass = ListDeviceValue::class
-
-@PublishedApi
-internal const val objectOtherRoomConfigurationValueClassIndex = 9
-
-@PublishedApi
-internal val objectOtherRoomConfigurationValueClass = ObjectOtherRoomConfigurationValue::class
-
-@PublishedApi
-internal const val scheduleValueClassIndex = 10
-
-@PublishedApi
-internal val scheduleValueClass = ScheduleValue::class
-
-@PublishedApi
-internal const val listEmptyValueClassIndex = 11
-
-@PublishedApi
-internal val listEmptyValueClass = ListEmptyValue::class
-
-@PublishedApi
-internal const val unknownValueClassIndex = 12
-
-@PublishedApi
-internal val unknownValueClass = UnknownValue::class
-
-@PublishedApi
-internal const val booleanConstraintsClassIndex = 13
-
-@PublishedApi
-internal val booleanConstraintsClass = BooleanConstraints::class
-
-@PublishedApi
-internal const val numberConstraintsClassIndex = 14
-
-@PublishedApi
-internal val numberConstraintsClass = NumberConstraints::class
-
-@PublishedApi
-internal const val stringConstraintsClassIndex = 15
-
-@PublishedApi
-internal val stringConstraintsClass = StringConstraints::class
-
-@PublishedApi
-internal const val scheduleConstraintsClassIndex = 16
-
-@PublishedApi
-internal val scheduleConstraintsClass = ScheduleConstraints::class
-
-@PublishedApi
-internal const val unknownConstraintsClassIndex = 17
-
-@PublishedApi
-internal val unknownConstraintsClass = UnknownConstraints::class
+internal const val UNKNOWN_CONSTRAINTS_CLASS_INDEX = 17
 
 private val EXPECTED_ACTUAL_CLASSES by lazy {
     val all =
         listOf(
-            stringValueClass,
-            booleanValueClass,
-            doubleValueClass,
-            listDoubleValueClass,
-            listStringValueClass,
-            listDeviceErrorValueClass,
-            listZigbeeDeviceStatusValueClass,
-            listRoomActorValueClass,
-            listDeviceValueClass,
-            objectOtherRoomConfigurationValueClass,
-            scheduleValueClass,
-            listEmptyValueClass,
-            unknownValueClass,
-            booleanConstraintsClass,
-            numberConstraintsClass,
-            stringConstraintsClass,
-            scheduleConstraintsClass,
-            unknownConstraintsClass,
+            StringValue::class,
+            BooleanValue::class,
+            DoubleValue::class,
+            ListDoubleValue::class,
+            ListStringValue::class,
+            ListDeviceErrorValue::class,
+            ListZigbeeDeviceStatusValue::class,
+            ListRoomActorValue::class,
+            ListDeviceValue::class,
+            ObjectOtherRoomConfigurationValue::class,
+            ScheduleValue::class,
+            ListEmptyValue::class,
+            UnknownValue::class,
+            BooleanConstraints::class,
+            NumberConstraints::class,
+            StringConstraints::class,
+            ScheduleConstraints::class,
+            UnknownConstraints::class,
         )
 
     buildList(all.size * all.size) {
@@ -169,20 +115,21 @@ private val EXPECTED_ACTUAL_CLASSES by lazy {
 value class ExpectedActualClass internal constructor(
     internal val indexIntoList: Int,
 ) {
-    init {
-        require(indexIntoList >= 0) { "Index into list must be non-negative, got $indexIntoList" }
-        require(indexIntoList < 18 * 18) { "Index into list must be less than 18 * 18, got $indexIntoList" }
-    }
-
-    val expectedClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].first
-    val actualClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].second
-
     companion object {
         fun of(
             expected: Int,
             actual: Int,
         ) = ExpectedActualClass(expected * 18 + actual)
     }
+
+    init {
+        require(indexIntoList >= 0) { "Index into list must be non-negative, got $indexIntoList" }
+        require(indexIntoList < 18 * 18) { "Index into list must be less than 18 * 18, got $indexIntoList" }
+    }
+
+    val expectedClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].first
+
+    val actualClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].second
 }
 
 // Cache common error types to avoid repeated allocations, I identified kotlin was caching those ::class calls, but it was still slower than this

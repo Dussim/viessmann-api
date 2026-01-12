@@ -105,27 +105,28 @@ internal inline fun <reified T : Constraints<*>> typedCommandRule(
     }
 }
 
-fun stringPropertyRule(propertyName: String) = typedPropertyRule<StringValue>(propertyName, stringValueClassIndex)
+fun stringPropertyRule(propertyName: String) = typedPropertyRule<StringValue>(propertyName, STRING_VALUE_CLASS_INDEX)
 
-fun booleanPropertyRule(propertyName: String) = typedPropertyRule<BooleanValue>(propertyName, booleanValueClassIndex)
+fun booleanPropertyRule(propertyName: String) = typedPropertyRule<BooleanValue>(propertyName, BOOLEAN_VALUE_CLASS_INDEX)
 
-fun doublePropertyRule(propertyName: String) = typedPropertyRule<DoubleValue>(propertyName, doubleValueClassIndex)
+fun doublePropertyRule(propertyName: String) = typedPropertyRule<DoubleValue>(propertyName, DOUBLE_VALUE_CLASS_INDEX)
 
-fun listDoublePropertyRule(propertyName: String) = typedListPropertyRule<ListDoubleValue>(propertyName, listDoubleValueClassIndex)
+fun listDoublePropertyRule(propertyName: String) = typedListPropertyRule<ListDoubleValue>(propertyName, LIST_DOUBLE_VALUE_CLASS_INDEX)
 
-fun listStringPropertyRule(propertyName: String) = typedListPropertyRule<ListStringValue>(propertyName, listStringValueClassIndex)
+fun listStringPropertyRule(propertyName: String) = typedListPropertyRule<ListStringValue>(propertyName, LIST_STRING_VALUE_CLASS_INDEX)
 
-fun listDeviceErrorPropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceErrorValue>(propertyName, listDeviceErrorValueClassIndex)
+fun listDeviceErrorPropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceErrorValue>(propertyName, LIST_DEVICE_ERROR_VALUE_CLASS_INDEX)
 
-fun listZigbeeDeviceStatusPropertyRule(propertyName: String) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName, listZigbeeDeviceStatusValueClassIndex)
+fun listZigbeeDeviceStatusPropertyRule(propertyName: String) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName, LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX)
 
-fun listRoomActorPropertyRule(propertyName: String) = typedListPropertyRule<ListRoomActorValue>(propertyName, listRoomActorValueClassIndex)
+fun listRoomActorPropertyRule(propertyName: String) = typedListPropertyRule<ListRoomActorValue>(propertyName, LIST_ROOM_ACTOR_VALUE_CLASS_INDEX)
 
-fun listDevicePropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceValue>(propertyName, listDeviceValueClassIndex)
+fun listDevicePropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceValue>(propertyName, LIST_DEVICE_VALUE_CLASS_INDEX)
 
-fun objectOtherRoomConfigurationPropertyRule(propertyName: String) = typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName, objectOtherRoomConfigurationValueClassIndex)
+fun objectOtherRoomConfigurationPropertyRule(propertyName: String) =
+    typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName, OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX)
 
-fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName, scheduleValueClassIndex)
+fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName, SCHEDULE_VALUE_CLASS_INDEX)
 
 fun numberOfParametersRule(
     expected: Int,
@@ -143,15 +144,16 @@ fun numberOfParametersRule(
     }
 }
 
-fun stringConstraintsRule(parameterName: String) = typedCommandRule<StringConstraints>(parameterName, stringConstraintsClassIndex)
+fun stringConstraintsRule(parameterName: String) = typedCommandRule<StringConstraints>(parameterName, STRING_CONSTRAINTS_CLASS_INDEX)
 
-fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstraints>(parameterName, numberConstraintsClassIndex)
+fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstraints>(parameterName, NUMBER_CONSTRAINTS_CLASS_INDEX)
 
-fun booleanConstraintsRule(parameterName: String) = typedCommandRule<BooleanConstraints>(parameterName, booleanConstraintsClassIndex)
+fun booleanConstraintsRule(parameterName: String) = typedCommandRule<BooleanConstraints>(parameterName, BOOLEAN_CONSTRAINTS_CLASS_INDEX)
 
-fun unknownConstraintsRule(parameterName: String) = typedCommandRule<UnknownConstraints>(parameterName, unknownConstraintsClassIndex)
+fun unknownConstraintsRule(parameterName: String) = typedCommandRule<UnknownConstraints>(parameterName, UNKNOWN_CONSTRAINTS_CLASS_INDEX)
 
-fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> = typedCommandRule<ScheduleConstraints>(parameterName, scheduleConstraintsClassIndex)
+fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> =
+    typedCommandRule<ScheduleConstraints>(parameterName, SCHEDULE_CONSTRAINTS_CLASS_INDEX)
 
 fun commandRule(
     commandName: String,

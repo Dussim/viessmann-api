@@ -58,7 +58,7 @@ internal data object ParameterSerializer : KSerializer<Parameter> {
             encodeStringElement(descriptor, 0, value.type)
             encodeBooleanElement(descriptor, 1, value.required)
             when (val constraints = value.constraints) {
-                BooleanConstraints -> encodeSerializableElement(descriptor, 2, JsonObject.Companion.serializer(), emptyObject)
+                BooleanConstraints -> encodeSerializableElement(descriptor, 2, JsonObject.serializer(), emptyObject)
                 is NumberConstraints -> encodeSerializableElement(descriptor, 2, NumberConstraints.serializer(), constraints)
                 is ScheduleConstraints -> encodeSerializableElement(descriptor, 2, ScheduleConstraints.serializer(), constraints)
                 is StringConstraints -> encodeSerializableElement(descriptor, 2, StringConstraints.serializer(), constraints)

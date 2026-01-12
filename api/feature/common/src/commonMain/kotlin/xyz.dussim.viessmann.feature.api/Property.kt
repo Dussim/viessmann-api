@@ -4,19 +4,19 @@ package xyz.dussim.viessmann.feature.api
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import xyz.dussim.viessmann.feature.api.validation.booleanValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.doubleValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.listDeviceErrorValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.listDeviceValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.listDoubleValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.listEmptyValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.listRoomActorValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.listStringValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.listZigbeeDeviceStatusValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.objectOtherRoomConfigurationValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.scheduleValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.stringValueClassIndex
-import xyz.dussim.viessmann.feature.api.validation.unknownValueClassIndex
+import xyz.dussim.viessmann.feature.api.validation.BOOLEAN_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.DOUBLE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_DEVICE_ERROR_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_DEVICE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_DOUBLE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_EMPTY_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_ROOM_ACTOR_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_STRING_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.SCHEDULE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.STRING_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.UNKNOWN_VALUE_CLASS_INDEX
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmRecord
 import kotlin.time.Instant
@@ -54,28 +54,28 @@ sealed interface ListPropertyValue
 data class UnknownValue(
     override val element: JsonElement,
 ) : PropertyValue<JsonElement> {
-    override val propertyValueClassIndex get() = unknownValueClassIndex
+    override val propertyValueClassIndex get() = UNKNOWN_VALUE_CLASS_INDEX
 }
 
 @JvmRecord
 data class BooleanValue(
     override val element: Boolean,
 ) : PropertyValue<Boolean> {
-    override val propertyValueClassIndex get() = booleanValueClassIndex
+    override val propertyValueClassIndex get() = BOOLEAN_VALUE_CLASS_INDEX
 }
 
 @JvmRecord
 data class DoubleValue(
     override val element: Double,
 ) : PropertyValue<Double> {
-    override val propertyValueClassIndex get() = doubleValueClassIndex
+    override val propertyValueClassIndex get() = DOUBLE_VALUE_CLASS_INDEX
 }
 
 @JvmRecord
 data class StringValue(
     override val element: String,
 ) : PropertyValue<String> {
-    override val propertyValueClassIndex get() = stringValueClassIndex
+    override val propertyValueClassIndex get() = STRING_VALUE_CLASS_INDEX
 }
 
 @JvmRecord
@@ -83,7 +83,7 @@ data class ListDoubleValue(
     override val element: List<Double>,
 ) : PropertyValue<List<Double>>,
     ListPropertyValue {
-    override val propertyValueClassIndex get() = listDoubleValueClassIndex
+    override val propertyValueClassIndex get() = LIST_DOUBLE_VALUE_CLASS_INDEX
 
     companion object {
         val EMPTY = ListDoubleValue(emptyList())
@@ -95,7 +95,7 @@ data class ListStringValue(
     override val element: List<String>,
 ) : PropertyValue<List<String>>,
     ListPropertyValue {
-    override val propertyValueClassIndex get() = listStringValueClassIndex
+    override val propertyValueClassIndex get() = LIST_STRING_VALUE_CLASS_INDEX
 
     companion object {
         val EMPTY = ListStringValue(emptyList())
@@ -107,7 +107,7 @@ data class ListDeviceErrorValue(
     override val element: List<DeviceError>,
 ) : PropertyValue<List<DeviceError>>,
     ListPropertyValue {
-    override val propertyValueClassIndex get() = listDeviceErrorValueClassIndex
+    override val propertyValueClassIndex get() = LIST_DEVICE_ERROR_VALUE_CLASS_INDEX
 
     companion object {
         val EMPTY = ListDeviceErrorValue(emptyList())
@@ -119,7 +119,7 @@ data class ListZigbeeDeviceStatusValue(
     override val element: List<ZigbeeDeviceStatus>,
 ) : PropertyValue<List<ZigbeeDeviceStatus>>,
     ListPropertyValue {
-    override val propertyValueClassIndex get() = listZigbeeDeviceStatusValueClassIndex
+    override val propertyValueClassIndex get() = LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX
 
     companion object {
         val EMPTY = ListZigbeeDeviceStatusValue(emptyList())
@@ -131,7 +131,7 @@ data class ListRoomActorValue(
     override val element: List<RoomActor>,
 ) : PropertyValue<List<RoomActor>>,
     ListPropertyValue {
-    override val propertyValueClassIndex get() = listRoomActorValueClassIndex
+    override val propertyValueClassIndex get() = LIST_ROOM_ACTOR_VALUE_CLASS_INDEX
 
     companion object {
         val EMPTY = ListRoomActorValue(emptyList())
@@ -143,7 +143,7 @@ data class ListDeviceValue(
     override val element: List<Device>,
 ) : PropertyValue<List<Device>>,
     ListPropertyValue {
-    override val propertyValueClassIndex get() = listDeviceValueClassIndex
+    override val propertyValueClassIndex get() = LIST_DEVICE_VALUE_CLASS_INDEX
 
     companion object {
         val EMPTY = ListDeviceValue(emptyList())
@@ -154,19 +154,19 @@ data class ListDeviceValue(
 data class ObjectOtherRoomConfigurationValue(
     override val element: OtherRoomConfiguration,
 ) : PropertyValue<OtherRoomConfiguration> {
-    override val propertyValueClassIndex get() = objectOtherRoomConfigurationValueClassIndex
+    override val propertyValueClassIndex get() = OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX
 }
 
 @JvmRecord
 data class ScheduleValue(
     override val element: Map<String, List<Schedule>>,
 ) : PropertyValue<Map<String, List<Schedule>>> {
-    override val propertyValueClassIndex get() = scheduleValueClassIndex
+    override val propertyValueClassIndex get() = SCHEDULE_VALUE_CLASS_INDEX
 }
 
 data object ListEmptyValue : PropertyValue<List<Nothing>>, ListPropertyValue {
     override val element = emptyList<Nothing>()
-    override val propertyValueClassIndex get() = listEmptyValueClassIndex
+    override val propertyValueClassIndex get() = LIST_EMPTY_VALUE_CLASS_INDEX
 }
 
 @OptIn(kotlin.time.ExperimentalTime::class)
