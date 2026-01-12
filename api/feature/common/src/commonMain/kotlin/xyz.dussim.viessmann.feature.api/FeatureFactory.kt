@@ -48,13 +48,6 @@ fun interface FeatureFactory<F : Feature> {
     operator fun invoke(feature: Feature): F = getOrThrow(feature)
 }
 
-interface NamedFeatureFactory<F : Feature> : FeatureFactory<F> {
-    /**
-     * This is the wildcard name for which this factory was created, but its usage is based mostly on used matcher.
-     */
-    val wildcardName: String
-}
-
 fun interface FeatureMatcher {
     companion object {
         private class ByStructureImpl(
