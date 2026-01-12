@@ -24,23 +24,49 @@ import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
 import xyz.dussim.viessmann.feature.api.validation.PropertyValidationErrors.getMismatchProperties
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Constraint
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentType.Property
+import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentTypeMismatch
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.MissingComponent
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch.Expected
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.WrongFeatureImplementation
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 
-@PublishedApi
-internal val featureDeviceClass = Feature.Device::class
+private val GEOFENCING_BUT_SHOULD_BE_DEVICE =
+    ExpectedActualClass.of(
+        expected = FEATURE_DEVICE_CLASS_INDEX,
+        actual = FEATURE_GEOFENCING_CLASS_INDEX,
+    )
 
-@PublishedApi
-internal val featureGatewayClass = Feature.Gateway::class
+private val GATEWAY_BUT_SHOULD_BE_DEVICE =
+    ExpectedActualClass.of(
+        expected = FEATURE_DEVICE_CLASS_INDEX,
+        actual = FEATURE_GATEWAY_CLASS_INDEX,
+    )
 
-@PublishedApi
-internal val featureGeofencingClass = Feature.Geofencing::class
+private val DEVICE_BUT_SHOULD_BE_GEOFENCING =
+    ExpectedActualClass.of(
+        expected = FEATURE_GEOFENCING_CLASS_INDEX,
+        actual = FEATURE_DEVICE_CLASS_INDEX,
+    )
+
+private val GATEWAY_BUT_SHOULD_BE_GEOFENCING =
+    ExpectedActualClass.of(
+        expected = FEATURE_GEOFENCING_CLASS_INDEX,
+        actual = FEATURE_GATEWAY_CLASS_INDEX,
+    )
+
+private val DEVICE_BUT_SHOULD_BE_GATEWAY =
+    ExpectedActualClass.of(
+        expected = FEATURE_GATEWAY_CLASS_INDEX,
+        actual = FEATURE_DEVICE_CLASS_INDEX,
+    )
+
+private val GEOFENCING_BUT_SHOULD_BE_GATEWAY =
+    ExpectedActualClass.of(
+        expected = FEATURE_GATEWAY_CLASS_INDEX,
+        actual = FEATURE_GEOFENCING_CLASS_INDEX,
+    )
+
+val MISSING_COMMAND_EXPECTED_CLASS = ExpectedActualClass.of(COMMAND_CLASS_INDEX)
 
 @PublishedApi
 internal inline fun propertyHash(
@@ -53,8 +79,8 @@ internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
     propertyName: String,
     expectedIndex: Int,
 ): ValidationRule<Feature, ValidationError> {
-    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
-    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
+    val missingError = Invalid(MissingComponent(propertyName, ExpectedActualClass.of(expectedIndex)))
+    val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
     val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { target ->
@@ -72,8 +98,8 @@ internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
     propertyName: String,
     expectedIndex: Int,
 ): ValidationRule<Feature, ValidationError> {
-    val missingError = Invalid(MissingComponent(Property, propertyName, T::class))
-    val getMismatchProperties = getMismatchProperties(Property, propertyName, expectedIndex)
+    val missingError = Invalid(MissingComponent(propertyName, ExpectedActualClass.of(expectedIndex)))
+    val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
     val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { target ->
@@ -91,8 +117,8 @@ internal inline fun <reified T : Constraints<*>> typedCommandRule(
     parameterName: String,
     expectedIndex: Int,
 ): ValidationRule<Command, ValidationError> {
-    val missingError = Invalid(MissingComponent(ComponentType.Command, parameterName, T::class))
-    val getMismatchProperties = getMismatchProperties(Constraint, parameterName, expectedIndex)
+    val missingError = Invalid(MissingComponent(parameterName, ExpectedActualClass.of(expectedIndex)))
+    val getMismatchProperties = getMismatchProperties(parameterName, expectedIndex)
     val precomputedHash = propertyHash(parameterName.hashCode(), parameterName.length)
 
     return ValidationRule { target ->
@@ -132,7 +158,7 @@ fun numberOfParametersRule(
     expected: Int,
     name: String,
 ): ValidationRule<Command, ValidationError> {
-    val expectedData = Expected(ComponentType.Command, name, expected)
+    val expectedData = Expected(name, expected)
     return ValidationRule { command ->
         if (command.params.size == expected) {
             return@ValidationRule ValidationResult.Valid
@@ -159,17 +185,17 @@ fun commandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,
 ): ValidationRule<Feature, ValidationError> {
-    val missingError = Invalid(MissingComponent(ComponentType.Feature, commandName, Command::class))
-    val combined = propertyHash(commandName.hashCode(), commandName.length)
+    val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
 
     return ValidationRule { feature ->
-        innerRule.validate(feature.commands[commandName, combined] ?: return@ValidationRule missingError)
+        innerRule.validate(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
     }
 }
 
 fun deviceFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
-    val gatewayError = Invalid(WrongFeatureImplementation(featureName, featureGatewayClass, featureDeviceClass))
-    val geofencingError = Invalid(WrongFeatureImplementation(featureName, featureGeofencingClass, featureDeviceClass))
+    val gatewayError = Invalid(ComponentTypeMismatch(featureName, GATEWAY_BUT_SHOULD_BE_DEVICE))
+    val geofencingError = Invalid(ComponentTypeMismatch(featureName, GEOFENCING_BUT_SHOULD_BE_DEVICE))
 
     return ValidationRule { feature ->
         when (feature) {
@@ -181,8 +207,8 @@ fun deviceFeatureRule(featureName: String): ValidationRule<Feature, ValidationEr
 }
 
 fun gatewayFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
-    val deviceError = Invalid(WrongFeatureImplementation(featureName, featureDeviceClass, featureGatewayClass))
-    val geofencingError = Invalid(WrongFeatureImplementation(featureName, featureGeofencingClass, featureGatewayClass))
+    val deviceError = Invalid(ComponentTypeMismatch(featureName, DEVICE_BUT_SHOULD_BE_GATEWAY))
+    val geofencingError = Invalid(ComponentTypeMismatch(featureName, GEOFENCING_BUT_SHOULD_BE_GATEWAY))
 
     return ValidationRule { feature ->
         when (feature) {
@@ -194,8 +220,8 @@ fun gatewayFeatureRule(featureName: String): ValidationRule<Feature, ValidationE
 }
 
 fun geofencingFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
-    val deviceError = Invalid(WrongFeatureImplementation(featureName, featureDeviceClass, featureGeofencingClass))
-    val gatewayError = Invalid(WrongFeatureImplementation(featureName, featureGatewayClass, featureGeofencingClass))
+    val deviceError = Invalid(ComponentTypeMismatch(featureName, DEVICE_BUT_SHOULD_BE_GEOFENCING))
+    val gatewayError = Invalid(ComponentTypeMismatch(featureName, GATEWAY_BUT_SHOULD_BE_GEOFENCING))
 
     return ValidationRule { feature ->
         when (feature) {

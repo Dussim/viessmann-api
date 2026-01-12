@@ -2,6 +2,7 @@ package xyz.dussim.viessmann.feature.api.validation
 
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.BooleanValue
+import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
@@ -79,6 +80,21 @@ internal const val SCHEDULE_CONSTRAINTS_CLASS_INDEX = 16
 @PublishedApi
 internal const val UNKNOWN_CONSTRAINTS_CLASS_INDEX = 17
 
+@PublishedApi
+internal const val COMMAND_CLASS_INDEX = 18
+
+@PublishedApi
+internal const val FEATURE_DEVICE_CLASS_INDEX = 19
+
+@PublishedApi
+internal const val FEATURE_GATEWAY_CLASS_INDEX = 20
+
+@PublishedApi
+internal const val FEATURE_GEOFENCING_CLASS_INDEX = 21
+
+@PublishedApi
+internal const val MISSING_COMPONENT_CLASS_INDEX = 22
+
 private val EXPECTED_ACTUAL_CLASSES by lazy {
     val all =
         listOf(
@@ -100,6 +116,11 @@ private val EXPECTED_ACTUAL_CLASSES by lazy {
             StringConstraints::class,
             ScheduleConstraints::class,
             UnknownConstraints::class,
+            Command::class,
+            Feature.Device::class,
+            Feature.Gateway::class,
+            Feature.Geofencing::class,
+            Nothing::class,
         )
 
     buildList(all.size * all.size) {
@@ -116,23 +137,30 @@ value class ExpectedActualClass internal constructor(
     internal val indexIntoList: Int,
 ) {
     companion object {
+        private const val SIZE = 23
+
         fun of(
             expected: Int,
             actual: Int,
-        ) = ExpectedActualClass(expected * 18 + actual)
+        ) = ExpectedActualClass(expected * SIZE + actual)
+
+        fun of(expected: Int) = ExpectedActualClass(expected * SIZE + MISSING_COMPONENT_CLASS_INDEX)
     }
 
     init {
         require(indexIntoList >= 0) { "Index into list must be non-negative, got $indexIntoList" }
-        require(indexIntoList < 18 * 18) { "Index into list must be less than 18 * 18, got $indexIntoList" }
+        require(indexIntoList < SIZE * SIZE) { "Index into list must be less than ${SIZE * SIZE}, got $indexIntoList" }
     }
 
     val expectedClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].first
 
     val actualClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].second
+
+    val firstIndex get() = indexIntoList / SIZE
+    val secondIndex get() = indexIntoList % SIZE
 }
 
-// Cache common error types to avoid repeated allocations, I identified kotlin was caching those ::class calls, but it was still slower than this
+// Cache common error types to avoid repeated allocations
 @Suppress("NOTHING_TO_INLINE")
 object PropertyValidationErrors {
     fun interface MismatchPropertiesGetter {
@@ -141,10 +169,9 @@ object PropertyValidationErrors {
 
     @PublishedApi
     internal val mismatches =
-        Array(18) { IntToObjectMap.of<ValidationResult<ComponentTypeMismatch>>() }
+        Array(23) { IntToObjectMap.of<ValidationResult<ComponentTypeMismatch>>() }
 
     inline fun getMismatchProperties(
-        typeOfComponent: ValidationError.ComponentType,
         nameOfComponent: String,
         expectedIndex: Int,
     ): MismatchPropertiesGetter =
@@ -157,7 +184,6 @@ object PropertyValidationErrors {
                 val value =
                     Invalid(
                         ComponentTypeMismatch(
-                            typeOfComponent,
                             nameOfComponent,
                             ExpectedActualClass.of(expectedIndex, actualIndex),
                         ),
@@ -175,24 +201,15 @@ object PropertyValidationErrors {
 }
 
 sealed interface ValidationError {
-    enum class ComponentType {
-        Feature,
-        Property,
-        Command,
-        Constraint,
-    }
-
     @JvmRecord
     data class MissingComponent(
-        val typeOfComponent: ComponentType,
-        val nameOfComponent: String,
-        val expectedTypeOfComponent: KClass<*>,
+        val name: String,
+        val expectedActualClass: ExpectedActualClass,
     ) : ValidationError
 
     @JvmRecord
     data class ComponentTypeMismatch(
-        val typeOfComponent: ComponentType,
-        val nameOfComponent: String,
+        val name: String,
         val expectedActualClass: ExpectedActualClass,
     ) : ValidationError
 
@@ -202,16 +219,8 @@ sealed interface ValidationError {
         val actual: Int,
     ) : ValidationError {
         data class Expected(
-            val typeOfComponent: ComponentType,
             val nameOfComponent: String,
             val expected: Int,
         )
     }
-
-    @JvmRecord
-    data class WrongFeatureImplementation(
-        val featureName: String,
-        val expected: KClass<out Feature>,
-        val actual: KClass<out Feature>,
-    ) : ValidationError
 }
