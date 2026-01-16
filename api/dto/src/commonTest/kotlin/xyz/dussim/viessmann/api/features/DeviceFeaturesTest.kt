@@ -1,16 +1,17 @@
 package xyz.dussim.viessmann.api.features
 
 import io.kotest.assertions.assertSoftly
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import xyz.dussim.viessmann.api.models.ResponseData
-import xyz.dussim.viessmann.api.testing.ParseSpec
+import xyz.dussim.viessmann.api.utils.json
 import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.FeatureResolver
 import xyz.dussim.viessmann.feature.api.StringValue
 
 class DeviceFeaturesTest :
-    ParseSpec({ json ->
+    FunSpec({
         val features =
             json
                 .decodeFromString<ResponseData<DeviceFeature>>(

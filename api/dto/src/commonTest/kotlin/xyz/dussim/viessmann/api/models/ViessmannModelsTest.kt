@@ -1,14 +1,15 @@
 package xyz.dussim.viessmann.api.models
 
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
-import xyz.dussim.viessmann.api.testing.ParseSpec
 import xyz.dussim.viessmann.api.testing.readFilesContentsIn
+import xyz.dussim.viessmann.api.utils.json
 
 class ViessmannModelsTest :
-    ParseSpec({ json ->
+    FunSpec({
         context("parses installations") {
             withData(readFilesContentsIn("models/installation")) { (_, content) ->
                 val installations = json.decodeFromString<ResponseData<JsonObject>>(content).data

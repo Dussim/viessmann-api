@@ -20,11 +20,9 @@ class KotlinCommonPlugin : Plugin<Project> {
                 compilerOptions {
                     freeCompilerArgs.addAll(
                         "-opt-in=kotlin.time.ExperimentalTime",
-                        "-Xcontext-parameters",
                         "-Xcontext-sensitive-resolution",
                         "-Xannotation-target-all",
                         "-Xreturn-value-checker=check",
-                        "-Xexplicit-backing-fields"
                     )
                 }
 
