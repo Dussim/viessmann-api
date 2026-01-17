@@ -151,6 +151,8 @@ class FeatureResolver(
 
     operator fun <F : Feature> get(descriptor: FeatureDescriptor.Static<F>) = firstOf(descriptor, descriptor.byWildcardNameThenStructure)
 
+    operator fun <F : Feature> get(descriptor: FeatureDescriptor.Indexed<F>) = firstOf(descriptor, descriptor.byWildcardNameThenStructure)
+
     operator fun <F : Feature> get(
         descriptor: FeatureDescriptor.Indexed<F>,
         index: Int,

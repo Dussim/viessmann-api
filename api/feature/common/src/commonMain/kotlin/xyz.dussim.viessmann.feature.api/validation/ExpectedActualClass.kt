@@ -156,8 +156,12 @@ value class ExpectedActualClass internal constructor(
 
     val actualClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].second
 
-    val firstIndex get() = indexIntoList / SIZE
-    val secondIndex get() = indexIntoList % SIZE
+    override fun toString(): String =
+        if (actualClass == Nothing::class) {
+            "expected '$expectedClass' but got nothing"
+        } else {
+            "expected '$expectedClass' but got actual '$actualClass'"
+        }
 }
 
 // Cache common error types to avoid repeated allocations
@@ -205,13 +209,17 @@ sealed interface ValidationError {
     data class MissingComponent(
         val name: String,
         val expectedActualClass: ExpectedActualClass,
-    ) : ValidationError
+    ) : ValidationError {
+        override fun toString(): String = "Missing component '$name': $expectedActualClass"
+    }
 
     @JvmRecord
     data class ComponentTypeMismatch(
         val name: String,
         val expectedActualClass: ExpectedActualClass,
-    ) : ValidationError
+    ) : ValidationError {
+        override fun toString(): String = "Component type mismatch '$name': $expectedActualClass"
+    }
 
     @JvmRecord
     data class NumberOfParametersMismatch(
@@ -219,8 +227,10 @@ sealed interface ValidationError {
         val actual: Int,
     ) : ValidationError {
         data class Expected(
-            val nameOfComponent: String,
+            val name: String,
             val expected: Int,
         )
+
+        override fun toString(): String = "Number of parameters mismatch in component '${expected.name}': expected $expected, actual $actual"
     }
 }
