@@ -1,15 +1,18 @@
 package xyz.dussim.viessmann.api.feature.processor
 
+import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
+import xyz.dussim.viessmann.api.feature.annotations.CommandName
 
 /**
  * Marker interface for types that can be converted to constraint property specs.
@@ -69,24 +72,25 @@ data class CommandSymbolContext(
     val parentContext: SymbolContext,
     val command: KSClassDeclaration,
 ) {
-    companion object {
-        private val DEFAULT_CONSTRAINTS =
-            setOf(
-                "constraint1",
-                "constraint2",
-                "constraint3",
-                "constraint4",
-                "constraint5",
-                "constraint6",
-            )
-    }
+    @OptIn(com.google.devtools.ksp.KspExperimental::class)
+    val realName =
+        command.getAnnotationsByType(CommandName::class).firstOrNull()?.name
+            ?: command.simpleName.asString().replaceFirstChar(Char::lowercaseChar)
 
     val name = command.simpleName.asString()
-    val lowerCaseName = name.replaceFirstChar(Char::lowercaseChar)
-    val implName = "${name}Impl"
+    val lowerCaseName = realName
 
     val superInterface = command.toClassName()
-    val implType = parentContext.implName.nestedClass(implName)
+
+    val signature by lazy {
+        CommandSignature(
+            name = realName.replaceFirstChar { it.uppercase() },
+            parameters = constraintsProperties.map { it.name to it.type },
+        )
+    }
+
+    val implName by lazy { signature.implName }
+    val implType by lazy { ClassName(parentContext.implName.packageName + ".commands", implName) }
 
     val constraintsProperties by lazy {
         command

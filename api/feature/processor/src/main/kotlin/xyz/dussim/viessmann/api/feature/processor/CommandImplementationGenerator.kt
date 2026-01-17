@@ -1,9 +1,12 @@
 package xyz.dussim.viessmann.api.feature.processor
 
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
@@ -63,7 +66,7 @@ fun initBlock() =
         .add(
             "throw %T(%S, validate(command))\n",
             CommandValidationException::class.asTypeName(),
-            context.superInterface,
+            context.name.replace("_", ""),
         ).endControlFlow()
         .build()
 
@@ -72,20 +75,26 @@ fun initBlock() =
  */
 context(context: CommandSymbolContext)
 fun companionObject(): TypeSpec {
-    val properties =
+    val ruleExpressions =
         context
             .constraintsProperties
             .map {
-                ruleProperty(
-                    generateConstraintRuleName(it.name),
-                    COMMAND_VALIDATION_RULE_TYPE,
-                    CodeBlock.of("%M(%S)", CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type), it.name),
+                CodeBlock.of(
+                    "%M",
+                    context.parentContext.ruleRegistry.register(
+                        CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type),
+                        listOf(it.name),
+                        COMMAND_VALIDATION_RULE_TYPE,
+                    ),
                 )
             }.plus(
-                ruleProperty(
-                    "numberOfParametersRule",
-                    COMMAND_VALIDATION_RULE_TYPE,
-                    CodeBlock.of("%M(%L, %S)", NUMBER_OF_PARAMETERS_RULE, context.constraintsProperties.size, context.lowerCaseName),
+                CodeBlock.of(
+                    "%M",
+                    context.parentContext.ruleRegistry.register(
+                        NUMBER_OF_PARAMETERS_RULE,
+                        listOf(context.constraintsProperties.size, context.lowerCaseName.replace("_", "")),
+                        COMMAND_VALIDATION_RULE_TYPE,
+                    ),
                 ),
             )
 
@@ -93,7 +102,7 @@ fun companionObject(): TypeSpec {
         overrideProperty(
             "rule",
             FEATURE_VALIDATION_RULE_TYPE,
-            CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.lowerCaseName),
+            CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.lowerCaseName.replace("_", "")),
         )
 
     return TypeSpec
@@ -101,32 +110,44 @@ fun companionObject(): TypeSpec {
         .addSuperinterface(typeNameOf<CommandValidationRule>())
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
         .addProperty(commandRuleProperty)
-        .addProperties(properties)
-        .addFunction(generateValidateFunction(typeNameOf<Command>(), properties))
+        .addFunction(generateValidateFunction(typeNameOf<Command>(), ruleExpressions))
         .build()
 }
 
 /**
- * Generates complete command implementation class.
- * Creates an internal class that implements the command interface with validation.
+ * Generates complete command implementation class in a separate file.
+ * Creates an internal class that implements multiple command interfaces with validation.
  *
+ * @param implName The name of the implementation class
+ * @param superInterfaces The list of command interfaces to implement
  * @param context The command context with all necessary information
- * @return TypeSpec for the command implementation class
+ * @return FileSpec for the command implementation
  */
-fun generateCommandImplementation(context: CommandSymbolContext) =
-    context(context) {
-        TypeSpec
-            .classBuilder(context.implName)
-            .addAnnotation(PUBLISHED_API_ANNOTATION)
-            .addModifiers(KModifier.INTERNAL)
-            .addSuperinterface(context.superInterface)
-            .primaryConstructor(constructor())
-            .addProperty(constructorProperty())
-            .addProperties(context.allPropertiesImpl)
-            .apply {
-                if (context.constraintsProperties.isNotEmpty()) {
-                    addInitializerBlock(initBlock())
-                }
-            }.addType(companionObject())
-            .build()
-    }
+fun generateCommandImplementation(
+    implName: ClassName,
+    superInterfaces: List<TypeName>,
+    context: CommandSymbolContext,
+): FileSpec {
+    val typeSpec =
+        context(context) {
+            TypeSpec
+                .classBuilder(implName)
+                .addAnnotation(PUBLISHED_API_ANNOTATION)
+                .addModifiers(KModifier.INTERNAL)
+                .addSuperinterfaces(superInterfaces)
+                .primaryConstructor(constructor())
+                .addProperty(constructorProperty())
+                .addProperties(context.allPropertiesImpl)
+                .apply {
+                    if (context.constraintsProperties.isNotEmpty()) {
+                        addInitializerBlock(initBlock())
+                    }
+                }.addType(companionObject())
+                .build()
+        }
+
+    return FileSpec
+        .builder(implName.packageName, implName.simpleName)
+        .addType(typeSpec)
+        .build()
+}

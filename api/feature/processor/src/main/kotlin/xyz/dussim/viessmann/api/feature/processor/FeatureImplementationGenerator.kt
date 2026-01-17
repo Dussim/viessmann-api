@@ -1,5 +1,6 @@
 package xyz.dussim.viessmann.api.feature.processor
 
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -8,6 +9,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
@@ -37,7 +39,7 @@ fun constructor() =
  * Throws FeatureValidationException if validation fails.
  */
 context(context: SymbolContext)
-fun initBlock(): CodeBlock {
+fun initBlock(implName: ClassName): CodeBlock {
     if (context.parameterProperties.isEmpty() && context.commandProperties.isEmpty()) {
         return CodeBlock.of("")
     }
@@ -53,7 +55,7 @@ fun initBlock(): CodeBlock {
                 addCommandInitialization(property)
             }
             nextControlFlow("catch (_: Exception)")
-            addValidationException()
+            addValidationException(implName)
             endControlFlow()
         }.build()
 }
@@ -94,11 +96,11 @@ private fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty
  * Adds FeatureValidationException throw statement.
  */
 context(context: SymbolContext)
-private fun CodeBlock.Builder.addValidationException() {
+private fun CodeBlock.Builder.addValidationException(implName: ClassName) {
     add(
         "throw %T(%S, validate($DELEGATE))\n",
         FeatureValidationException::class.asTypeName(),
-        context.name.asString(),
+        implName.simpleName.replace("_", "").removeSuffix("Impl"),
     )
 }
 
@@ -106,7 +108,7 @@ private fun CodeBlock.Builder.addValidationException() {
  * Generates companion object that implements validation rules for the feature.
  */
 context(context: SymbolContext)
-fun companionObject(): TypeSpec {
+fun companionObject(implName: ClassName): TypeSpec {
     val subTypeValidationMember =
         when (context.baseFeature.delegate) {
             typeNameOf<Feature.Device>() -> DEVICE_FEATURE_RULE
@@ -115,78 +117,34 @@ fun companionObject(): TypeSpec {
             else -> error("Unreachable")
         }
 
-    val properties =
+    val ruleExpressions =
         listOf(
-            ruleProperty(
-                "subTypeRule",
-                FEATURE_VALIDATION_RULE_TYPE,
-                CodeBlock.of("%M(%S)", subTypeValidationMember, context.implName),
+            CodeBlock.of(
+                "%M",
+                context.ruleRegistry.register(subTypeValidationMember, listOf(implName), FEATURE_VALIDATION_RULE_TYPE),
             ),
         ).plus(
             context
                 .parameterProperties
                 .map {
-                    ruleProperty(
-                        generatePropertyRuleName(it.name),
-                        FEATURE_VALIDATION_RULE_TYPE,
-                        CodeBlock.of("%M(%S)", it.validationFunction, it.name),
+                    CodeBlock.of(
+                        "%M",
+                        context.ruleRegistry.register(it.validationFunction, listOf(it.name), FEATURE_VALIDATION_RULE_TYPE),
                     )
                 },
         ).plus(
             context
                 .nestedCommands
                 .map {
-                    ruleProperty(
-                        generatePropertyRuleName(it.lowerCaseName),
-                        FEATURE_VALIDATION_RULE_TYPE,
-                        CodeBlock.of("${it.implName}.rule"),
-                    )
+                    CodeBlock.of("%T.rule", it.implType)
                 },
         )
 
     return TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(FEATURE_VALIDATION_RULE_TYPE)
-        .addProperties(properties)
-        .addFunction(generateValidateFunction(typeNameOf<Feature>(), properties))
+        .addFunction(generateValidateFunction(typeNameOf<Feature>(), ruleExpressions))
         .build()
-}
-
-/**
- * Generates internal descriptor property for the feature.
- */
-context(context: SymbolContext)
-fun internalDescriptorProperty(): PropertySpec {
-    val descriptorName = generateDescriptorName(context.implName)
-    val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
-
-    return PropertySpec
-        .builder(descriptorName, descriptorType)
-        .addModifiers(KModifier.INTERNAL)
-        .addAnnotation(PUBLISHED_API_ANNOTATION)
-        .initializer(
-            buildCodeBlock {
-                add("%M(\n", FEATURE_DESCRIPTOR_FACTORY)
-                indent()
-                add("wildcardName = %S,\n", context.featureName)
-                add("rule = %T,\n", context.implName)
-                unindent()
-                add(") { feature ->\n")
-                indent()
-                add("feature as? %T ?: %T(\n", context.superInterface, context.implName)
-                indent()
-                add("delegate = feature as %T,\n", context.baseFeature.delegate)
-                context.featureProperties.forEach {
-                    add("${it.name} = feature.${it.name},\n")
-                }
-                add("hashCode = feature.hashCode(),\n")
-                unindent()
-                add(")\n")
-                unindent()
-                add("}")
-                add(" as %T", descriptorType)
-            },
-        ).build()
 }
 
 /**
@@ -194,10 +152,11 @@ fun internalDescriptorProperty(): PropertySpec {
  * Includes descriptor property.
  */
 context(context: SymbolContext)
-fun featureExtensions(): List<PropertySpec> {
-    val descriptorName = generateDescriptorName(context.implName)
-    val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
-    return listOf(
+fun featureExtensions(
+    descriptorName: String,
+    descriptorType: TypeName,
+): List<PropertySpec> =
+    listOf(
         PropertySpec
             .builder("descriptor", descriptorType)
             .receiver(context.superInterfaceCompanion)
@@ -209,65 +168,107 @@ fun featureExtensions(): List<PropertySpec> {
                     .build(),
             ).build(),
     )
+
+/**
+ * Generates shared feature implementation class.
+ *
+ * @param implName The name of the implementation class
+ * @param superInterfaces The list of feature interfaces to implement
+ * @param context The symbol context for the feature structure
+ * @return FileSpec containing the implementation class
+ */
+fun generateSharedFeatureImplementation(
+    implName: ClassName,
+    superInterfaces: List<TypeName>,
+    context: SymbolContext,
+) = context(context) {
+    val constructor = constructor()
+    val properties = context.allPropertiesImpl
+    val initBlock = initBlock(implName)
+
+    val classImpl =
+        TypeSpec
+            .classBuilder(implName)
+            .addModifiers(KModifier.INTERNAL)
+            .addAnnotation(PUBLISHED_API_ANNOTATION)
+            .primaryConstructor(constructor)
+            .addSuperinterfaces(superInterfaces)
+            .addType(companionObject(implName))
+            .addProperties(properties)
+            .addProperty(PropertySpec.builder("hashCode", INT, KModifier.PRIVATE).initializer("hashCode").build())
+            .apply {
+                if (initBlock.isNotEmpty()) {
+                    addInitializerBlock(initBlock)
+                }
+            }.addFunction(
+                FunSpec
+                    .builder("equals")
+                    .addModifiers(KModifier.OVERRIDE)
+                    .addParameter("other", Any::class.asClassName().copy(nullable = true))
+                    .returns(Boolean::class)
+                    .addStatement("return %M(other)", EQUALS_IMPL)
+                    .build(),
+            ).addFunction(
+                FunSpec
+                    .builder("hashCode")
+                    .addModifiers(KModifier.OVERRIDE)
+                    .returns(Int::class)
+                    .addStatement("return hashCode")
+                    .build(),
+            ).build()
+
+    FileSpec
+        .builder(implName.packageName, implName.simpleName)
+        .addType(classImpl)
+        .build()
 }
 
 /**
- * Generates complete feature implementation including:
- * - Main implementation class
- * - Factory functions
- * - Utils combining factory, matchers, and validation
- * - Command implementations
- * - Extension properties
+ * Generates feature descriptor and extension property for a specific feature interface.
  *
- * @param context The symbol context with all feature information
- * @return FileSpec containing the complete feature implementation
+ * @param context The symbol context for the feature
+ * @param implName The name of the shared implementation class
+ * @return FileSpec containing the descriptor and extensions
  */
-fun generateFeatureImplementation(context: SymbolContext) =
-    context(context) {
-        val constructor = constructor()
-        val properties = context.allPropertiesImpl
-        val initBlock = initBlock()
+fun generateFeatureDescriptorAndExtensions(
+    context: SymbolContext,
+    implName: ClassName,
+) = context(context) {
+    val descriptorName = generateDescriptorName(context.superInterface)
+    val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
 
-        val classImpl =
-            TypeSpec
-                .classBuilder(context.implName)
-                .addModifiers(KModifier.INTERNAL)
-                .addAnnotation(PUBLISHED_API_ANNOTATION)
-                .primaryConstructor(constructor)
-                .addSuperinterface(context.symbol.toClassName())
-                .addTypes(
-                    context
-                        .nestedCommands
-                        .map(::generateCommandImplementation),
-                ).addType(companionObject())
-                .addProperties(properties)
-                .addProperty(PropertySpec.builder("hashCode", INT, KModifier.PRIVATE).initializer("hashCode").build())
-                .apply {
-                    if (initBlock.isNotEmpty()) {
-                        addInitializerBlock(initBlock)
+    val descriptorProperty =
+        PropertySpec
+            .builder(descriptorName, descriptorType)
+            .addModifiers(KModifier.INTERNAL)
+            .addAnnotation(PUBLISHED_API_ANNOTATION)
+            .initializer(
+                buildCodeBlock {
+                    add("%M(\n", FEATURE_DESCRIPTOR_FACTORY)
+                    indent()
+                    add("wildcardName = %S,\n", context.featureName)
+                    add("rule = %T,\n", implName)
+                    unindent()
+                    add(") { feature ->\n")
+                    indent()
+                    add("feature as? %T ?: %T(\n", context.superInterface, implName)
+                    indent()
+                    add("delegate = feature as %T,\n", context.baseFeature.delegate)
+                    context.featureProperties.forEach {
+                        add("${it.name} = feature.${it.name},\n")
                     }
-                }.addFunction(
-                    FunSpec
-                        .builder("equals")
-                        .addModifiers(KModifier.OVERRIDE)
-                        .addParameter("other", Any::class.asClassName().copy(nullable = true))
-                        .returns(Boolean::class)
-                        .addStatement("return %M(other)", EQUALS_IMPL)
-                        .build(),
-                ).addFunction(
-                    FunSpec
-                        .builder("hashCode")
-                        .addModifiers(KModifier.OVERRIDE)
-                        .returns(Int::class)
-                        .addStatement("return hashCode")
-                        .build(),
-                ).build()
+                    add("hashCode = feature.hashCode(),\n")
+                    unindent()
+                    add(")\n")
+                    unindent()
+                    add("}")
+                    add(" as %T", descriptorType)
+                },
+            ).build()
 
-        FileSpec
-            .builder(context.implName)
-            .addType(classImpl)
-            .apply {
-                addProperty(internalDescriptorProperty())
-            }.addProperties(featureExtensions())
-            .build()
-    }
+    FileSpec
+        .builder(context.implName.packageName, context.implName.simpleName)
+        .addProperty(descriptorProperty)
+        .addProperties(featureExtensions(descriptorName, descriptorType))
+        .build()
+}

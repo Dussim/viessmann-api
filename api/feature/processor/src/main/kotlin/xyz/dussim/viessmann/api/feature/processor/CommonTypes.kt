@@ -15,12 +15,15 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Command
+import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
+import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
+import kotlin.time.Instant
 
 const val VALIDATION_PACKAGE = "xyz.dussim.viessmann.feature.api.validation"
 private const val FEATURE_API_PACKAGE = "xyz.dussim.viessmann.feature.api"
@@ -30,8 +33,6 @@ const val COMMAND = "command"
 // Naming constants
 private const val IMPL_SUFFIX = "Impl"
 private const val DESCRIPTOR_SUFFIX = "Descriptor"
-private const val PROPERTY_RULE_SUFFIX = "PropertyRule"
-private const val CONSTRAINT_RULE_SUFFIX = "ConstraintRule"
 
 val FEATURE_DESCRIPTOR_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureDescriptor")
 
@@ -92,6 +93,16 @@ val PUBLISHED_API_ANNOTATION: AnnotationSpec =
         .builder(PublishedApi::class)
         .build()
 
+val DEFAULT_CONSTRAINTS =
+    setOf(
+        "constraint1",
+        "constraint2",
+        "constraint3",
+        "constraint4",
+        "constraint5",
+        "constraint6",
+    )
+
 /**
  * Combines two integers into a single long value for efficient map lookups.
  * Used for property/command name hashing.
@@ -135,25 +146,11 @@ fun varArgFunctionCall(
         .build()
 
 /**
- * Creates a private validation rule property.
- */
-fun ruleProperty(
-    name: String,
-    ruleType: TypeName,
-    initializer: CodeBlock,
-): PropertySpec =
-    PropertySpec
-        .builder(name, ruleType)
-        .addModifiers(KModifier.PRIVATE)
-        .initializer(initializer)
-        .build()
-
-/**
  * Generates an override validate function that aggregates results from multiple rules.
  */
 fun generateValidateFunction(
     targetType: TypeName,
-    ruleProperties: List<PropertySpec>,
+    ruleExpressions: List<CodeBlock>,
 ): FunSpec =
     FunSpec
         .builder("validate")
@@ -170,7 +167,7 @@ fun generateValidateFunction(
                 .add(
                     varArgFunctionCall(
                         VALIDATION_RESULT_OF,
-                        ruleProperties.map { CodeBlock.of("${it.name}.validate(value),\n") },
+                        ruleExpressions.map { CodeBlock.of("%L.validate(value),\n", it) },
                     ),
                 ).build(),
         ).build()
@@ -240,17 +237,142 @@ fun overrideProperty(
  */
 fun generateDescriptorName(className: ClassName): String =
     className.simpleName
+        .replace("_", "")
         .replaceFirstChar { it.lowercase() }
         .removeSuffix(IMPL_SUFFIX) + DESCRIPTOR_SUFFIX
 
-/**
- * Generates a property rule name.
- * Example: "temperature" -> "temperaturePropertyRule"
- */
-fun generatePropertyRuleName(propertyName: String): String = propertyName + PROPERTY_RULE_SUFFIX
+data class CommandSignature(
+    val name: String,
+    val parameters: List<Pair<String, TypeName>>,
+) {
+    val implName: String
+        get() {
+            val capitalizedName = name.replaceFirstChar { it.uppercase() }
+            if (parameters.isEmpty()) return "${capitalizedName}Impl"
+            val paramsPart =
+                parameters.joinToString("") { (pNameRaw, pType) ->
+                    val typePart = pType.toString().substringAfterLast(".").replaceFirstChar { it.uppercase() }
+                    val pName = pNameRaw.replaceFirstChar { it.uppercase() }
+                    if (pName == "Value" || capitalizedName.endsWith(pName, ignoreCase = true)) {
+                        typePart
+                    } else {
+                        pName + typePart
+                    }
+                }
+            return "${capitalizedName}${paramsPart}Impl"
+        }
+}
 
-/**
- * Generates a constraint rule name.
- * Example: "temperature" -> "temperatureConstraintRule"
- */
-fun generateConstraintRuleName(propertyName: String): String = propertyName + CONSTRAINT_RULE_SUFFIX
+data class RuleSignature(
+    val function: MemberName,
+    val args: List<Any>,
+    val targetType: TypeName,
+) {
+    fun generateName(): String {
+        val functionPart = function.simpleName
+        val argsPart =
+            args.joinToString("_") { arg ->
+                when (arg) {
+                    is ClassName -> arg.simpleName
+                    is MemberName -> arg.simpleName
+                    else -> arg.toString().replace(Regex("[^a-zA-Z0-9]"), "_")
+                }
+            }
+        val name = "${argsPart}_$functionPart"
+        val sanitized = if (name.first().isDigit()) "rule_$name" else name
+        return sanitized.replaceFirstChar { it.lowercase() }.replace("__", "_")
+    }
+}
+
+class RuleRegistry(
+    val rulesPackage: String,
+) {
+    private val rules = mutableMapOf<RuleSignature, MemberName>()
+
+    fun register(
+        function: MemberName,
+        args: List<Any>,
+        targetType: TypeName,
+    ): MemberName {
+        val signature = RuleSignature(function, args, targetType)
+        return rules.getOrPut(signature) {
+            MemberName(rulesPackage, signature.generateName())
+        }
+    }
+
+    fun getAllRules(): Map<RuleSignature, MemberName> = rules
+}
+
+private val SUPERINTERFACE_PROPERTIES =
+    mapOf(
+        "feature" to typeNameOf<String>(),
+        "wildcardFeature" to typeNameOf<String>(),
+        "isEnabled" to typeNameOf<Boolean>(),
+        "isReady" to typeNameOf<Boolean>(),
+        "apiVersion" to typeNameOf<Int>(),
+        "timestamp" to typeNameOf<Instant>(),
+        "uri" to typeNameOf<String>(),
+        "properties" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Property>()),
+        "commands" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Command>()),
+        "deviceId" to typeNameOf<String?>(),
+        "gatewayId" to typeNameOf<String?>(),
+        "isActive" to typeNameOf<Boolean?>(),
+    )
+
+private val DEVICE_PROPERTIES =
+    SUPERINTERFACE_PROPERTIES +
+        mapOf(
+            "deviceId" to typeNameOf<String>(),
+            "gatewayId" to typeNameOf<String>(),
+        )
+
+private val GATEWAY_PROPERTIES =
+    SUPERINTERFACE_PROPERTIES +
+        mapOf(
+            "gatewayId" to typeNameOf<String>(),
+        )
+
+private val GEOFENCING_PROPERTIES =
+    SUPERINTERFACE_PROPERTIES +
+        mapOf(
+            "isActive" to typeNameOf<Boolean>(),
+        )
+
+enum class BaseFeature(
+    val superInterfaceProperties: Map<String, TypeName>,
+    val delegate: TypeName,
+) {
+    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>()),
+    Device(DEVICE_PROPERTIES, typeNameOf<Feature.Device>()),
+    Gateway(GATEWAY_PROPERTIES, typeNameOf<Feature.Gateway>()),
+    Geofencing(GEOFENCING_PROPERTIES, typeNameOf<Feature.Geofencing>()),
+}
+
+data class FeatureSignature(
+    val baseFeature: BaseFeature,
+    val properties: List<Pair<String, TypeName>>,
+    val commands: List<Pair<String, CommandSignature>>,
+) {
+    val implName: String
+        get() {
+            val basePart = baseFeature.name
+            val propsPart =
+                properties.joinToString("") { (name, type) ->
+                    name.replaceFirstChar { it.uppercase() } +
+                        type.toString().substringAfterLast(".").replaceFirstChar { it.uppercase() }
+                }
+            val cmdsPart =
+                commands.joinToString("") { (name, sig) ->
+                    name.replaceFirstChar { it.uppercase() } +
+                        sig.implName.removeSuffix("Impl")
+                }
+            val rawName = "Feat${basePart}${propsPart}$cmdsPart"
+            val hash =
+                this
+                    .hashCode()
+                    .toUInt()
+                    .toString(36)
+                    .uppercase()
+            return "${rawName.take(40)}${hash}Impl"
+        }
+}

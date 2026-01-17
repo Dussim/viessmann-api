@@ -18,6 +18,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import xyz.dussim.viessmann.api.feature.annotations.FeatureEnum
@@ -173,16 +174,65 @@ class FeatureImplementationProcessor(
                             }
 
                         symbols
-                    }.map(::SymbolContext)
+                    }.let { ksSymbols ->
+                        if (ksSymbols.isEmpty()) return emptyList()
 
-            symbols.forEach { context ->
-                val symbol = context.symbol
-                generateFeatureImplementation(context)
-                    .writeTo(
-                        codeGenerator,
-                        Dependencies(true, symbol.containingFile!!),
-                    )
-            }
+                        val basePackage = ksSymbols.first().packageName.asString()
+                        val rulesPackage = "$basePackage.components.rules"
+                        val ruleRegistry = RuleRegistry(rulesPackage)
+
+                        val symbols = ksSymbols.map { SymbolContext(it, ruleRegistry) }
+
+                        // Group features by signature for deduplication
+                        symbols.groupBy { it.featureSignature }.forEach { (signature, group) ->
+                            val firstContext = group.first()
+                            val implName =
+                                ClassName(
+                                    firstContext.implName.packageName + ".implementations",
+                                    signature.implName,
+                                )
+                            val superInterfaces = group.map { it.superInterface }.distinct()
+
+                            // Generate shared implementation
+                            generateSharedFeatureImplementation(implName, superInterfaces, firstContext)
+                                .writeTo(
+                                    codeGenerator,
+                                    Dependencies(true, *group.map { it.symbol.containingFile!! }.toTypedArray()),
+                                )
+
+                            // Generate descriptor and extensions for each feature in the group
+                            group.forEach { context ->
+                                generateFeatureDescriptorAndExtensions(context, implName)
+                                    .writeTo(
+                                        codeGenerator,
+                                        Dependencies(true, context.symbol.containingFile!!),
+                                    )
+                            }
+                        }
+
+                        symbols
+                            .flatMap { it.nestedCommands }
+                            .groupBy { it.signature }
+                            .forEach { (signature, group) ->
+                                val firstCommand = group.first()
+                                val implName = ClassName(firstCommand.parentContext.implName.packageName + ".commands", signature.implName)
+                                val superInterfaces = group.map { it.superInterface }.distinct()
+
+                                generateCommandImplementation(implName, superInterfaces, firstCommand)
+                                    .writeTo(
+                                        codeGenerator,
+                                        Dependencies(true, *group.map { it.command.containingFile!! }.toTypedArray()),
+                                    )
+                            }
+
+                        generateValidationRules(ruleRegistry)
+                            .writeTo(
+                                codeGenerator,
+                                Dependencies(true, *ksSymbols.map { it.containingFile!! }.toTypedArray()),
+                            )
+
+                        symbols
+                    }
 
             return emptyList()
         }

@@ -1,5 +1,7 @@
 package xyz.dussim.buildlogic
 
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FileSpec
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
@@ -108,6 +110,44 @@ abstract class GenerateFeatureInterfacesFromParsedFeaturesTask : DefaultTask() {
                 .filter { it.feature !in ignoredFeatures }
 
         val generator = FeatureInterfaceGenerator(packageName.get(), logger)
+
+        // Collect all command signatures
+        val commandSignatures =
+            mergedFeatures.flatMap { feature ->
+                feature.commands.map { (name, command) ->
+                    generator.getCommandSignature(name, command)
+                }
+            }
+
+        // Identify shareable commands
+        val shareableSignatures =
+            commandSignatures
+                .groupBy { it }
+                .filter { it.value.size > 1 }
+                .map { it.key }
+
+        val allUniqueSignatures = commandSignatures.distinct()
+        val signaturesByName = allUniqueSignatures.groupBy { it.name }
+
+        val sharedCommandsPackage = "${packageName.get()}.commands"
+        val sharedCommandsMap: Map<CommandSignature, ClassName> =
+            shareableSignatures.associateWith { sig ->
+                val useShortName = (signaturesByName[sig.name]?.size ?: 0) == 1
+                val interfaceName = if (useShortName) sig.capitalizedName else sig.interfaceName
+                ClassName(sharedCommandsPackage, interfaceName)
+            }
+
+        generator.useSharedCommands(sharedCommandsMap)
+
+        // Generate shared command interfaces
+        sharedCommandsMap.forEach { (sig, className) ->
+            val fileSpec =
+                FileSpec
+                    .builder(className.packageName, className.simpleName)
+                    .addType(generator.generateCommandInterface(className.simpleName, sig.name, sig.parameters))
+                    .build()
+            fileSpec.writeTo(outputDir)
+        }
 
         mergedFeatures.forEach { feature ->
             val fileSpec = generator.generate(feature)

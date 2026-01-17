@@ -35,6 +35,23 @@ class FeatureInterfaceGenerator(
     private val packageName: String,
     private val logger: Logger,
 ) {
+    private val sharedCommands = mutableMapOf<CommandSignature, ClassName>()
+
+    fun useSharedCommands(commands: Map<CommandSignature, ClassName>) {
+        sharedCommands.putAll(commands)
+    }
+
+    fun getCommandSignature(
+        name: String,
+        command: Command,
+    ): CommandSignature {
+        val params =
+            command.params.entries.sortedBy { it.key }.map { (pName, pParam) ->
+                ParameterSignature(pName, pParam.type)
+            }
+        return CommandSignature(name, params)
+    }
+
     fun generate(feature: DeviceFeature): FileSpec {
         val interfaceName = featureToInterfaceName(feature.feature)
         val typeSpec =
@@ -65,15 +82,26 @@ class FeatureInterfaceGenerator(
         // Add commands
         feature.commands.entries.sortedBy { it.key }.forEach { (name, command) ->
             val commandInterfaceName = name.replaceFirstChar { it.uppercaseChar() }
-            val commandInterface = generateCommandInterface(commandInterfaceName, command)
-            typeSpec.addType(commandInterface)
+            val signature = getCommandSignature(name, command)
+            val sharedClassName = sharedCommands[signature]
 
-            typeSpec
-                .addProperty(
+            if (sharedClassName != null) {
+                typeSpec.addProperty(
                     PropertySpec
-                        .builder(name, ClassName("", interfaceName, commandInterfaceName))
+                        .builder(name, sharedClassName)
                         .build(),
                 )
+            } else {
+                val commandInterface = generateCommandInterface(commandInterfaceName, name, signature.parameters)
+                typeSpec.addType(commandInterface)
+
+                typeSpec
+                    .addProperty(
+                        PropertySpec
+                            .builder(name, ClassName("", interfaceName, commandInterfaceName))
+                            .build(),
+                    )
+            }
         }
 
         return FileSpec
@@ -94,11 +122,11 @@ class FeatureInterfaceGenerator(
         return if (name.endsWith("Feature")) name else "${name}Feature"
     }
 
-    private fun generateCommandInterface(
+    fun generateCommandInterface(
         name: String,
-        command: Command,
+        commandName: String,
+        params: List<ParameterSignature>,
     ): TypeSpec {
-        val params = command.params.entries.sortedBy { it.key }
         val commandClassName =
             when (params.size) {
                 0 -> Command0::class.asClassName()
@@ -114,35 +142,40 @@ class FeatureInterfaceGenerator(
         val typeSpec =
             TypeSpec
                 .interfaceBuilder(name)
-                .addType(TypeSpec.companionObjectBuilder().build())
+                .addAnnotation(
+                    AnnotationSpec
+                        .builder(ClassName("xyz.dussim.viessmann.api.feature.annotations", "CommandName"))
+                        .addMember("%S", commandName)
+                        .build(),
+                ).addType(TypeSpec.companionObjectBuilder().build())
 
         if (params.isNotEmpty()) {
-            val typeArguments = params.map { mapParameterToType(it.value) }
+            val typeArguments = params.map { mapParameterTypeToType(it.type) }
             typeSpec.addSuperinterface(commandClassName.parameterizedBy(typeArguments))
         } else {
             typeSpec.addSuperinterface(commandClassName)
         }
 
-        params.forEachIndexed { index, (paramName, parameter) ->
+        params.forEachIndexed { index, param ->
             typeSpec.addProperty(
                 PropertySpec
-                    .builder("constraint${index + 1}", mapParameterToConstraintsTypeName(parameter), KModifier.OVERRIDE)
-                    .getter(FunSpec.getterBuilder().addStatement("return %N", paramName).build())
+                    .builder("constraint${index + 1}", mapParameterTypeToConstraintsTypeName(param.type), KModifier.OVERRIDE)
+                    .getter(FunSpec.getterBuilder().addStatement("return %N", param.name).build())
                     .addAnnotation(
                         AnnotationSpec
                             .builder(Deprecated::class)
-                            .addMember("message = \"Use '$paramName' instead\"")
-                            .addMember("replaceWith = ReplaceWith(\"$paramName\")")
+                            .addMember("message = \"Use '${param.name}' instead\"")
+                            .addMember("replaceWith = ReplaceWith(\"${param.name}\")")
                             .addMember("level = DeprecationLevel.WARNING")
                             .build(),
                     ).build(),
             )
         }
 
-        params.forEach { (paramName, parameter) ->
+        params.forEach { param ->
             typeSpec.addProperty(
                 PropertySpec
-                    .builder(paramName, mapParameterToConstraintsTypeName(parameter))
+                    .builder(param.name, mapParameterTypeToConstraintsTypeName(param.type))
                     .build(),
             )
         }
@@ -150,8 +183,8 @@ class FeatureInterfaceGenerator(
         return typeSpec.build()
     }
 
-    private fun mapParameterToType(parameter: Parameter): TypeName =
-        when (parameter.type) {
+    private fun mapParameterTypeToType(type: String): TypeName =
+        when (type) {
             "string" -> {
                 String::class.asTypeName()
             }
@@ -175,16 +208,51 @@ class FeatureInterfaceGenerator(
             }
 
             else -> {
-                error("Unknown parameter type: ${parameter.type}")
+                error("Unknown parameter type: $type")
             }
         }
 
-    private fun mapParameterToConstraintsTypeName(parameter: Parameter): TypeName =
-        when (parameter.type) {
+    private fun mapParameterTypeToConstraintsTypeName(type: String): TypeName =
+        when (type) {
             "string" -> StringConstraints::class.asClassName()
             "number" -> NumberConstraints::class.asClassName()
             "boolean" -> BooleanConstraints::class.asClassName()
             "Schedule" -> ScheduleConstraints::class.asClassName()
-            else -> error("Unknown parameter type: ${parameter.type}")
+            else -> error("Unknown parameter type: $type")
         }
 }
+
+data class CommandSignature(
+    val name: String,
+    val parameters: List<ParameterSignature>,
+) {
+    val capitalizedName = name.replaceFirstChar { it.uppercaseChar() }
+
+    val interfaceName: String
+        get() {
+            if (parameters.isEmpty()) return capitalizedName
+            val paramsPart =
+                parameters.joinToString("") { p ->
+                    val typePart =
+                        when (p.type) {
+                            "string" -> "String"
+                            "number" -> "Double"
+                            "boolean" -> "Boolean"
+                            "Schedule" -> "Schedule"
+                            else -> p.type.replaceFirstChar { it.uppercase() }
+                        }
+                    val pName = p.name.replaceFirstChar { it.uppercase() }
+                    if (pName == "Value" || capitalizedName.endsWith(pName, ignoreCase = true)) {
+                        typePart
+                    } else {
+                        pName + typePart
+                    }
+                }
+            return "$capitalizedName$paramsPart"
+        }
+}
+
+data class ParameterSignature(
+    val name: String,
+    val type: String,
+)

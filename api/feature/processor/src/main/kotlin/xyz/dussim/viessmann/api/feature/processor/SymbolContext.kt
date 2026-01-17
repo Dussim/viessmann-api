@@ -53,51 +53,6 @@ val PROPERTY_VALIDATION_FUNCTIONS =
         typeNameOf<ScheduleValue>() to validationRule("schedulePropertyRule"),
     )
 
-private val SUPERINTERFACE_PROPERTIES =
-    mapOf(
-        "feature" to typeNameOf<String>(),
-        "wildcardFeature" to typeNameOf<String>(),
-        "isEnabled" to typeNameOf<Boolean>(),
-        "isReady" to typeNameOf<Boolean>(),
-        "apiVersion" to typeNameOf<Int>(),
-        "timestamp" to typeNameOf<Instant>(),
-        "uri" to typeNameOf<String>(),
-        "properties" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Property>()),
-        "commands" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Command>()),
-        "deviceId" to typeNameOf<String?>(),
-        "gatewayId" to typeNameOf<String?>(),
-        "isActive" to typeNameOf<Boolean?>(),
-    )
-
-private val DEVICE_PROPERTIES =
-    SUPERINTERFACE_PROPERTIES +
-        mapOf(
-            "deviceId" to typeNameOf<String>(),
-            "gatewayId" to typeNameOf<String>(),
-        )
-
-private val GATEWAY_PROPERTIES =
-    SUPERINTERFACE_PROPERTIES +
-        mapOf(
-            "gatewayId" to typeNameOf<String>(),
-        )
-
-private val GEOFENCING_PROPERTIES =
-    SUPERINTERFACE_PROPERTIES +
-        mapOf(
-            "isActive" to typeNameOf<Boolean>(),
-        )
-
-enum class BaseFeature(
-    val superInterfaceProperties: Map<String, TypeName>,
-    val delegate: TypeName,
-) {
-    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>()),
-    Device(DEVICE_PROPERTIES, typeNameOf<Feature.Device>()),
-    Gateway(GATEWAY_PROPERTIES, typeNameOf<Feature.Gateway>()),
-    Geofencing(GEOFENCING_PROPERTIES, typeNameOf<Feature.Geofencing>()),
-}
-
 /**
  * Marker interface for types that can be converted to KotlinPoet PropertySpec.
  */
@@ -198,24 +153,30 @@ data class CommandProperty(
     val name: String,
     val type: TypeName,
     val implType: TypeName,
+    val signature: CommandSignature,
     val command: KSClassDeclaration,
 ) : ConvertibleToPropertySpec {
     companion object {
         context(context: SymbolContext)
         fun from(property: KSPropertyDeclaration): CommandProperty {
             val type = property.type.resolve().toTypeName()
-            val superType = type.toString().substringAfterLast(".")
-            val implType = context.implName.nestedClass("${superType}Impl")
+            val declaration = property.type.resolve().declaration as KSClassDeclaration
+            val commandContext = CommandSymbolContext(context, declaration)
+
+            val signature = commandContext.signature
+            val implType = commandContext.implType
+
             return CommandProperty(
                 name = property.simpleName.asString(),
                 type = type,
                 implType = implType,
+                signature = signature,
                 command = property.parentDeclaration as KSClassDeclaration,
             )
         }
     }
 
-    override fun asPropertySpec() = overrideProperty(name, type)
+    override fun asPropertySpec() = overrideProperty(name, implType)
 }
 
 /**
@@ -224,19 +185,28 @@ data class CommandProperty(
  */
 data class SymbolContext(
     val symbol: KSClassDeclaration,
+    val ruleRegistry: RuleRegistry,
 ) {
     @OptIn(KspExperimental::class)
     val featureName = symbol.getAnnotationsByType(GenerateFeatureImplementation::class).first().featureName
     val name = symbol.simpleName
     val superInterface = symbol.toClassName()
     val superInterfaceCompanion = superInterface.nestedClass("Companion")
-    val implName = ClassName(symbol.packageName.asString(), symbol.simpleName.asString() + "Impl")
+    val implName = ClassName(symbol.packageName.asString(), symbol.simpleName.asString().replace("_", "") + "Impl")
     val implCompanion = implName.nestedClass("Companion")
 
     /**
      * True if the feature name contains a placeholder "{}" for indexed features.
      */
     val isIndexed by lazy { featureName.contains("{}") }
+
+    val featureSignature by lazy {
+        FeatureSignature(
+            baseFeature = baseFeature,
+            properties = parameterProperties.map { it.name to it.type }.sortedBy { it.first },
+            commands = commandProperties.map { it.name to it.signature }.sortedBy { it.first },
+        )
+    }
 
     val baseFeature by lazy {
         symbol.superTypes.firstNotNullOf {
@@ -318,9 +288,7 @@ context(context: SymbolContext)
 fun nestedCommands(): List<CommandSymbolContext> =
     context
         .symbol
-        .declarations
-        .filterIsInstance<KSClassDeclaration>()
-        .filter { it.classKind == ClassKind.INTERFACE }
-        .filter { it.superTypes.any { superType -> superType.implementsInterface(OfCommand::class) } }
-        .map { CommandSymbolContext(context, it) }
+        .getDeclaredProperties()
+        .filter { it.type.implementsInterface(OfCommand::class) }
+        .map { CommandSymbolContext(context, it.type.resolve().declaration as KSClassDeclaration) }
         .toList()
