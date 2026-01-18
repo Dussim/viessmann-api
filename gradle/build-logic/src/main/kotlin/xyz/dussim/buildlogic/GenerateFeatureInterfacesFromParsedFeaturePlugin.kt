@@ -4,7 +4,11 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -20,8 +24,9 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.work.DisableCachingByDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import xyz.dussim.viessmann.api.models.ResponseData
-import xyz.dussim.viessmann.feature.api.DeviceFeature
+import xyz.dussim.buildlogic.internal.CommandSignature
+import xyz.dussim.buildlogic.internal.FeatureInterfaceGenerator
+import xyz.dussim.buildlogic.internal.FeatureMerger
 import java.io.File
 
 abstract class GenerateFeatureInterfacesFromParsedFeaturePlugin : Plugin<Project> {
@@ -78,7 +83,6 @@ abstract class GenerateFeatureInterfacesFromParsedFeaturesTask : DefaultTask() {
     }
 
     @TaskAction
-    @OptIn(kotlin.time.ExperimentalTime::class)
     fun generate() {
         val ignoredFeatures = ignoredFeatures.get()
         val json =
@@ -100,23 +104,24 @@ abstract class GenerateFeatureInterfacesFromParsedFeaturesTask : DefaultTask() {
         outputDir.deleteRecursively()
         outputDir.mkdirs()
 
-        val allFeatures: List<DeviceFeature> =
+        val allFeatures =
             inputFiles
                 .flatMap(readFeaturesFromFile(json))
+                .filterIsInstance<JsonObject>()
 
         val mergedFeatures =
             FeatureMerger
                 .mergeAll(allFeatures)
-                .filter { it.feature !in ignoredFeatures }
+                .filter { (it["feature"]?.jsonPrimitive?.content ?: "") !in ignoredFeatures }
 
         val generator = FeatureInterfaceGenerator(packageName.get(), logger)
 
         // Collect all command signatures
         val commandSignatures =
             mergedFeatures.flatMap { feature ->
-                feature.commands.map { (name, command) ->
-                    generator.getCommandSignature(name, command)
-                }
+                feature["commands"]?.jsonObject?.map { (name, command) ->
+                    generator.getCommandSignature(name, command.jsonObject)
+                } ?: emptyList()
             }
 
         // Identify shareable commands
@@ -162,8 +167,9 @@ private fun readFeaturesFromFile(json: Json) =
         file.inputStream().use {
             json
                 .decodeFromStream(
-                    deserializer = ResponseData.serializer(DeviceFeature.serializer()),
+                    deserializer = JsonObject.serializer(),
                     stream = it,
-                ).data
+                ).getValue("data")
+                .jsonArray
         }
     }

@@ -1,4 +1,4 @@
-package xyz.dussim.buildlogic
+package xyz.dussim.buildlogic.internal
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -11,25 +11,11 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.gradle.api.logging.Logger
-import xyz.dussim.viessmann.api.feature.annotations.GenerateFeatureImplementation
-import xyz.dussim.viessmann.feature.api.BooleanConstraints
-import xyz.dussim.viessmann.feature.api.Command
-import xyz.dussim.viessmann.feature.api.Command0
-import xyz.dussim.viessmann.feature.api.Command1
-import xyz.dussim.viessmann.feature.api.Command2
-import xyz.dussim.viessmann.feature.api.Command3
-import xyz.dussim.viessmann.feature.api.Command4
-import xyz.dussim.viessmann.feature.api.Command5
-import xyz.dussim.viessmann.feature.api.Command6
-import xyz.dussim.viessmann.feature.api.DeviceFeature
-import xyz.dussim.viessmann.feature.api.Feature
-import xyz.dussim.viessmann.feature.api.ListEmptyValue
-import xyz.dussim.viessmann.feature.api.NumberConstraints
-import xyz.dussim.viessmann.feature.api.Parameter
-import xyz.dussim.viessmann.feature.api.Schedule
-import xyz.dussim.viessmann.feature.api.ScheduleConstraints
-import xyz.dussim.viessmann.feature.api.StringConstraints
 
 class FeatureInterfaceGenerator(
     private val packageName: String,
@@ -43,34 +29,36 @@ class FeatureInterfaceGenerator(
 
     fun getCommandSignature(
         name: String,
-        command: Command,
+        command: JsonObject,
     ): CommandSignature {
         val params =
-            command.params.entries.sortedBy { it.key }.map { (pName, pParam) ->
-                ParameterSignature(pName, pParam.type)
-            }
+            command["params"]?.jsonObject?.entries?.sortedBy { it.key }?.map { (pName, pParam) ->
+                ParameterSignature(pName, pParam.jsonObject["type"]?.jsonPrimitive?.content ?: "")
+            } ?: emptyList()
         return CommandSignature(name, params)
     }
 
-    fun generate(feature: DeviceFeature): FileSpec {
-        val interfaceName = featureToInterfaceName(feature.feature)
+    fun generate(feature: JsonObject): FileSpec {
+        val featureName = feature["feature"]?.jsonPrimitive?.content ?: ""
+        val interfaceName = featureToInterfaceName(featureName)
         val typeSpec =
             TypeSpec
                 .interfaceBuilder(interfaceName)
-                .addSuperinterface(Feature.Device::class)
+                .addSuperinterface(ClassName("xyz.dussim.viessmann.feature.api", "Feature", "Device"))
                 .addAnnotation(
                     AnnotationSpec
-                        .builder(GenerateFeatureImplementation::class)
-                        .addMember("%S", feature.feature)
+                        .builder(ClassName("xyz.dussim.viessmann.api.feature.annotations", "GenerateFeatureImplementation"))
+                        .addMember("%S", featureName)
                         .build(),
                 )
 
         // Add properties
-        feature.properties.entries.sortedBy { it.key }.forEach { (name, property) ->
-            val typeName = property.value::class.asClassName()
-            if (property.value is ListEmptyValue) {
-                logger.warn("Feature property ${feature.feature}::$name is empty list, skipping it as unknown what kind of object it holds")
+        feature["properties"]?.jsonObject?.entries?.sortedBy { it.key }?.forEach { (name, property) ->
+            val propObj = property.jsonObject
+            if (isListEmpty(propObj)) {
+                logger.warn("Feature property $featureName::$name is empty list, skipping it as unknown what kind of object it holds")
             } else {
+                val typeName = mapPropertyToTypeName(propObj)
                 typeSpec.addProperty(
                     PropertySpec
                         .builder(name, typeName)
@@ -80,9 +68,10 @@ class FeatureInterfaceGenerator(
         }
 
         // Add commands
-        feature.commands.entries.sortedBy { it.key }.forEach { (name, command) ->
+        feature["commands"]?.jsonObject?.entries?.sortedBy { it.key }?.forEach { (name, command) ->
+            val commandObj = command.jsonObject
             val commandInterfaceName = name.replaceFirstChar { it.uppercaseChar() }
-            val signature = getCommandSignature(name, command)
+            val signature = getCommandSignature(name, commandObj)
             val sharedClassName = sharedCommands[signature]
 
             if (sharedClassName != null) {
@@ -129,13 +118,13 @@ class FeatureInterfaceGenerator(
     ): TypeSpec {
         val commandClassName =
             when (params.size) {
-                0 -> Command0::class.asClassName()
-                1 -> Command1::class.asClassName()
-                2 -> Command2::class.asClassName()
-                3 -> Command3::class.asClassName()
-                4 -> Command4::class.asClassName()
-                5 -> Command5::class.asClassName()
-                6 -> Command6::class.asClassName()
+                0 -> ClassName("xyz.dussim.viessmann.feature.api", "Command0")
+                1 -> ClassName("xyz.dussim.viessmann.feature.api", "Command1")
+                2 -> ClassName("xyz.dussim.viessmann.feature.api", "Command2")
+                3 -> ClassName("xyz.dussim.viessmann.feature.api", "Command3")
+                4 -> ClassName("xyz.dussim.viessmann.feature.api", "Command4")
+                5 -> ClassName("xyz.dussim.viessmann.feature.api", "Command5")
+                6 -> ClassName("xyz.dussim.viessmann.feature.api", "Command6")
                 else -> error("Too many parameters for command")
             }
 
@@ -163,10 +152,10 @@ class FeatureInterfaceGenerator(
                     .getter(FunSpec.getterBuilder().addStatement("return %N", param.name).build())
                     .addAnnotation(
                         AnnotationSpec
-                            .builder(Deprecated::class)
+                            .builder(Deprecated::class.asClassName())
                             .addMember("message = \"Use '${param.name}' instead\"")
-                            .addMember("replaceWith = ReplaceWith(\"${param.name}\")")
-                            .addMember("level = DeprecationLevel.WARNING")
+                            .addMember("replaceWith = %T(\"${param.name}\")", ReplaceWith::class.asClassName())
+                            .addMember("level = %T.WARNING", DeprecationLevel::class.asClassName())
                             .build(),
                     ).build(),
             )
@@ -198,7 +187,7 @@ class FeatureInterfaceGenerator(
             }
 
             "Schedule" -> {
-                val scheduleClass = Schedule::class.asClassName()
+                val scheduleClass = ClassName("xyz.dussim.viessmann.feature.api", "Schedule")
                 val listClass = List::class.asClassName()
                 val mapClass = Map::class.asClassName()
                 mapClass.parameterizedBy(
@@ -214,12 +203,74 @@ class FeatureInterfaceGenerator(
 
     private fun mapParameterTypeToConstraintsTypeName(type: String): TypeName =
         when (type) {
-            "string" -> StringConstraints::class.asClassName()
-            "number" -> NumberConstraints::class.asClassName()
-            "boolean" -> BooleanConstraints::class.asClassName()
-            "Schedule" -> ScheduleConstraints::class.asClassName()
+            "string" -> ClassName("xyz.dussim.viessmann.feature.api", "StringConstraints")
+            "number" -> ClassName("xyz.dussim.viessmann.feature.api", "NumberConstraints")
+            "boolean" -> ClassName("xyz.dussim.viessmann.feature.api", "BooleanConstraints")
+            "Schedule" -> ClassName("xyz.dussim.viessmann.feature.api", "ScheduleConstraints")
             else -> error("Unknown parameter type: $type")
         }
+
+    private fun isListEmpty(property: JsonObject): Boolean {
+        val value = property["value"]
+        return value is JsonArray && value.isEmpty()
+    }
+
+    private fun mapPropertyToTypeName(property: JsonObject): TypeName {
+        val type = property["type"]?.jsonPrimitive?.content ?: ""
+        val value = property["value"]
+        return when (type) {
+            "string" -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "StringValue")
+            }
+
+            "number" -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "DoubleValue")
+            }
+
+            "boolean" -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "BooleanValue")
+            }
+
+            "array" -> {
+                val array = value as? JsonArray
+                if (array.isNullOrEmpty()) {
+                    ClassName("xyz.dussim.viessmann.feature.api", "ListEmptyValue")
+                } else {
+                    guessArrayClassName(array)
+                }
+            }
+
+            "object" -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "ObjectOtherRoomConfigurationValue")
+            }
+
+            "Schedule" -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "ScheduleValue")
+            }
+
+            "DeviceList" -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "ListDeviceValue")
+            }
+
+            else -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "UnknownValue")
+            }
+        }
+    }
+
+    private fun guessArrayClassName(array: JsonArray): ClassName {
+        val first = array.first()
+        if (first is JsonObject) {
+            if (first.containsKey("errorCode")) return ClassName("xyz.dussim.viessmann.feature.api", "ListDeviceErrorValue")
+            if (first.containsKey("modelId")) return ClassName("xyz.dussim.viessmann.feature.api", "ListDeviceValue")
+            if (first.containsKey("deviceId")) return ClassName("xyz.dussim.viessmann.feature.api", "ListRoomActorValue")
+            if (first.containsKey("device")) return ClassName("xyz.dussim.viessmann.feature.api", "ListZigbeeDeviceStatusValue")
+        } else if (first is kotlinx.serialization.json.JsonPrimitive) {
+            if (first.isString) return ClassName("xyz.dussim.viessmann.feature.api", "ListStringValue")
+            return ClassName("xyz.dussim.viessmann.feature.api", "ListDoubleValue")
+        }
+        return ClassName("xyz.dussim.viessmann.feature.api", "UnknownValue")
+    }
 }
 
 data class CommandSignature(

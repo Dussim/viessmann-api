@@ -4,10 +4,10 @@ plugins {
     `kotlin-dsl`
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.ben.manes.versions)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
+
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 
     implementation(libs.plugins.kotest)
@@ -19,12 +19,8 @@ dependencies {
     implementation(libs.plugins.kotlin.serialization)
     implementation(libs.plugins.ksp)
 
-    implementation(libs.kotlinx.serialization.json)
-
     implementation(libs.kotlinpoet.ksp)
-
-    implementation("xyz.dussim:dto:0.0.3")
-    implementation("xyz.dussim:annotations:0.0.3")
+    implementation(libs.kotlinx.serialization.json)
 }
 
 gradlePlugin {
