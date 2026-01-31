@@ -193,41 +193,51 @@ fun commandRule(
     }
 }
 
-fun deviceFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
-    val gatewayError = Invalid(ComponentTypeMismatch(featureName, GATEWAY_BUT_SHOULD_BE_DEVICE))
-    val geofencingError = Invalid(ComponentTypeMismatch(featureName, GEOFENCING_BUT_SHOULD_BE_DEVICE))
+private val featureTypeErrors = mutableMapOf<String, ValidationResult<ValidationError>>()
 
-    return ValidationRule { feature ->
-        when (feature) {
-            is Feature.Device -> ValidationResult.Valid
-            is Feature.Gateway -> gatewayError
-            is Feature.Geofencing -> geofencingError
+private inline fun cachedFeatureError(
+    featureName: String,
+    expectedActualClass: ExpectedActualClass,
+): ValidationResult<ValidationError> =
+    featureTypeErrors.getOrPut(featureName) {
+        Invalid(ComponentTypeMismatch(featureName, expectedActualClass))
+    }
+
+private inline fun featureTypeRule(
+    deviceError: ExpectedActualClass,
+    gatewayError: ExpectedActualClass,
+    geofencingError: ExpectedActualClass,
+    crossinline isValid: (Feature) -> Boolean,
+): ValidationRule<Feature, ValidationError> =
+    ValidationRule { feature ->
+        if (isValid(feature)) {
+            ValidationResult.Valid
+        } else {
+            when (feature) {
+                is Feature.Device -> cachedFeatureError(feature.feature, deviceError)
+                is Feature.Gateway -> cachedFeatureError(feature.feature, gatewayError)
+                is Feature.Geofencing -> cachedFeatureError(feature.feature, geofencingError)
+            }
         }
     }
-}
 
-fun gatewayFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
-    val deviceError = Invalid(ComponentTypeMismatch(featureName, DEVICE_BUT_SHOULD_BE_GATEWAY))
-    val geofencingError = Invalid(ComponentTypeMismatch(featureName, GEOFENCING_BUT_SHOULD_BE_GATEWAY))
+fun deviceFeatureRule(): ValidationRule<Feature, ValidationError> =
+    featureTypeRule(
+        deviceError = GATEWAY_BUT_SHOULD_BE_DEVICE, // unused, but needed for exhaustive when
+        gatewayError = GATEWAY_BUT_SHOULD_BE_DEVICE,
+        geofencingError = GEOFENCING_BUT_SHOULD_BE_DEVICE,
+    ) { it is Feature.Device }
 
-    return ValidationRule { feature ->
-        when (feature) {
-            is Feature.Gateway -> ValidationResult.Valid
-            is Feature.Device -> deviceError
-            is Feature.Geofencing -> geofencingError
-        }
-    }
-}
+fun gatewayFeatureRule(): ValidationRule<Feature, ValidationError> =
+    featureTypeRule(
+        deviceError = DEVICE_BUT_SHOULD_BE_GATEWAY,
+        gatewayError = DEVICE_BUT_SHOULD_BE_GATEWAY, // unused
+        geofencingError = GEOFENCING_BUT_SHOULD_BE_GATEWAY,
+    ) { it is Feature.Gateway }
 
-fun geofencingFeatureRule(featureName: String): ValidationRule<Feature, ValidationError> {
-    val deviceError = Invalid(ComponentTypeMismatch(featureName, DEVICE_BUT_SHOULD_BE_GEOFENCING))
-    val gatewayError = Invalid(ComponentTypeMismatch(featureName, GATEWAY_BUT_SHOULD_BE_GEOFENCING))
-
-    return ValidationRule { feature ->
-        when (feature) {
-            is Feature.Geofencing -> ValidationResult.Valid
-            is Feature.Device -> deviceError
-            is Feature.Gateway -> gatewayError
-        }
-    }
-}
+fun geofencingFeatureRule(): ValidationRule<Feature, ValidationError> =
+    featureTypeRule(
+        deviceError = DEVICE_BUT_SHOULD_BE_GEOFENCING,
+        gatewayError = GATEWAY_BUT_SHOULD_BE_GEOFENCING,
+        geofencingError = DEVICE_BUT_SHOULD_BE_GEOFENCING, // unused
+    ) { it is Feature.Geofencing }

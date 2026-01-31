@@ -121,7 +121,7 @@ fun companionObject(implName: ClassName): TypeSpec {
         listOf(
             CodeBlock.of(
                 "%M",
-                context.ruleRegistry.register(subTypeValidationMember, listOf(implName), FEATURE_VALIDATION_RULE_TYPE),
+                context.ruleRegistry.register(subTypeValidationMember, emptyList(), FEATURE_VALIDATION_RULE_TYPE),
             ),
         ).plus(
             context

@@ -278,7 +278,12 @@ data class RuleSignature(
                     else -> arg.toString().replace(Regex("[^a-zA-Z0-9]"), "_")
                 }
             }
-        val name = "${argsPart}_$functionPart"
+        val name =
+            if (argsPart.isBlank()) {
+                functionPart
+            } else {
+                "${argsPart}_$functionPart"
+            }
         val sanitized = if (name.first().isDigit()) "rule_$name" else name
         return sanitized.replaceFirstChar { it.lowercase() }.replace("__", "_")
     }
