@@ -21,18 +21,27 @@ import xyz.dussim.viessmann.feature.api.FeatureValidationException
 
 /**
  * Generates constructor accepting a delegate feature.
+ * When using abstract class, only delegate parameter is needed.
+ * Otherwise, all feature parameters and hashCode are included.
  */
 context(context: SymbolContext)
-fun constructor() =
-    FunSpec
-        .constructorBuilder()
-        .addParameter(
-            ParameterSpec
-                .builder(DELEGATE, context.baseFeature.delegate)
-                .build(),
-        ).addParameters(context.featureParametersImpl)
-        .addParameter(ParameterSpec("hashCode", INT))
-        .build()
+fun constructor(): FunSpec {
+    val builder =
+        FunSpec
+            .constructorBuilder()
+            .addParameter(
+                ParameterSpec
+                    .builder(DELEGATE, context.baseFeature.delegate)
+                    .build(),
+            )
+
+    if (context.baseFeature.abstractClass == null) {
+        builder.addParameters(context.featureParametersImpl)
+        builder.addParameter(ParameterSpec("hashCode", INT))
+    }
+
+    return builder.build()
+}
 
 /**
  * Generates initialization block that validates and assigns properties and commands.
@@ -183,8 +192,9 @@ fun generateSharedFeatureImplementation(
     context: SymbolContext,
 ) = context(context) {
     val constructor = constructor()
-    val properties = context.allPropertiesImpl
+    val properties = context.parameterPropertiesImpl + context.commandPropertiesImpl
     val initBlock = initBlock(implName)
+    val abstractClass = context.baseFeature.abstractClass
 
     val classImpl =
         TypeSpec
@@ -192,30 +202,40 @@ fun generateSharedFeatureImplementation(
             .addModifiers(KModifier.INTERNAL)
             .addAnnotation(PUBLISHED_API_ANNOTATION)
             .primaryConstructor(constructor)
-            .addSuperinterfaces(superInterfaces)
-            .addType(companionObject(implName))
+            .apply {
+                if (abstractClass != null) {
+                    superclass(abstractClass)
+                    addSuperclassConstructorParameter("$DELEGATE")
+                    addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
+                } else {
+                    addSuperinterfaces(superInterfaces)
+                    addProperties(context.featurePropertiesImpl)
+                    addProperty(PropertySpec.builder("hashCode", INT, KModifier.PRIVATE).initializer("hashCode").build())
+                    addFunction(
+                        FunSpec
+                            .builder("equals")
+                            .addModifiers(KModifier.OVERRIDE)
+                            .addParameter("other", Any::class.asClassName().copy(nullable = true))
+                            .returns(Boolean::class)
+                            .addStatement("return %M(other)", EQUALS_IMPL)
+                            .build(),
+                    )
+                    addFunction(
+                        FunSpec
+                            .builder("hashCode")
+                            .addModifiers(KModifier.OVERRIDE)
+                            .returns(Int::class)
+                            .addStatement("return hashCode")
+                            .build(),
+                    )
+                }
+            }.addType(companionObject(implName))
             .addProperties(properties)
-            .addProperty(PropertySpec.builder("hashCode", INT, KModifier.PRIVATE).initializer("hashCode").build())
             .apply {
                 if (initBlock.isNotEmpty()) {
                     addInitializerBlock(initBlock)
                 }
-            }.addFunction(
-                FunSpec
-                    .builder("equals")
-                    .addModifiers(KModifier.OVERRIDE)
-                    .addParameter("other", Any::class.asClassName().copy(nullable = true))
-                    .returns(Boolean::class)
-                    .addStatement("return %M(other)", EQUALS_IMPL)
-                    .build(),
-            ).addFunction(
-                FunSpec
-                    .builder("hashCode")
-                    .addModifiers(KModifier.OVERRIDE)
-                    .returns(Int::class)
-                    .addStatement("return hashCode")
-                    .build(),
-            ).build()
+            }.build()
 
     FileSpec
         .builder(implName.packageName, implName.simpleName)
@@ -236,6 +256,7 @@ fun generateFeatureDescriptorAndExtensions(
 ) = context(context) {
     val descriptorName = generateDescriptorName(context.superInterface)
     val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
+    val abstractClass = context.baseFeature.abstractClass
 
     val descriptorProperty =
         PropertySpec
@@ -251,15 +272,19 @@ fun generateFeatureDescriptorAndExtensions(
                     unindent()
                     add(") { feature ->\n")
                     indent()
-                    add("feature as? %T ?: %T(\n", context.superInterface, implName)
-                    indent()
-                    add("delegate = feature as %T,\n", context.baseFeature.delegate)
-                    context.featureProperties.forEach {
-                        add("${it.name} = feature.${it.name},\n")
+                    if (abstractClass != null) {
+                        add("feature as? %T ?: %T(feature as %T)\n", context.superInterface, implName, context.baseFeature.delegate)
+                    } else {
+                        add("feature as? %T ?: %T(\n", context.superInterface, implName)
+                        indent()
+                        add("delegate = feature as %T,\n", context.baseFeature.delegate)
+                        context.featureProperties.forEach {
+                            add("${it.name} = feature.${it.name},\n")
+                        }
+                        add("hashCode = feature.hashCode(),\n")
+                        unindent()
+                        add(")\n")
                     }
-                    add("hashCode = feature.hashCode(),\n")
-                    unindent()
-                    add(")\n")
                     unindent()
                     add("}")
                     add(" as %T", descriptorType)

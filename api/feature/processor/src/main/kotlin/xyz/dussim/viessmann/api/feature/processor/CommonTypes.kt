@@ -35,6 +35,9 @@ private const val IMPL_SUFFIX = "Impl"
 private const val DESCRIPTOR_SUFFIX = "Descriptor"
 
 val FEATURE_DESCRIPTOR_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureDescriptor")
+val ABSTRACT_DEVICE_FEATURE = ClassName(FEATURE_API_PACKAGE, "AbstractDeviceFeature")
+val ABSTRACT_GATEWAY_FEATURE = ClassName(FEATURE_API_PACKAGE, "AbstractGatewayFeature")
+val ABSTRACT_GEOFENCING_FEATURE = ClassName(FEATURE_API_PACKAGE, "AbstractGeofencingFeature")
 
 // Common member names
 val COMMAND_RULE = MemberName(VALIDATION_PACKAGE, "commandRule")
@@ -346,11 +349,12 @@ private val GEOFENCING_PROPERTIES =
 enum class BaseFeature(
     val superInterfaceProperties: Map<String, TypeName>,
     val delegate: TypeName,
+    val abstractClass: ClassName?,
 ) {
-    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>()),
-    Device(DEVICE_PROPERTIES, typeNameOf<Feature.Device>()),
-    Gateway(GATEWAY_PROPERTIES, typeNameOf<Feature.Gateway>()),
-    Geofencing(GEOFENCING_PROPERTIES, typeNameOf<Feature.Geofencing>()),
+    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>(), null),
+    Device(DEVICE_PROPERTIES, typeNameOf<Feature.Device>(), ABSTRACT_DEVICE_FEATURE),
+    Gateway(GATEWAY_PROPERTIES, typeNameOf<Feature.Gateway>(), ABSTRACT_GATEWAY_FEATURE),
+    Geofencing(GEOFENCING_PROPERTIES, typeNameOf<Feature.Geofencing>(), ABSTRACT_GEOFENCING_FEATURE),
 }
 
 data class FeatureSignature(
