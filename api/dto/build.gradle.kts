@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jmailen.gradle.kotlinter.tasks.FormatTask
 
@@ -12,6 +13,9 @@ dependencies {
 }
 
 kotlin {
+    jvm {
+        compilerOptions.jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
+    }
     sourceSets.commonMain {
         kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
         dependencies {
