@@ -4,10 +4,10 @@ import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 
 /**
- * Current implementation - uses isInvalid checks first, then capacity.
+ * Old implementation - uses isInvalid checks first, then capacity.
  */
 @Suppress("UNCHECKED_CAST")
-fun <E> ofCurrentEight(
+fun <E> ofOldEight(
     result1: ValidationResult<E>,
     result2: ValidationResult<E>,
     result3: ValidationResult<E>,
@@ -57,10 +57,10 @@ fun <E> ofCurrentEight(
 }
 
 /**
- * Alternative implementation - uses bitmask approach.
+ * Current implementation - uses bitmask approach.
  */
 @Suppress("UNCHECKED_CAST")
-fun <E> ofAlternativeEight(
+fun <E> ofCurrentEight(
     result1: ValidationResult<E>,
     result2: ValidationResult<E>,
     result3: ValidationResult<E>,

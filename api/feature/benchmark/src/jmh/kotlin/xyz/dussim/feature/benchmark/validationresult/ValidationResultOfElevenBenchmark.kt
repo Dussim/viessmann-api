@@ -39,7 +39,7 @@ private typealias OfFunctionEleven<E> = (
 @Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1)
 open class ValidationResultOfElevenBenchmark {
-    @Param("CURRENT", "ALTERNATIVE")
+    @Param("OLD", "CURRENT")
     lateinit var implementation: Implementation
 
     @Param("ALL_VALID", "ONE_INVALID", "FIRST_INVALID", "LAST_INVALID", "TWO_INVALID", "ALL_INVALID", "ONE_INVALID_MULTIPLE_ERRORS", "MIXED_ONE_AND_MULTIPLE_ERRORS")
@@ -76,8 +76,8 @@ open class ValidationResultOfElevenBenchmark {
     fun setup() {
         ofFunction =
             when (implementation) {
+                Implementation.OLD -> ::ofOldEleven
                 Implementation.CURRENT -> ::ofCurrentEleven
-                Implementation.ALTERNATIVE -> ::ofAlternativeEleven
             }
         when (scenario) {
             Scenario.ALL_VALID -> {

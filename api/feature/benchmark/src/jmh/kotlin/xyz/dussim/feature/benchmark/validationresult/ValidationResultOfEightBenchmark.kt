@@ -36,7 +36,7 @@ private typealias OfFunctionEight<E> = (
 @Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1)
 open class ValidationResultOfEightBenchmark {
-    @Param("CURRENT", "ALTERNATIVE")
+    @Param("OLD", "CURRENT")
     lateinit var implementation: Implementation
 
     @Param(
@@ -77,8 +77,8 @@ open class ValidationResultOfEightBenchmark {
     fun setup() {
         ofFunction =
             when (implementation) {
+                Implementation.OLD -> ::ofOldEight
                 Implementation.CURRENT -> ::ofCurrentEight
-                Implementation.ALTERNATIVE -> ::ofAlternativeEight
             }
 
         when (scenario) {

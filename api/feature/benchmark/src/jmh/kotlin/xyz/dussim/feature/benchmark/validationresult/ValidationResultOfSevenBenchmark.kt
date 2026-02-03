@@ -19,8 +19,8 @@ import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.In
 import java.util.concurrent.TimeUnit
 
 enum class Implementation {
+    OLD,
     CURRENT,
-    ALTERNATIVE,
 }
 
 enum class Scenario {
@@ -52,8 +52,8 @@ typealias OfFunction<E> = (
 @Fork(value = 1)
 open class ValidationResultOfSevenBenchmark {
     @Param(
+        "OLD",
         "CURRENT",
-        "ALTERNATIVE",
     )
     lateinit var implementation: Implementation
 
@@ -93,8 +93,8 @@ open class ValidationResultOfSevenBenchmark {
     fun setup() {
         ofFunction =
             when (implementation) {
-                Implementation.CURRENT -> ::ofCurrent
-                Implementation.ALTERNATIVE -> ::ofAlternative
+                Implementation.OLD -> ::ofOldSeven
+                Implementation.CURRENT -> ::ofCurrentSeven
             }
 
         when (scenario) {

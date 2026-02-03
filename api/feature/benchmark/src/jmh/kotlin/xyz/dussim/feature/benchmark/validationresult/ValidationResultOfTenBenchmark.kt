@@ -38,7 +38,7 @@ private typealias OfFunctionTen<E> = (
 @Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1)
 open class ValidationResultOfTenBenchmark {
-    @Param("CURRENT", "ALTERNATIVE")
+    @Param("OLD", "CURRENT")
     lateinit var implementation: Implementation
 
     @Param("ALL_VALID", "ONE_INVALID", "FIRST_INVALID", "LAST_INVALID", "TWO_INVALID", "ALL_INVALID", "ONE_INVALID_MULTIPLE_ERRORS", "MIXED_ONE_AND_MULTIPLE_ERRORS")
@@ -73,8 +73,8 @@ open class ValidationResultOfTenBenchmark {
     fun setup() {
         ofFunction =
             when (implementation) {
+                Implementation.OLD -> ::ofOldTen
                 Implementation.CURRENT -> ::ofCurrentTen
-                Implementation.ALTERNATIVE -> ::ofAlternativeTen
             }
         when (scenario) {
             Scenario.ALL_VALID -> {

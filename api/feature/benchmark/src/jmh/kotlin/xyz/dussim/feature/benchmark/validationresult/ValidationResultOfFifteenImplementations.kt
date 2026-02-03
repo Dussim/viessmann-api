@@ -4,7 +4,7 @@ import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 
 @Suppress("UNCHECKED_CAST")
-fun <E> ofCurrentFifteen(
+fun <E> ofOldFifteen(
     result1: ValidationResult<E>,
     result2: ValidationResult<E>,
     result3: ValidationResult<E>,
@@ -72,7 +72,7 @@ fun <E> ofCurrentFifteen(
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <E> ofAlternativeFifteen(
+fun <E> ofCurrentFifteen(
     result1: ValidationResult<E>,
     result2: ValidationResult<E>,
     result3: ValidationResult<E>,

@@ -33,7 +33,7 @@ private typealias OfFunctionFive<E> = (
 @Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1)
 open class ValidationResultOfFiveBenchmark {
-    @Param("CURRENT", "ALTERNATIVE")
+    @Param("OLD", "CURRENT")
     lateinit var implementation: Implementation
 
     @Param(
@@ -68,8 +68,8 @@ open class ValidationResultOfFiveBenchmark {
     fun setup() {
         ofFunction =
             when (implementation) {
+                Implementation.OLD -> ::ofOldFive
                 Implementation.CURRENT -> ::ofCurrentFive
-                Implementation.ALTERNATIVE -> ::ofAlternativeFive
             }
 
         when (scenario) {

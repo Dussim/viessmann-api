@@ -22,6 +22,10 @@ value class ValidationResult<out T>
         inline val isInvalid: Boolean
             get() = value != null
 
+        @PublishedApi
+        internal inline val invalidFlag: Int
+            get() = if (isInvalid) 1 else 0
+
         @Suppress("UNCHECKED_CAST")
         inline fun forEach(crossinline action: (T) -> Unit) {
             when (value) {
@@ -71,22 +75,21 @@ value class ValidationResult<out T>
                 result1: ValidationResult<E>,
                 result2: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array = arrayOfNulls<Any>(result1.size + result2.size)
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 return Invalid(array as Array<E>)
@@ -97,25 +100,23 @@ value class ValidationResult<out T>
                 result2: ValidationResult<E>,
                 result3: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size)
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -128,28 +129,25 @@ value class ValidationResult<out T>
                 result3: ValidationResult<E>,
                 result4: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size + result4.size)
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -164,31 +162,27 @@ value class ValidationResult<out T>
                 result4: ValidationResult<E>,
                 result5: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size + result4.size + result5.size)
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -205,34 +199,29 @@ value class ValidationResult<out T>
                 result5: ValidationResult<E>,
                 result6: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size + result4.size + result5.size + result6.size)
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -251,37 +240,34 @@ value class ValidationResult<out T>
                 result6: ValidationResult<E>,
                 result7: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size + result7.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -302,40 +288,37 @@ value class ValidationResult<out T>
                 result7: ValidationResult<E>,
                 result8: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -358,43 +341,39 @@ value class ValidationResult<out T>
                 result8: ValidationResult<E>,
                 result9: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -419,40 +398,41 @@ value class ValidationResult<out T>
                 result9: ValidationResult<E>,
                 result10: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid && !result2.isInvalid && !result3.isInvalid && !result4.isInvalid && !result5.isInvalid && !result6.isInvalid && !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid &&
-                    !result10.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size +
-                        result10.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
-                        result10.isInvalid -> return result10
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size + result10.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -479,49 +459,43 @@ value class ValidationResult<out T>
                 result10: ValidationResult<E>,
                 result11: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid &&
-                    !result10.isInvalid &&
-                    !result11.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size +
-                        result10.size +
-                        result11.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
-                        result10.isInvalid -> return result10
-                        result11.isInvalid -> return result11
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size + result10.size + result11.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -550,52 +524,45 @@ value class ValidationResult<out T>
                 result11: ValidationResult<E>,
                 result12: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid &&
-                    !result10.isInvalid &&
-                    !result11.isInvalid &&
-                    !result12.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size +
-                        result10.size +
-                        result11.size +
-                        result12.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
-                        result10.isInvalid -> return result10
-                        result11.isInvalid -> return result11
-                        result12.isInvalid -> return result12
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -626,55 +593,48 @@ value class ValidationResult<out T>
                 result12: ValidationResult<E>,
                 result13: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid &&
-                    !result10.isInvalid &&
-                    !result11.isInvalid &&
-                    !result12.isInvalid &&
-                    !result13.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size +
-                        result10.size +
-                        result11.size +
-                        result12.size +
-                        result13.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
-                        result10.isInvalid -> return result10
-                        result11.isInvalid -> return result11
-                        result12.isInvalid -> return result12
-                        result13.isInvalid -> return result13
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
+                            result13.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -707,58 +667,50 @@ value class ValidationResult<out T>
                 result13: ValidationResult<E>,
                 result14: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid &&
-                    !result10.isInvalid &&
-                    !result11.isInvalid &&
-                    !result12.isInvalid &&
-                    !result13.isInvalid &&
-                    !result14.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size +
-                        result10.size +
-                        result11.size +
-                        result12.size +
-                        result13.size +
-                        result14.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
-                        result10.isInvalid -> return result10
-                        result11.isInvalid -> return result11
-                        result12.isInvalid -> return result12
-                        result13.isInvalid -> return result13
-                        result14.isInvalid -> return result14
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
+                            result13.size + result14.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -793,61 +745,52 @@ value class ValidationResult<out T>
                 result14: ValidationResult<E>,
                 result15: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid &&
-                    !result10.isInvalid &&
-                    !result11.isInvalid &&
-                    !result12.isInvalid &&
-                    !result13.isInvalid &&
-                    !result14.isInvalid &&
-                    !result15.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size +
-                        result10.size +
-                        result11.size +
-                        result12.size +
-                        result13.size +
-                        result14.size +
-                        result15.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
-                        result10.isInvalid -> return result10
-                        result11.isInvalid -> return result11
-                        result12.isInvalid -> return result12
-                        result13.isInvalid -> return result13
-                        result14.isInvalid -> return result14
-                        result15.isInvalid -> return result15
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
+                            result13.size + result14.size + result15.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -884,64 +827,54 @@ value class ValidationResult<out T>
                 result15: ValidationResult<E>,
                 result16: ValidationResult<E>,
             ): ValidationResult<E> {
-                if (!result1.isInvalid &&
-                    !result2.isInvalid &&
-                    !result3.isInvalid &&
-                    !result4.isInvalid &&
-                    !result5.isInvalid &&
-                    !result6.isInvalid &&
-                    !result7.isInvalid &&
-                    !result8.isInvalid &&
-                    !result9.isInvalid &&
-                    !result10.isInvalid &&
-                    !result11.isInvalid &&
-                    !result12.isInvalid &&
-                    !result13.isInvalid &&
-                    !result14.isInvalid &&
-                    !result15.isInvalid &&
-                    !result16.isInvalid
-                ) {
-                    return Valid
-                }
-                val capacity =
-                    result1.size +
-                        result2.size +
-                        result3.size +
-                        result4.size +
-                        result5.size +
-                        result6.size +
-                        result7.size +
-                        result8.size +
-                        result9.size +
-                        result10.size +
-                        result11.size +
-                        result12.size +
-                        result13.size +
-                        result14.size +
-                        result15.size +
-                        result16.size
-                if (capacity == 1) {
-                    when {
-                        result1.isInvalid -> return result1
-                        result2.isInvalid -> return result2
-                        result3.isInvalid -> return result3
-                        result4.isInvalid -> return result4
-                        result5.isInvalid -> return result5
-                        result6.isInvalid -> return result6
-                        result7.isInvalid -> return result7
-                        result8.isInvalid -> return result8
-                        result9.isInvalid -> return result9
-                        result10.isInvalid -> return result10
-                        result11.isInvalid -> return result11
-                        result12.isInvalid -> return result12
-                        result13.isInvalid -> return result13
-                        result14.isInvalid -> return result14
-                        result15.isInvalid -> return result15
-                        result16.isInvalid -> return result16
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
                     }
                 }
+
                 var current = 0
-                val array = arrayOfNulls<Any>(capacity)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
+                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
+                            result13.size + result14.size + result15.size + result16.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
