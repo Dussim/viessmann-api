@@ -24,9 +24,10 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.work.DisableCachingByDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import xyz.dussim.buildlogic.internal.CommandSignature
+import xyz.dussim.buildlogic.internal.CommandInterfaceGenerator
 import xyz.dussim.buildlogic.internal.FeatureInterfaceGenerator
 import xyz.dussim.buildlogic.internal.FeatureMerger
+import xyz.dussim.buildlogic.internal.identifySharedCommands
 import java.io.File
 
 abstract class GenerateFeatureInterfacesFromParsedFeaturePlugin : Plugin<Project> {
@@ -124,23 +125,7 @@ abstract class GenerateFeatureInterfacesFromParsedFeaturesTask : DefaultTask() {
                 } ?: emptyList()
             }
 
-        // Identify shareable commands
-        val shareableSignatures =
-            commandSignatures
-                .groupBy { it }
-                .filter { it.value.size > 1 }
-                .map { it.key }
-
-        val allUniqueSignatures = commandSignatures.distinct()
-        val signaturesByName = allUniqueSignatures.groupBy { it.name }
-
-        val sharedCommandsPackage = "${packageName.get()}.commands"
-        val sharedCommandsMap: Map<CommandSignature, ClassName> =
-            shareableSignatures.associateWith { sig ->
-                val useShortName = (signaturesByName[sig.name]?.size ?: 0) == 1
-                val interfaceName = if (useShortName) sig.capitalizedName else sig.interfaceName
-                ClassName(sharedCommandsPackage, interfaceName)
-            }
+        val sharedCommandsMap = identifySharedCommands(commandSignatures, packageName.get())
 
         generator.useSharedCommands(sharedCommandsMap)
 
@@ -149,7 +134,7 @@ abstract class GenerateFeatureInterfacesFromParsedFeaturesTask : DefaultTask() {
             val fileSpec =
                 FileSpec
                     .builder(className.packageName, className.simpleName)
-                    .addType(generator.generateCommandInterface(className.simpleName, sig.name, sig.parameters))
+                    .addType(CommandInterfaceGenerator.generateCommandInterface(className.simpleName, sig.name, sig.parameters))
                     .build()
             fileSpec.writeTo(outputDir)
         }

@@ -19,6 +19,7 @@ kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref 
 kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "jetbrains-kotlin" }
 kotlin-test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "jetbrains-kotlin" }
 kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0"
+swagger-parser = "io.swagger.parser.v3:swagger-parser:2.1.37"
 
 [plugins]
 ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }

@@ -21,6 +21,7 @@ dependencies {
 
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.swagger.parser)
 }
 
 gradlePlugin {
@@ -40,6 +41,10 @@ gradlePlugin {
         register("generateFeatureInterfaces") {
             id = "xyz.dussim.generate.features"
             implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromParsedFeaturePlugin"
+        }
+        register("generateFeatureInterfacesFromYaml") {
+            id = "xyz.dussim.generate.features.yaml"
+            implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromYamlPlugin"
         }
     }
 }
