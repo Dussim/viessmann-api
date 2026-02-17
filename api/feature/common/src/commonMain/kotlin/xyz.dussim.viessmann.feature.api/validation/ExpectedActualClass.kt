@@ -4,16 +4,29 @@ import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
+import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
+import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.Feature
+import xyz.dussim.viessmann.feature.api.ListBusTypeValue
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
+import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
+import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
+import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
+import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.ListEmptyValue
+import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
+import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
+import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
+import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
+import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
+import xyz.dussim.viessmann.feature.api.ProductInfoValue
 import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
@@ -95,6 +108,47 @@ internal const val FEATURE_GEOFENCING_CLASS_INDEX = 21
 @PublishedApi
 internal const val MISSING_COMPONENT_CLASS_INDEX = 22
 
+@PublishedApi
+internal const val LIST_BUS_TYPE_CLASS_INDEX = 23
+
+@PublishedApi
+internal const val ENERGY_MATRIX_VALUE_CLASS_INDEX = 24
+
+@PublishedApi
+internal const val LOGS_VALUE_CLASS_INDEX = 25
+
+@PublishedApi
+internal const val LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX = 26
+
+@PublishedApi
+internal const val PRODUCT_INFO_VALUE_CLASS_INDEX = 27
+
+@PublishedApi
+internal const val FACTORY_RESET_INFO_VALUE_CLASS_INDEX = 28
+
+@PublishedApi
+internal const val LIST_EEBUS_DEVICE_VALUE_CLASS_INDEX = 29
+
+@PublishedApi
+internal const val LIST_EEBUS_SERVICE_PARTNER_VALUE_CLASS_INDEX = 30
+
+@PublishedApi
+internal const val LIST_ELECTRICAL_ENERGY_MATRIX_VALUE_CLASS_INDEX = 31
+
+@PublishedApi
+internal const val LIST_OPERATING_DATA_CELLS_DETAIL_VALUE_CLASS_INDEX = 32
+
+@PublishedApi
+internal const val LIST_DEVICE_INFORMATION_VALUE_CLASS_INDEX = 33
+
+@PublishedApi
+internal const val LIST_ENERGY_CHARGED_DEVICE_VALUE_CLASS_INDEX = 34
+
+@PublishedApi
+internal const val LIST_SENSOR_VALUE_CLASS_INDEX = 35
+
+private const val SIZE = 36
+
 private val EXPECTED_ACTUAL_CLASSES by lazy {
     val all =
         listOf(
@@ -121,6 +175,19 @@ private val EXPECTED_ACTUAL_CLASSES by lazy {
             Feature.Gateway::class,
             Feature.Geofencing::class,
             Nothing::class,
+            ListBusTypeValue::class,
+            EnergyMatrixValue::class,
+            LogsValue::class,
+            ListLogBookEntryValue::class,
+            ProductInfoValue::class,
+            FactoryResetInfoValue::class,
+            ListEebusDeviceValue::class,
+            ListEebusServicePartnerValue::class,
+            ListElectricalEnergyMatrixValue::class,
+            ListOperatingDataCellsDetailValue::class,
+            ListDeviceInformationValue::class,
+            ListEnergyChargedDeviceValue::class,
+            ListSensorValue::class,
         )
 
     buildList(all.size * all.size) {
@@ -137,8 +204,6 @@ value class ExpectedActualClass internal constructor(
     internal val indexIntoList: Int,
 ) {
     companion object {
-        private const val SIZE = 23
-
         fun of(
             expected: Int,
             actual: Int,
@@ -173,7 +238,7 @@ object PropertyValidationErrors {
 
     @PublishedApi
     internal val mismatches =
-        Array(23) { IntToObjectMap.of<ValidationResult<ComponentTypeMismatch>>() }
+        Array(SIZE) { IntToObjectMap.of<ValidationResult<ComponentTypeMismatch>>() }
 
     inline fun getMismatchProperties(
         nameOfComponent: String,

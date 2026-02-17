@@ -52,7 +52,7 @@ internal data object PropertySerializer : KSerializer<Property> {
                     encodeSerializableElement(
                         descriptor,
                         1,
-                        ListSerializer(Double.Companion.serializer()),
+                        ListSerializer(Double.serializer()),
                         propertyValue.element,
                     )
                 }
@@ -67,7 +67,12 @@ internal data object PropertySerializer : KSerializer<Property> {
                 }
 
                 is UnknownValue -> {
-                    encodeSerializableElement(descriptor, 1, JsonElement.Companion.serializer(), propertyValue.element)
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        JsonElement.serializer(),
+                        propertyValue.element,
+                    )
                 }
 
                 is ListDeviceErrorValue -> {
@@ -119,6 +124,123 @@ internal data object PropertySerializer : KSerializer<Property> {
                     )
                 }
 
+                is ListBusTypeValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(BusType.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is EnergyMatrixValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        EnergyMatrix.serializer(),
+                        propertyValue.element,
+                    )
+                }
+
+                is LogsValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        Logs.serializer(),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListLogBookEntryValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(LogBookEntry.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ProductInfoValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ProductInfo.serializer(),
+                        propertyValue.element,
+                    )
+                }
+
+                is FactoryResetInfoValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        FactoryResetInfo.serializer(),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListEebusDeviceValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(EebusDevice.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListEebusServicePartnerValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(EebusServicePartner.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListElectricalEnergyMatrixValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(ElectricalEnergyMatrix.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListOperatingDataCellsDetailValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(OperatingDataCellsDetail.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListEnergyChargedDeviceValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(EnergyChargedDevice.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListDeviceInformationValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(DeviceInformation.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListSensorValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(SensorValue.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
                 ListEmptyValue -> {
                     encodeSerializableElement(
                         descriptor,
@@ -163,6 +285,14 @@ internal data object PropertySerializer : KSerializer<Property> {
                             ?: decoder.decodeOrNull(array, DeviceError.serializer(), ::ListDeviceErrorValue)
                             ?: decoder.decodeOrNull(array, ZigbeeDeviceStatus.serializer(), ::ListZigbeeDeviceStatusValue)
                             ?: decoder.decodeOrNull(array, RoomActor.serializer(), ::ListRoomActorValue)
+                            ?: decoder.decodeOrNull(array, BusType.serializer(), ::ListBusTypeValue)
+                            ?: decoder.decodeOrNull(array, LogBookEntry.serializer(), ::ListLogBookEntryValue)
+                            ?: decoder.decodeOrNull(array, EebusDevice.serializer(), ::ListEebusDeviceValue)
+                            ?: decoder.decodeOrNull(array, EebusServicePartner.serializer(), ::ListEebusServicePartnerValue)
+                            ?: decoder.decodeOrNull(array, ElectricalEnergyMatrix.serializer(), ::ListElectricalEnergyMatrixValue)
+                            ?: decoder.decodeOrNull(array, OperatingDataCellsDetail.serializer(), ::ListOperatingDataCellsDetailValue)
+                            ?: decoder.decodeOrNull(array, EnergyChargedDevice.serializer(), ::ListEnergyChargedDeviceValue)
+                            ?: decoder.decodeOrNull(array, DeviceInformation.serializer(), ::ListDeviceInformationValue)
                             ?: UnknownValue(value)
                     }
 
@@ -170,6 +300,9 @@ internal data object PropertySerializer : KSerializer<Property> {
                         val obj = value as? JsonObject
 
                         decoder.decodeOrNull(obj, OtherRoomConfiguration.serializer(), ::ObjectOtherRoomConfigurationValue)
+                            ?: decoder.decodeOrNull(obj, Logs.serializer(), ::LogsValue)
+                            ?: decoder.decodeOrNull(obj, ProductInfo.serializer(), ::ProductInfoValue)
+                            ?: decoder.decodeOrNull(obj, FactoryResetInfo.serializer(), ::FactoryResetInfoValue)
                             ?: UnknownValue(value)
                     }
 
@@ -187,6 +320,28 @@ internal data object PropertySerializer : KSerializer<Property> {
                             obj,
                             MapSerializer(String.serializer(), ListSerializer(Schedule.serializer())),
                             ::ScheduleValue,
+                        )
+                            ?: UnknownValue(value)
+                    }
+
+                    ENERGY_MATRIX -> {
+                        val obj = value as? JsonObject
+
+                        decoder.decodeOrNull(
+                            obj,
+                            EnergyMatrix.serializer(),
+                            ::EnergyMatrixValue,
+                        )
+                            ?: UnknownValue(value)
+                    }
+
+                    CO2_VALUES, AIR_QUALITY_VALUES -> {
+                        val array = value as? JsonArray
+
+                        decoder.decodeOrNull(
+                            array,
+                            SensorValue.serializer(),
+                            ::ListSensorValue,
                         )
                             ?: UnknownValue(value)
                     }
