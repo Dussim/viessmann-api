@@ -17,11 +17,15 @@ import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
 import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.ListEmptyValue
 import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
+import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
 import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
 import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
+import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
+import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
@@ -147,7 +151,19 @@ internal const val LIST_ENERGY_CHARGED_DEVICE_VALUE_CLASS_INDEX = 34
 @PublishedApi
 internal const val LIST_SENSOR_VALUE_CLASS_INDEX = 35
 
-private const val SIZE = 36
+@PublishedApi
+internal const val LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX = 36
+
+@PublishedApi
+internal const val LIST_FUEL_CELL_ERROR_VALUE_CLASS_INDEX = 37
+
+@PublishedApi
+internal const val LIST_WIFI_NETWORK_VALUE_CLASS_INDEX = 38
+
+@PublishedApi
+internal const val LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX = 39
+
+private const val SIZE = 40
 
 private val EXPECTED_ACTUAL_CLASSES by lazy {
     val all =
@@ -188,6 +204,10 @@ private val EXPECTED_ACTUAL_CLASSES by lazy {
             ListDeviceInformationValue::class,
             ListEnergyChargedDeviceValue::class,
             ListSensorValue::class,
+            ListPowerBalanceEntryValue::class,
+            ListFuelCellErrorValue::class,
+            ListWifiNetworkValue::class,
+            ListVentilationMessageValue::class,
         )
 
     buildList(all.size * all.size) {

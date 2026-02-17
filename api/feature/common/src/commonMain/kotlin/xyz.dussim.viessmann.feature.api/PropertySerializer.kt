@@ -241,6 +241,42 @@ internal data object PropertySerializer : KSerializer<Property> {
                     )
                 }
 
+                is ListPowerBalanceEntryValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(PowerBalanceEntry.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListFuelCellErrorValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(FuelCellError.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListWifiNetworkValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(WifiNetwork.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListVentilationMessageValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(VentilationMessage.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
                 ListEmptyValue -> {
                     encodeSerializableElement(
                         descriptor,
@@ -293,6 +329,10 @@ internal data object PropertySerializer : KSerializer<Property> {
                             ?: decoder.decodeOrNull(array, OperatingDataCellsDetail.serializer(), ::ListOperatingDataCellsDetailValue)
                             ?: decoder.decodeOrNull(array, EnergyChargedDevice.serializer(), ::ListEnergyChargedDeviceValue)
                             ?: decoder.decodeOrNull(array, DeviceInformation.serializer(), ::ListDeviceInformationValue)
+                            ?: decoder.decodeOrNull(array, PowerBalanceEntry.serializer(), ::ListPowerBalanceEntryValue)
+                            ?: decoder.decodeOrNull(array, FuelCellError.serializer(), ::ListFuelCellErrorValue)
+                            ?: decoder.decodeOrNull(array, WifiNetwork.serializer(), ::ListWifiNetworkValue)
+                            ?: decoder.decodeOrNull(array, VentilationMessage.serializer(), ::ListVentilationMessageValue)
                             ?: UnknownValue(value)
                     }
 

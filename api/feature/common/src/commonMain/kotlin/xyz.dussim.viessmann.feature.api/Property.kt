@@ -18,11 +18,15 @@ import xyz.dussim.viessmann.feature.api.validation.LIST_EEBUS_SERVICE_PARTNER_VA
 import xyz.dussim.viessmann.feature.api.validation.LIST_ELECTRICAL_ENERGY_MATRIX_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_EMPTY_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ENERGY_CHARGED_DEVICE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_FUEL_CELL_ERROR_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_OPERATING_DATA_CELLS_DETAIL_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ROOM_ACTOR_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_SENSOR_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_STRING_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_WIFI_NETWORK_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LOGS_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX
@@ -317,6 +321,54 @@ data class ListSensorValue(
     }
 }
 
+@JvmRecord
+data class ListPowerBalanceEntryValue(
+    override val element: List<PowerBalanceEntry>,
+) : PropertyValue<List<PowerBalanceEntry>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListPowerBalanceEntryValue(emptyList())
+    }
+}
+
+@JvmRecord
+data class ListFuelCellErrorValue(
+    override val element: List<FuelCellError>,
+) : PropertyValue<List<FuelCellError>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_FUEL_CELL_ERROR_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListFuelCellErrorValue(emptyList())
+    }
+}
+
+@JvmRecord
+data class ListWifiNetworkValue(
+    override val element: List<WifiNetwork>,
+) : PropertyValue<List<WifiNetwork>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_WIFI_NETWORK_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListWifiNetworkValue(emptyList())
+    }
+}
+
+@JvmRecord
+data class ListVentilationMessageValue(
+    override val element: List<VentilationMessage>,
+) : PropertyValue<List<VentilationMessage>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListVentilationMessageValue(emptyList())
+    }
+}
+
 data object ListEmptyValue : PropertyValue<List<Nothing>>, ListPropertyValue {
     override val element = emptyList<Nothing>()
     override val propertyValueClassIndex get() = LIST_EMPTY_VALUE_CLASS_INDEX
@@ -544,6 +596,42 @@ data class SensorValue(
     val level: String,
     val lowerBorder: Double,
     val upperBorder: Double,
+)
+
+@JvmRecord
+@Serializable
+data class PowerBalanceEntry(
+    val value: Double,
+    val unit: String,
+    val type: String,
+)
+
+@OptIn(kotlin.time.ExperimentalTime::class)
+@JvmRecord
+@Serializable
+data class FuelCellError(
+    val timestamp: Instant,
+    val errorCode: String,
+    val accessLevel: String,
+    val priority: String,
+)
+
+@JvmRecord
+@Serializable
+data class WifiNetwork(
+    val ssid: String,
+    val signalStrength: Double,
+)
+
+@OptIn(kotlin.time.ExperimentalTime::class)
+@JvmRecord
+@Serializable
+data class VentilationMessage(
+    val timestamp: Instant,
+    val errorCode: String,
+    val status: String,
+    val count: Double,
+    val priority: String,
 )
 
 @JvmName("ofBoolean")

@@ -76,7 +76,7 @@ class ExpectedActualClassTest :
 
             test("throws for index exceeding maximum") {
                 shouldThrow<IllegalArgumentException> {
-                    ExpectedActualClass(23 * 23) // SIZE * SIZE
+                    ExpectedActualClass(40 * 40) // SIZE * SIZE
                 }
             }
 
@@ -84,7 +84,7 @@ class ExpectedActualClassTest :
                 // Should not throw - index 0 is valid
                 ExpectedActualClass(0)
                 // Index just below max should work
-                ExpectedActualClass(23 * 23 - 1)
+                ExpectedActualClass(40 * 40 - 1)
             }
         }
 
