@@ -15,6 +15,8 @@
 
 ### Testing
 
+#### NEVER RUN TESTS UNLESS ASKED TO
+
 **Framework:** Kotest with FunSpec style. JVM tests run on JUnit Platform.
 
 **Test commands:**
@@ -77,6 +79,7 @@ class ExampleTest :
 ```
 
 **Style conventions:**
+
 - Class definition with lambda on new line (see test examples)
 - Trailing commas in multi-line lists
 - Explicit type parameters when needed for clarity
@@ -108,10 +111,19 @@ Reports: `api/feature/benchmark/build/reports/jmh/results.json`
 ### Troubleshooting
 
 **JAVA_HOME issues on Windows:**
+
 ```powershell
 $env:JAVA_HOME = "$env:USERPROFILE\.jdks\openjdk-21"
 ```
 
 **Configuration Cache:** Enabled by default. Problems report: `build/reports/problems/problems-report.html`
 
-**KSP issues:** Ensure `kspCommonMainKotlinMetadata` runs before other compilation tasks. Check generated sources in `build/generated/ksp/metadata/commonMain/kotlin/`.
+**KSP issues:** Ensure `kspCommonMainKotlinMetadata` runs before other compilation tasks. Check generated sources in
+`build/generated/ksp/metadata/commonMain/kotlin/`.
+
+---
+
+### Feature Processor
+
+For detailed information on how to create feature interfaces for code generation with `:feature:processor`, see:
+[Feature Processor Code Generation Guide](../docs/feature-processor-guide.md)
