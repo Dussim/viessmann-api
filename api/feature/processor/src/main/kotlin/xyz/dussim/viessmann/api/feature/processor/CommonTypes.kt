@@ -134,19 +134,41 @@ fun <T, E> booleanRule(
 /**
  * Creates a variable-argument function call CodeBlock.
  * Useful for generating validation result aggregation calls.
+ * Automatically chunks into nested calls when args exceed the max overload size (16).
  */
 fun varArgFunctionCall(
     function: MemberName,
     args: List<CodeBlock>,
-): CodeBlock =
-    CodeBlock
-        .builder()
-        .add("%M(\n", function)
-        .indent()
-        .apply { args.forEach(::add) }
-        .unindent()
-        .add(")\n")
-        .build()
+): CodeBlock {
+    val maxArgs = 16
+    if (args.size <= maxArgs) {
+        return CodeBlock
+            .builder()
+            .add("%M(\n", function)
+            .indent()
+            .apply { args.forEach(::add) }
+            .unindent()
+            .add(")\n")
+            .build()
+    }
+    // Chunk into nested calls: of(of(chunk1...), of(chunk2...), ...)
+    val chunks = args.chunked(maxArgs)
+    val nestedCalls =
+        chunks.map { chunk ->
+            CodeBlock.of(
+                "%L,\n",
+                CodeBlock
+                    .builder()
+                    .add("%M(\n", function)
+                    .indent()
+                    .apply { chunk.forEach(::add) }
+                    .unindent()
+                    .add(")")
+                    .build(),
+            )
+        }
+    return varArgFunctionCall(function, nestedCalls)
+}
 
 /**
  * Generates an override validate function that aggregates results from multiple rules.
@@ -254,13 +276,14 @@ data class CommandSignature(
             if (parameters.isEmpty()) return "${capitalizedName}Impl"
             val paramsPart =
                 parameters.joinToString("") { (pNameRaw, pType) ->
-                    val typePart = pType.toString().substringAfterLast(".").replaceFirstChar { it.uppercase() }
+                    val typePart =
+                        pType
+                            .toString()
+                            .substringAfterLast(".")
+                            .removeSuffix("?")
+                            .replaceFirstChar { it.uppercase() }
                     val pName = pNameRaw.replaceFirstChar { it.uppercase() }
-                    if (pName == "Value" || capitalizedName.endsWith(pName, ignoreCase = true)) {
-                        typePart
-                    } else {
-                        pName + typePart
-                    }
+                    pName + typePart
                 }
             return "${capitalizedName}${paramsPart}Impl"
         }
@@ -368,7 +391,11 @@ data class FeatureSignature(
             val propsPart =
                 properties.joinToString("") { (name, type) ->
                     name.replaceFirstChar { it.uppercase() } +
-                        type.toString().substringAfterLast(".").replaceFirstChar { it.uppercase() }
+                        type
+                            .toString()
+                            .substringAfterLast(".")
+                            .removeSuffix("?")
+                            .replaceFirstChar { it.uppercase() }
                 }
             val cmdsPart =
                 commands.joinToString("") { (name, sig) ->

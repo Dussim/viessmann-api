@@ -43,177 +43,177 @@ import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmRecord
 import kotlin.reflect.KClass
 
-@PublishedApi
-internal const val STRING_VALUE_CLASS_INDEX = 0
+private val CLASS_REGISTRY: List<KClass<*>> =
+    listOf(
+        StringValue::class,
+        BooleanValue::class,
+        DoubleValue::class,
+        ListDoubleValue::class,
+        ListStringValue::class,
+        ListDeviceErrorValue::class,
+        ListZigbeeDeviceStatusValue::class,
+        ListRoomActorValue::class,
+        ListDeviceValue::class,
+        ObjectOtherRoomConfigurationValue::class,
+        ScheduleValue::class,
+        ListEmptyValue::class,
+        UnknownValue::class,
+        BooleanConstraints::class,
+        NumberConstraints::class,
+        StringConstraints::class,
+        ScheduleConstraints::class,
+        UnknownConstraints::class,
+        Command::class,
+        Feature.Device::class,
+        Feature.Gateway::class,
+        Feature.Geofencing::class,
+        Nothing::class,
+        ListBusTypeValue::class,
+        EnergyMatrixValue::class,
+        LogsValue::class,
+        ListLogBookEntryValue::class,
+        ProductInfoValue::class,
+        FactoryResetInfoValue::class,
+        ListEebusDeviceValue::class,
+        ListEebusServicePartnerValue::class,
+        ListElectricalEnergyMatrixValue::class,
+        ListOperatingDataCellsDetailValue::class,
+        ListDeviceInformationValue::class,
+        ListEnergyChargedDeviceValue::class,
+        ListSensorValue::class,
+        ListPowerBalanceEntryValue::class,
+        ListFuelCellErrorValue::class,
+        ListWifiNetworkValue::class,
+        ListVentilationMessageValue::class,
+    )
 
 @PublishedApi
-internal const val BOOLEAN_VALUE_CLASS_INDEX = 1
+internal val STRING_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(StringValue::class)
 
 @PublishedApi
-internal const val DOUBLE_VALUE_CLASS_INDEX = 2
+internal val BOOLEAN_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(BooleanValue::class)
 
 @PublishedApi
-internal const val LIST_DOUBLE_VALUE_CLASS_INDEX = 3
+internal val DOUBLE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(DoubleValue::class)
 
 @PublishedApi
-internal const val LIST_STRING_VALUE_CLASS_INDEX = 4
+internal val LIST_DOUBLE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListDoubleValue::class)
 
 @PublishedApi
-internal const val LIST_DEVICE_ERROR_VALUE_CLASS_INDEX = 5
+internal val LIST_STRING_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListStringValue::class)
 
 @PublishedApi
-internal const val LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX = 6
+internal val LIST_DEVICE_ERROR_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListDeviceErrorValue::class)
 
 @PublishedApi
-internal const val LIST_ROOM_ACTOR_VALUE_CLASS_INDEX = 7
+internal val LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListZigbeeDeviceStatusValue::class)
 
 @PublishedApi
-internal const val LIST_DEVICE_VALUE_CLASS_INDEX = 8
+internal val LIST_ROOM_ACTOR_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListRoomActorValue::class)
 
 @PublishedApi
-internal const val OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX = 9
+internal val LIST_DEVICE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListDeviceValue::class)
 
 @PublishedApi
-internal const val SCHEDULE_VALUE_CLASS_INDEX = 10
+internal val OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ObjectOtherRoomConfigurationValue::class)
 
 @PublishedApi
-internal const val LIST_EMPTY_VALUE_CLASS_INDEX = 11
+internal val SCHEDULE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ScheduleValue::class)
 
 @PublishedApi
-internal const val UNKNOWN_VALUE_CLASS_INDEX = 12
+internal val LIST_EMPTY_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListEmptyValue::class)
 
 @PublishedApi
-internal const val BOOLEAN_CONSTRAINTS_CLASS_INDEX = 13
+internal val UNKNOWN_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(UnknownValue::class)
 
 @PublishedApi
-internal const val NUMBER_CONSTRAINTS_CLASS_INDEX = 14
+internal val BOOLEAN_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(BooleanConstraints::class)
 
 @PublishedApi
-internal const val STRING_CONSTRAINTS_CLASS_INDEX = 15
+internal val NUMBER_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(NumberConstraints::class)
 
 @PublishedApi
-internal const val SCHEDULE_CONSTRAINTS_CLASS_INDEX = 16
+internal val STRING_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(StringConstraints::class)
 
 @PublishedApi
-internal const val UNKNOWN_CONSTRAINTS_CLASS_INDEX = 17
+internal val SCHEDULE_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ScheduleConstraints::class)
 
 @PublishedApi
-internal const val COMMAND_CLASS_INDEX = 18
+internal val UNKNOWN_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(UnknownConstraints::class)
 
 @PublishedApi
-internal const val FEATURE_DEVICE_CLASS_INDEX = 19
+internal val COMMAND_CLASS_INDEX = CLASS_REGISTRY.indexOf(Command::class)
 
 @PublishedApi
-internal const val FEATURE_GATEWAY_CLASS_INDEX = 20
+internal val FEATURE_DEVICE_CLASS_INDEX = CLASS_REGISTRY.indexOf(Feature.Device::class)
 
 @PublishedApi
-internal const val FEATURE_GEOFENCING_CLASS_INDEX = 21
+internal val FEATURE_GATEWAY_CLASS_INDEX = CLASS_REGISTRY.indexOf(Feature.Gateway::class)
 
 @PublishedApi
-internal const val MISSING_COMPONENT_CLASS_INDEX = 22
+internal val FEATURE_GEOFENCING_CLASS_INDEX = CLASS_REGISTRY.indexOf(Feature.Geofencing::class)
 
 @PublishedApi
-internal const val LIST_BUS_TYPE_CLASS_INDEX = 23
+internal val MISSING_COMPONENT_CLASS_INDEX = CLASS_REGISTRY.indexOf(Nothing::class)
 
 @PublishedApi
-internal const val ENERGY_MATRIX_VALUE_CLASS_INDEX = 24
+internal val LIST_BUS_TYPE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListBusTypeValue::class)
 
 @PublishedApi
-internal const val LOGS_VALUE_CLASS_INDEX = 25
+internal val ENERGY_MATRIX_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(EnergyMatrixValue::class)
 
 @PublishedApi
-internal const val LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX = 26
+internal val LOGS_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(LogsValue::class)
 
 @PublishedApi
-internal const val PRODUCT_INFO_VALUE_CLASS_INDEX = 27
+internal val LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListLogBookEntryValue::class)
 
 @PublishedApi
-internal const val FACTORY_RESET_INFO_VALUE_CLASS_INDEX = 28
+internal val PRODUCT_INFO_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ProductInfoValue::class)
 
 @PublishedApi
-internal const val LIST_EEBUS_DEVICE_VALUE_CLASS_INDEX = 29
+internal val FACTORY_RESET_INFO_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(FactoryResetInfoValue::class)
 
 @PublishedApi
-internal const val LIST_EEBUS_SERVICE_PARTNER_VALUE_CLASS_INDEX = 30
+internal val LIST_EEBUS_DEVICE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListEebusDeviceValue::class)
 
 @PublishedApi
-internal const val LIST_ELECTRICAL_ENERGY_MATRIX_VALUE_CLASS_INDEX = 31
+internal val LIST_EEBUS_SERVICE_PARTNER_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListEebusServicePartnerValue::class)
 
 @PublishedApi
-internal const val LIST_OPERATING_DATA_CELLS_DETAIL_VALUE_CLASS_INDEX = 32
+internal val LIST_ELECTRICAL_ENERGY_MATRIX_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListElectricalEnergyMatrixValue::class)
 
 @PublishedApi
-internal const val LIST_DEVICE_INFORMATION_VALUE_CLASS_INDEX = 33
+internal val LIST_OPERATING_DATA_CELLS_DETAIL_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListOperatingDataCellsDetailValue::class)
 
 @PublishedApi
-internal const val LIST_ENERGY_CHARGED_DEVICE_VALUE_CLASS_INDEX = 34
+internal val LIST_DEVICE_INFORMATION_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListDeviceInformationValue::class)
 
 @PublishedApi
-internal const val LIST_SENSOR_VALUE_CLASS_INDEX = 35
+internal val LIST_ENERGY_CHARGED_DEVICE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListEnergyChargedDeviceValue::class)
 
 @PublishedApi
-internal const val LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX = 36
+internal val LIST_SENSOR_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListSensorValue::class)
 
 @PublishedApi
-internal const val LIST_FUEL_CELL_ERROR_VALUE_CLASS_INDEX = 37
+internal val LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListPowerBalanceEntryValue::class)
 
 @PublishedApi
-internal const val LIST_WIFI_NETWORK_VALUE_CLASS_INDEX = 38
+internal val LIST_FUEL_CELL_ERROR_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListFuelCellErrorValue::class)
 
 @PublishedApi
-internal const val LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX = 39
+internal val LIST_WIFI_NETWORK_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListWifiNetworkValue::class)
 
-private const val SIZE = 40
+@PublishedApi
+internal val LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListVentilationMessageValue::class)
+
+private val SIZE = CLASS_REGISTRY.size
 
 private val EXPECTED_ACTUAL_CLASSES by lazy {
-    val all =
-        listOf(
-            StringValue::class,
-            BooleanValue::class,
-            DoubleValue::class,
-            ListDoubleValue::class,
-            ListStringValue::class,
-            ListDeviceErrorValue::class,
-            ListZigbeeDeviceStatusValue::class,
-            ListRoomActorValue::class,
-            ListDeviceValue::class,
-            ObjectOtherRoomConfigurationValue::class,
-            ScheduleValue::class,
-            ListEmptyValue::class,
-            UnknownValue::class,
-            BooleanConstraints::class,
-            NumberConstraints::class,
-            StringConstraints::class,
-            ScheduleConstraints::class,
-            UnknownConstraints::class,
-            Command::class,
-            Feature.Device::class,
-            Feature.Gateway::class,
-            Feature.Geofencing::class,
-            Nothing::class,
-            ListBusTypeValue::class,
-            EnergyMatrixValue::class,
-            LogsValue::class,
-            ListLogBookEntryValue::class,
-            ProductInfoValue::class,
-            FactoryResetInfoValue::class,
-            ListEebusDeviceValue::class,
-            ListEebusServicePartnerValue::class,
-            ListElectricalEnergyMatrixValue::class,
-            ListOperatingDataCellsDetailValue::class,
-            ListDeviceInformationValue::class,
-            ListEnergyChargedDeviceValue::class,
-            ListSensorValue::class,
-            ListPowerBalanceEntryValue::class,
-            ListFuelCellErrorValue::class,
-            ListWifiNetworkValue::class,
-            ListVentilationMessageValue::class,
-        )
-
-    buildList(all.size * all.size) {
-        for (i in all.indices) {
-            for (j in all.indices) {
-                add(all[i] to all[j])
+    buildList(CLASS_REGISTRY.size * CLASS_REGISTRY.size) {
+        for (i in CLASS_REGISTRY.indices) {
+            for (j in CLASS_REGISTRY.indices) {
+                add(CLASS_REGISTRY[i] to CLASS_REGISTRY[j])
             }
         }
     }

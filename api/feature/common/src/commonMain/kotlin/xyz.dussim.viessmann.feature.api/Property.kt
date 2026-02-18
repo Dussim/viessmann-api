@@ -383,8 +383,8 @@ data class DeviceError(
     val accessLevel: String,
     val priority: String,
     val audiences: List<String>,
-    val busAddress: String,
-    val busType: String,
+    val busAddress: String? = null, // ?
+    val busType: String? = null, // ?
 )
 
 @JvmRecord

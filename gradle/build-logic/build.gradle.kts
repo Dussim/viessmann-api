@@ -7,7 +7,6 @@ plugins {
 }
 
 dependencies {
-
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 
     implementation(libs.plugins.kotest)

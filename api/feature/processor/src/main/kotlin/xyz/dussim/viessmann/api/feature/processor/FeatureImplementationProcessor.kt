@@ -41,15 +41,32 @@ import xyz.dussim.viessmann.feature.api.Command4
 import xyz.dussim.viessmann.feature.api.Command5
 import xyz.dussim.viessmann.feature.api.Command6
 import xyz.dussim.viessmann.feature.api.DoubleValue
+import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
+import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureEnumFactory
+import xyz.dussim.viessmann.feature.api.ListBusTypeValue
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
+import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
+import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
+import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
+import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
+import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
+import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
+import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
+import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
+import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
+import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
+import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
+import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
+import xyz.dussim.viessmann.feature.api.ProductInfoValue
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.UnknownValue
@@ -75,22 +92,6 @@ class FeatureImplementationProcessor(
                 Feature.Device::class,
                 Feature.Gateway::class,
                 Feature.Geofencing::class,
-            )
-
-        private val PROPERTY_PRIMITIVE_VALUES =
-            listOf(
-                UnknownValue::class,
-                BooleanValue::class,
-                DoubleValue::class,
-                StringValue::class,
-                ListDoubleValue::class,
-                ListStringValue::class,
-                ListDeviceErrorValue::class,
-                ListZigbeeDeviceStatusValue::class,
-                ListRoomActorValue::class,
-                ListDeviceValue::class,
-                ObjectOtherRoomConfigurationValue::class,
-                ScheduleValue::class,
             )
 
         private val PROPERTY_COMMAND_TYPES =
@@ -138,7 +139,13 @@ class FeatureImplementationProcessor(
     override fun process(resolver: Resolver): List<KSAnnotated> =
         context(resolver, logger) {
             val featureDeclarations = FEATURE_SUBTYPES.map { it.declaration }
-            val propertiesSupportedPrimitiveTypes = PROPERTY_PRIMITIVE_VALUES.map { it.declaration }
+            val propertiesSupportedPrimitiveTypes =
+                PROPERTY_VALIDATION_FUNCTIONS.keys
+                    .mapNotNull { typeName ->
+                        val className = typeName as? ClassName ?: return@mapNotNull null
+                        val fqName = "${className.packageName}.${className.simpleName}"
+                        resolver.getClassDeclarationByName(fqName)
+                    }
             val propertiesSupportedSuperTypes = PROPERTY_COMMAND_TYPES.map { it.declaration }
 
             val featureEnumFactory = FeatureEnumFactory::class.declaration

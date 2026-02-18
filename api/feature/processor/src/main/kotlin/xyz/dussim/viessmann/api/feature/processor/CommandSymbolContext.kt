@@ -48,10 +48,8 @@ data class ConstraintProperty(
             .addModifiers(KModifier.OVERRIDE)
             .addAnnotation(
                 AnnotationSpec
-                    .builder(Deprecated::class)
-                    .addMember("message = \"Use '$name' instead\"")
-                    .addMember("replaceWith = ReplaceWith(\"$name\")")
-                    .addMember("level = DeprecationLevel.WARNING")
+                    .builder(ClassName("xyz.dussim.viessmann.feature.api", "CommandIndexedConstraintUsage"))
+                    .addMember("replacementProperty = %S", name)
                     .build(),
             ).getter(
                 FunSpec

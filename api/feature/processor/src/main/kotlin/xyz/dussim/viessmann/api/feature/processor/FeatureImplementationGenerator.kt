@@ -76,17 +76,43 @@ context(context: SymbolContext)
 private fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
     val (name, type, _, isListProperty, isEnumProperty) = property
     val combined = propertyHash(name.hashCode(), name.length)
+    val isNullable = property.isNullable
     when {
+        isEnumProperty && isNullable -> {
+            add(
+                "%N = properties[%S, %L]?.value?.let { it as %T }?.let { %T(it) }\n",
+                name,
+                name,
+                combined,
+                property.underlyingType,
+                type.copy(nullable = false),
+            )
+        }
+
         isEnumProperty -> {
-            add("$name = %T(properties[%S, %L]!!.value as %T)\n", type, name, combined, property.underlyingType)
+            add("%N = %T(properties[%S, %L]!!.value as %T)\n", name, type, name, combined, property.underlyingType)
+        }
+
+        isListProperty && isNullable -> {
+            add(
+                "%1N = properties[%2S, %3L]?.value as? %4T ?: %4T.EMPTY\n",
+                name,
+                name,
+                combined,
+                type.copy(nullable = false),
+            )
         }
 
         isListProperty -> {
-            add("$name = properties[%1S, %2L]!!.value as? %3T ?: %3T.EMPTY\n", name, combined, type)
+            add("%1N = properties[%2S, %3L]!!.value as? %4T ?: %4T.EMPTY\n", name, name, combined, type)
+        }
+
+        isNullable -> {
+            add("%N = properties[%S, %L]?.value as? %T\n", name, name, combined, type.copy(nullable = false))
         }
 
         else -> {
-            add("$name = properties[%S, %L]!!.value as %T\n", name, combined, type)
+            add("%N = properties[%S, %L]!!.value as %T\n", name, name, combined, type)
         }
     }
 }
@@ -98,7 +124,7 @@ context(context: SymbolContext)
 private fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty) {
     val name = property.name
     val propertyHash = propertyHash(name.hashCode(), name.length)
-    add("$name = %T(delegate.commands[%S, %L]!!)\n", property.implType, name, propertyHash)
+    add("%N = %T(delegate.commands[%S, %L]!!)\n", name, property.implType, name, propertyHash)
 }
 
 /**
@@ -138,7 +164,11 @@ fun companionObject(implName: ClassName): TypeSpec {
                 .map {
                     CodeBlock.of(
                         "%M",
-                        context.ruleRegistry.register(it.validationFunction, listOf(it.name), FEATURE_VALIDATION_RULE_TYPE),
+                        context.ruleRegistry.register(
+                            it.validationFunction,
+                            listOf(it.name, !it.isNullable),
+                            FEATURE_VALIDATION_RULE_TYPE,
+                        ),
                     )
                 },
         ).plus(

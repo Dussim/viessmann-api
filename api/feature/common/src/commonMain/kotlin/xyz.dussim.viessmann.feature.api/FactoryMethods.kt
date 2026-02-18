@@ -41,6 +41,7 @@ fun FeatureMatchers(
     }
 
 fun <F : Feature> FeatureDescriptor(
+    wildcardName: String,
     matchers: FeatureMatchers,
     factory: FeatureFactory<F>,
     rule: ValidationRule<Feature, ValidationError>,
@@ -48,6 +49,7 @@ fun <F : Feature> FeatureDescriptor(
     when (matchers) {
         is FeatureMatchers.Indexed -> {
             FeatureDescriptorIndexedImpl(
+                wildcardName = wildcardName,
                 factory = factory,
                 matchers = matchers,
                 rule = rule,
@@ -56,6 +58,7 @@ fun <F : Feature> FeatureDescriptor(
 
         is FeatureMatchers.Static -> {
             FeatureDescriptorStaticImpl(
+                wildcardName = wildcardName,
                 factory = factory,
                 matchers = matchers,
                 rule = rule,
@@ -69,25 +72,32 @@ fun <F : Feature> FeatureDescriptor(
     factory: FeatureFactory<F>,
 ): FeatureDescriptor<F> =
     FeatureDescriptor(
+        wildcardName = wildcardName,
         matchers = FeatureMatchers(wildcardName, rule),
         factory = factory,
         rule = rule,
     )
 
 internal class FeatureDescriptorIndexedImpl<F : Feature>(
+    private val wildcardName: String,
     factory: FeatureFactory<F>,
     matchers: FeatureMatchers.Indexed,
     rule: ValidationRule<Feature, ValidationError>,
 ) : FeatureDescriptor.Indexed<F>,
     FeatureFactory<F> by factory,
     FeatureMatchers.Indexed by matchers,
-    ValidationRule<Feature, ValidationError> by rule
+    ValidationRule<Feature, ValidationError> by rule {
+    override fun toString(): String = "FeatureDescriptor.Indexed[$wildcardName]"
+}
 
 internal class FeatureDescriptorStaticImpl<F : Feature>(
+    private val wildcardName: String,
     factory: FeatureFactory<F>,
     matchers: FeatureMatchers.Static,
     rule: ValidationRule<Feature, ValidationError>,
 ) : FeatureDescriptor.Static<F>,
     FeatureFactory<F> by factory,
     FeatureMatchers.Static by matchers,
-    ValidationRule<Feature, ValidationError> by rule
+    ValidationRule<Feature, ValidationError> by rule {
+    override fun toString(): String = "FeatureDescriptor.Static[$wildcardName]"
+}

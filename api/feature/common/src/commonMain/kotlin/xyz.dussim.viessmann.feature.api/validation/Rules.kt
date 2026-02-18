@@ -7,16 +7,33 @@ import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Constraints
 import xyz.dussim.viessmann.feature.api.DoubleValue
+import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
+import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.Feature
+import xyz.dussim.viessmann.feature.api.ListBusTypeValue
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
+import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
+import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
+import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
+import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.ListEmptyValue
+import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
+import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
+import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
+import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
+import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
+import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
+import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
+import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
+import xyz.dussim.viessmann.feature.api.ProductInfoValue
 import xyz.dussim.viessmann.feature.api.PropertyValue
 import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleValue
@@ -78,13 +95,19 @@ internal inline fun propertyHash(
 internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
     propertyName: String,
     expectedIndex: Int,
+    required: Boolean = true,
 ): ValidationRule<Feature, ValidationError> {
-    val missingError = Invalid(MissingComponent(propertyName, ExpectedActualClass.of(expectedIndex)))
+    val missingResult =
+        if (required) {
+            Invalid(MissingComponent(propertyName, ExpectedActualClass.of(expectedIndex)))
+        } else {
+            ValidationResult.Valid
+        }
     val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
     val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { target ->
-        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
+        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingResult
         if (property.value is T) {
             ValidationResult.Valid
         } else {
@@ -97,13 +120,19 @@ internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
 internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
     propertyName: String,
     expectedIndex: Int,
+    required: Boolean = true,
 ): ValidationRule<Feature, ValidationError> {
-    val missingError = Invalid(MissingComponent(propertyName, ExpectedActualClass.of(expectedIndex)))
+    val missingResult =
+        if (required) {
+            Invalid(MissingComponent(propertyName, ExpectedActualClass.of(expectedIndex)))
+        } else {
+            ValidationResult.Valid
+        }
     val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
     val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
 
     return ValidationRule { target ->
-        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingError
+        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingResult
         if (property.value is ListEmptyValue || property.value is T) {
             ValidationResult.Valid
         } else {
@@ -131,28 +160,157 @@ internal inline fun <reified T : Constraints<*>> typedCommandRule(
     }
 }
 
-fun stringPropertyRule(propertyName: String) = typedPropertyRule<StringValue>(propertyName, STRING_VALUE_CLASS_INDEX)
+fun stringPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<StringValue>(propertyName, STRING_VALUE_CLASS_INDEX, required)
 
-fun booleanPropertyRule(propertyName: String) = typedPropertyRule<BooleanValue>(propertyName, BOOLEAN_VALUE_CLASS_INDEX)
+fun booleanPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<BooleanValue>(propertyName, BOOLEAN_VALUE_CLASS_INDEX, required)
 
-fun doublePropertyRule(propertyName: String) = typedPropertyRule<DoubleValue>(propertyName, DOUBLE_VALUE_CLASS_INDEX)
+fun doublePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<DoubleValue>(propertyName, DOUBLE_VALUE_CLASS_INDEX, required)
 
-fun listDoublePropertyRule(propertyName: String) = typedListPropertyRule<ListDoubleValue>(propertyName, LIST_DOUBLE_VALUE_CLASS_INDEX)
+fun listDoublePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListDoubleValue>(propertyName, LIST_DOUBLE_VALUE_CLASS_INDEX, required)
 
-fun listStringPropertyRule(propertyName: String) = typedListPropertyRule<ListStringValue>(propertyName, LIST_STRING_VALUE_CLASS_INDEX)
+fun listStringPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListStringValue>(propertyName, LIST_STRING_VALUE_CLASS_INDEX, required)
 
-fun listDeviceErrorPropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceErrorValue>(propertyName, LIST_DEVICE_ERROR_VALUE_CLASS_INDEX)
+fun listDeviceErrorPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListDeviceErrorValue>(propertyName, LIST_DEVICE_ERROR_VALUE_CLASS_INDEX, required)
 
-fun listZigbeeDeviceStatusPropertyRule(propertyName: String) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName, LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX)
+fun listZigbeeDeviceStatusPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListZigbeeDeviceStatusValue>(propertyName, LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX, required)
 
-fun listRoomActorPropertyRule(propertyName: String) = typedListPropertyRule<ListRoomActorValue>(propertyName, LIST_ROOM_ACTOR_VALUE_CLASS_INDEX)
+fun listRoomActorPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListRoomActorValue>(propertyName, LIST_ROOM_ACTOR_VALUE_CLASS_INDEX, required)
 
-fun listDevicePropertyRule(propertyName: String) = typedListPropertyRule<ListDeviceValue>(propertyName, LIST_DEVICE_VALUE_CLASS_INDEX)
+fun listDevicePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListDeviceValue>(propertyName, LIST_DEVICE_VALUE_CLASS_INDEX, required)
 
-fun objectOtherRoomConfigurationPropertyRule(propertyName: String) =
-    typedPropertyRule<ObjectOtherRoomConfigurationValue>(propertyName, OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX)
+fun objectOtherRoomConfigurationPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<ObjectOtherRoomConfigurationValue>(
+    propertyName,
+    OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX,
+    required,
+)
 
-fun schedulePropertyRule(propertyName: String) = typedPropertyRule<ScheduleValue>(propertyName, SCHEDULE_VALUE_CLASS_INDEX)
+fun schedulePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<ScheduleValue>(propertyName, SCHEDULE_VALUE_CLASS_INDEX, required)
+
+fun listBusTypePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListBusTypeValue>(propertyName, LIST_BUS_TYPE_CLASS_INDEX, required)
+
+fun energyMatrixPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<EnergyMatrixValue>(propertyName, ENERGY_MATRIX_VALUE_CLASS_INDEX, required)
+
+fun logsPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<LogsValue>(propertyName, LOGS_VALUE_CLASS_INDEX, required)
+
+fun listLogBookEntryPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListLogBookEntryValue>(propertyName, LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX, required)
+
+fun productInfoPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<ProductInfoValue>(propertyName, PRODUCT_INFO_VALUE_CLASS_INDEX, required)
+
+fun factoryResetInfoPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<FactoryResetInfoValue>(propertyName, FACTORY_RESET_INFO_VALUE_CLASS_INDEX, required)
+
+fun listEebusDevicePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListEebusDeviceValue>(propertyName, LIST_EEBUS_DEVICE_VALUE_CLASS_INDEX, required)
+
+fun listEebusServicePartnerPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListEebusServicePartnerValue>(propertyName, LIST_EEBUS_SERVICE_PARTNER_VALUE_CLASS_INDEX, required)
+
+fun listElectricalEnergyMatrixPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListElectricalEnergyMatrixValue>(
+    propertyName,
+    LIST_ELECTRICAL_ENERGY_MATRIX_VALUE_CLASS_INDEX,
+    required,
+)
+
+fun listOperatingDataCellsDetailPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListOperatingDataCellsDetailValue>(
+    propertyName,
+    LIST_OPERATING_DATA_CELLS_DETAIL_VALUE_CLASS_INDEX,
+    required,
+)
+
+fun listEnergyChargedDevicePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListEnergyChargedDeviceValue>(propertyName, LIST_ENERGY_CHARGED_DEVICE_VALUE_CLASS_INDEX, required)
+
+fun listDeviceInformationPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListDeviceInformationValue>(propertyName, LIST_DEVICE_INFORMATION_VALUE_CLASS_INDEX, required)
+
+fun listSensorPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListSensorValue>(propertyName, LIST_SENSOR_VALUE_CLASS_INDEX, required)
+
+fun listPowerBalanceEntryPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListPowerBalanceEntryValue>(propertyName, LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX, required)
+
+fun listFuelCellErrorPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListFuelCellErrorValue>(propertyName, LIST_FUEL_CELL_ERROR_VALUE_CLASS_INDEX, required)
+
+fun listWifiNetworkPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListWifiNetworkValue>(propertyName, LIST_WIFI_NETWORK_VALUE_CLASS_INDEX, required)
+
+fun listVentilationMessagePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListVentilationMessageValue>(propertyName, LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX, required)
 
 fun numberOfParametersRule(
     expected: Int,

@@ -23,16 +23,33 @@ import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
+import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
+import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.Feature
+import xyz.dussim.viessmann.feature.api.ListBusTypeValue
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
+import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
+import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
+import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
+import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
+import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
+import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
+import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
+import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
+import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListPropertyValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
+import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
+import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
+import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
 import xyz.dussim.viessmann.feature.api.OfCommand
+import xyz.dussim.viessmann.feature.api.ProductInfoValue
 import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringValue
@@ -51,6 +68,23 @@ val PROPERTY_VALIDATION_FUNCTIONS =
         typeNameOf<ListDeviceValue>() to validationRule("listDevicePropertyRule"),
         typeNameOf<ObjectOtherRoomConfigurationValue>() to validationRule("objectOtherRoomConfigurationPropertyRule"),
         typeNameOf<ScheduleValue>() to validationRule("schedulePropertyRule"),
+        typeNameOf<ListBusTypeValue>() to validationRule("listBusTypePropertyRule"),
+        typeNameOf<EnergyMatrixValue>() to validationRule("energyMatrixPropertyRule"),
+        typeNameOf<LogsValue>() to validationRule("logsPropertyRule"),
+        typeNameOf<ListLogBookEntryValue>() to validationRule("listLogBookEntryPropertyRule"),
+        typeNameOf<ProductInfoValue>() to validationRule("productInfoPropertyRule"),
+        typeNameOf<FactoryResetInfoValue>() to validationRule("factoryResetInfoPropertyRule"),
+        typeNameOf<ListEebusDeviceValue>() to validationRule("listEebusDevicePropertyRule"),
+        typeNameOf<ListEebusServicePartnerValue>() to validationRule("listEebusServicePartnerPropertyRule"),
+        typeNameOf<ListElectricalEnergyMatrixValue>() to validationRule("listElectricalEnergyMatrixPropertyRule"),
+        typeNameOf<ListOperatingDataCellsDetailValue>() to validationRule("listOperatingDataCellsDetailPropertyRule"),
+        typeNameOf<ListEnergyChargedDeviceValue>() to validationRule("listEnergyChargedDevicePropertyRule"),
+        typeNameOf<ListDeviceInformationValue>() to validationRule("listDeviceInformationPropertyRule"),
+        typeNameOf<ListSensorValue>() to validationRule("listSensorPropertyRule"),
+        typeNameOf<ListPowerBalanceEntryValue>() to validationRule("listPowerBalanceEntryPropertyRule"),
+        typeNameOf<ListFuelCellErrorValue>() to validationRule("listFuelCellErrorPropertyRule"),
+        typeNameOf<ListWifiNetworkValue>() to validationRule("listWifiNetworkPropertyRule"),
+        typeNameOf<ListVentilationMessageValue>() to validationRule("listVentilationMessagePropertyRule"),
     )
 
 /**
@@ -129,16 +163,19 @@ data class ParameterProperty(
     val underlyingType
         get() =
             if (isEnumProperty) {
-                SymbolContext.ENUM_VALUES_TO_TYPE.getValue(type)
+                SymbolContext.ENUM_VALUES_TO_TYPE.getValue(type.copy(nullable = false))
             } else {
-                type
+                type.copy(nullable = false)
             }
 
+    val isNullable get() = type.isNullable
+
     val validationFunction by lazy {
+        val nonNullType = type.copy(nullable = false)
         if (isEnumProperty) {
-            SymbolContext.ENUM_VALUES_TO_VALIDATION_RULE.getValue(type)
+            SymbolContext.ENUM_VALUES_TO_VALIDATION_RULE.getValue(nonNullType)
         } else {
-            PROPERTY_VALIDATION_FUNCTIONS.getValue(type)
+            PROPERTY_VALIDATION_FUNCTIONS.getValue(nonNullType)
         }
     }
 
