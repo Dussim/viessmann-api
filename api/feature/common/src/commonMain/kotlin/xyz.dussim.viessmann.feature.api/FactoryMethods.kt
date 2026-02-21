@@ -79,7 +79,7 @@ fun <F : Feature> FeatureDescriptor(
     )
 
 internal class FeatureDescriptorIndexedImpl<F : Feature>(
-    private val wildcardName: String,
+    override val wildcardName: String,
     factory: FeatureFactory<F>,
     matchers: FeatureMatchers.Indexed,
     rule: ValidationRule<Feature, ValidationError>,
@@ -91,7 +91,7 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
 }
 
 internal class FeatureDescriptorStaticImpl<F : Feature>(
-    private val wildcardName: String,
+    override val wildcardName: String,
     factory: FeatureFactory<F>,
     matchers: FeatureMatchers.Static,
     rule: ValidationRule<Feature, ValidationError>,

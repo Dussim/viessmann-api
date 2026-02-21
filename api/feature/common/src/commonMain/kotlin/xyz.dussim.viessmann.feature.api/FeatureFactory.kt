@@ -102,6 +102,8 @@ sealed interface FeatureDescriptor<F : Feature> :
     FeatureFactory<F>,
     ValidationRule<Feature, ValidationError>,
     FeatureMatcherProvider {
+    val wildcardName: String
+
     interface Static<F : Feature> :
         FeatureDescriptor<F>,
         FeatureMatchers.Static
