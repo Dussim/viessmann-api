@@ -8,6 +8,8 @@ import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import org.gradle.api.logging.Logger
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 // region Data models
 
@@ -18,6 +20,7 @@ data class YamlFeatureInterface(
     val commands: List<YamlCommandDeclaration>,
     val isDeprecated: Boolean = false,
     val deprecationMessage: String? = null,
+    val removalDate: LocalDate? = null,
 )
 
 data class YamlPropertyDeclaration(
@@ -170,14 +173,22 @@ class YamlFeatureInterfaceGenerator(
                 ?.schema ?: return null
 
         val isDeprecated = getOp.deprecated == true
+        var removalDate: LocalDate? = null
         val deprecationMessage =
             if (isDeprecated) {
                 val deprecationInfo = getOp.extensions?.get("x-deprecation-info") as? Map<*, *>
                 val info = deprecationInfo?.get("info")?.toString()
-                val removalDate = deprecationInfo?.get("removal-date")?.toString()
+                val removalDateString = deprecationInfo?.get("removal-date")?.toString()
+                if (removalDateString != null) {
+                    try {
+                        removalDate = LocalDate.parse(removalDateString)
+                    } catch (e: DateTimeParseException) {
+                        logger.warn("Invalid removal-date format in feature '$featureName': $removalDateString. Expected YYYY-MM-DD.")
+                    }
+                }
                 buildString {
                     append(getOp.description ?: "This feature is deprecated.")
-                    if (removalDate != null) append(" Removal date: $removalDate.")
+                    if (removalDateString != null) append(" Removal date: $removalDateString.")
                     if (info != null) append(" $info")
                 }.takeIf { it.isNotBlank() }
             } else {
@@ -191,6 +202,7 @@ class YamlFeatureInterfaceGenerator(
             commands = extractCommandsForInterface(api, featureName, responseSchema),
             isDeprecated = isDeprecated,
             deprecationMessage = deprecationMessage,
+            removalDate = removalDate,
         )
     }
 

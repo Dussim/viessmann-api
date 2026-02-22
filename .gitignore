@@ -34,3 +34,6 @@ bin/
 
 ### Kotlin ###
 .kotlin
+
+### ANything else that should be ignored ###
+.ignored

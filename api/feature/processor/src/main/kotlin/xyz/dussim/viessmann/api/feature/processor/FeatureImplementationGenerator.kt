@@ -7,14 +7,12 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
-import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
@@ -288,6 +286,8 @@ fun generateFeatureDescriptorAndExtensions(
     val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
     val abstractClass = context.baseFeature.abstractClass
 
+    val descriptorFactory = if (context.isIndexed) INDEXED_FEATURE_DESCRIPTOR_FACTORY else STATIC_FEATURE_DESCRIPTOR_FACTORY
+
     val descriptorProperty =
         PropertySpec
             .builder(descriptorName, descriptorType)
@@ -295,7 +295,7 @@ fun generateFeatureDescriptorAndExtensions(
             .addAnnotation(PUBLISHED_API_ANNOTATION)
             .initializer(
                 buildCodeBlock {
-                    add("%M(\n", FEATURE_DESCRIPTOR_FACTORY)
+                    add("%M(\n", descriptorFactory)
                     indent()
                     add("wildcardName = %S,\n", context.featureName)
                     add("rule = %T,\n", implName)
@@ -317,7 +317,6 @@ fun generateFeatureDescriptorAndExtensions(
                     }
                     unindent()
                     add("}")
-                    add(" as %T", descriptorType)
                 },
             ).build()
 

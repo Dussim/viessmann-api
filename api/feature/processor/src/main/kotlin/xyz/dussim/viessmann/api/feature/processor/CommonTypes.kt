@@ -44,6 +44,8 @@ val COMMAND_RULE = MemberName(VALIDATION_PACKAGE, "commandRule")
 val EQUALS_IMPL = MemberName(FEATURE_API_PACKAGE, "equalsImpl")
 val VALIDATION_RESULT_OF = ValidationResult.Companion::class.member("of")
 val FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "FeatureDescriptor")
+val STATIC_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "staticFeatureDescriptor")
+val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexedFeatureDescriptor")
 
 val DEVICE_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "deviceFeatureRule")
 val GATEWAY_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "gatewayFeatureRule")

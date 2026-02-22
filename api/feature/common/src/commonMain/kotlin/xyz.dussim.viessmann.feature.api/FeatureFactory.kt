@@ -2,6 +2,7 @@ package xyz.dussim.viessmann.feature.api
 
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
+import kotlin.reflect.KClass
 
 // TODO this should be refactored, first of all exceptions are expensive so it should rather default to getOrNull
 
@@ -102,6 +103,7 @@ sealed interface FeatureDescriptor<F : Feature> :
     FeatureFactory<F>,
     ValidationRule<Feature, ValidationError>,
     FeatureMatcherProvider {
+    val featureClass: KClass<F>
     val wildcardName: String
 
     interface Static<F : Feature> :

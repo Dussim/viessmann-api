@@ -2,6 +2,7 @@ package xyz.dussim.viessmann.feature.api
 
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
+import kotlin.reflect.KClass
 
 fun Indexed(
     wildcardName: String,
@@ -40,7 +41,7 @@ fun FeatureMatchers(
         false -> Static(featureName, validation)
     }
 
-fun <F : Feature> FeatureDescriptor(
+inline fun <reified F : Feature> FeatureDescriptor(
     wildcardName: String,
     matchers: FeatureMatchers,
     factory: FeatureFactory<F>,
@@ -49,6 +50,7 @@ fun <F : Feature> FeatureDescriptor(
     when (matchers) {
         is FeatureMatchers.Indexed -> {
             FeatureDescriptorIndexedImpl(
+                featureClass = F::class,
                 wildcardName = wildcardName,
                 factory = factory,
                 matchers = matchers,
@@ -58,6 +60,7 @@ fun <F : Feature> FeatureDescriptor(
 
         is FeatureMatchers.Static -> {
             FeatureDescriptorStaticImpl(
+                featureClass = F::class,
                 wildcardName = wildcardName,
                 factory = factory,
                 matchers = matchers,
@@ -66,7 +69,7 @@ fun <F : Feature> FeatureDescriptor(
         }
     }
 
-fun <F : Feature> FeatureDescriptor(
+inline fun <reified F : Feature> FeatureDescriptor(
     wildcardName: String,
     rule: ValidationRule<Feature, ValidationError>,
     factory: FeatureFactory<F>,
@@ -78,7 +81,35 @@ fun <F : Feature> FeatureDescriptor(
         rule = rule,
     )
 
+inline fun <reified F : Feature> staticFeatureDescriptor(
+    wildcardName: String,
+    rule: ValidationRule<Feature, ValidationError>,
+    factory: FeatureFactory<F>,
+): FeatureDescriptor.Static<F> =
+    FeatureDescriptorStaticImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = factory,
+        matchers = Static(wildcardName, rule),
+        rule = rule,
+    )
+
+inline fun <reified F : Feature> indexedFeatureDescriptor(
+    wildcardName: String,
+    rule: ValidationRule<Feature, ValidationError>,
+    factory: FeatureFactory<F>,
+): FeatureDescriptor.Indexed<F> =
+    FeatureDescriptorIndexedImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = factory,
+        matchers = Indexed(wildcardName, rule),
+        rule = rule,
+    )
+
+@PublishedApi
 internal class FeatureDescriptorIndexedImpl<F : Feature>(
+    override val featureClass: KClass<F>,
     override val wildcardName: String,
     factory: FeatureFactory<F>,
     matchers: FeatureMatchers.Indexed,
@@ -90,7 +121,9 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
     override fun toString(): String = "FeatureDescriptor.Indexed[$wildcardName]"
 }
 
+@PublishedApi
 internal class FeatureDescriptorStaticImpl<F : Feature>(
+    override val featureClass: KClass<F>,
     override val wildcardName: String,
     factory: FeatureFactory<F>,
     matchers: FeatureMatchers.Static,

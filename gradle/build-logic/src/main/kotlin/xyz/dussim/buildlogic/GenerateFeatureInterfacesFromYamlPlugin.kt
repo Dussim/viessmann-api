@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import xyz.dussim.buildlogic.internal.CommandInterfaceGenerator
 import xyz.dussim.buildlogic.internal.YamlFeatureInterfaceGenerator
 import xyz.dussim.buildlogic.internal.identifySharedCommands
+import java.time.LocalDate
 
 abstract class GenerateFeatureInterfacesFromYamlPlugin : Plugin<Project> {
     override fun apply(target: Project): Unit =
@@ -115,8 +116,17 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
         logger.lifecycle("Pass 2: Generating feature files...")
         var success = 0
         var duplicate = 0
+        var omitted = 0
+        val now = LocalDate.now()
 
         for (feature in parsedFeatures) {
+            val removalDate = feature.removalDate
+            if (removalDate != null && (removalDate.isBefore(now) || removalDate.isEqual(now))) {
+                omitted++
+                logger.warn("Omitted generation of feature '${feature.featureName}' as it is deprecated and past removal date ($removalDate)")
+                continue
+            }
+
             val outputFile = outputDir.resolve("${feature.className}.kt")
             if (outputFile.exists()) {
                 duplicate++
@@ -129,7 +139,7 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
         }
 
         logger.lifecycle(
-            "Results: $success success, $duplicate duplicate out of ${inputFiles.size} total",
+            "Results: $success success, $duplicate duplicate, $omitted omitted due to removal date out of ${inputFiles.size} total",
         )
         logger.lifecycle("Shared commands: ${sharedCommandsMap.size}")
         logger.lifecycle("Output directory: $outputDir")
