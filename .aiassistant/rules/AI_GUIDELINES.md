@@ -4,10 +4,11 @@ apply: always
 
 ## MOST IMPORTANT INFO
 
-1. NEVER RUN TESTS IF NOT ASKED TO
-2. NEVER TRY TO LIST FILES IN BUILD DIR IF NOT ASKED TO
-3. NEVER ANALYZE BUILD DIR IF NOT ASKED TO
-4. NEVER BUILD TARGETS OTHER THAN JVM IF NOT ASKED TO
+1. BE SUPER SAFE: When running commands against the modules, NEVER analyze build folders or temporary artifacts.
+2. NEVER RUN TESTS IF NOT ASKED TO
+3. NEVER TRY TO LIST FILES IN BUILD DIR IF NOT ASKED TO
+4. NEVER ANALYZE BUILD DIR IF NOT ASKED TO
+5. NEVER BUILD TARGETS OTHER THAN JVM IF NOT ASKED TO
 
 ### Build & Configuration
 
@@ -88,6 +89,12 @@ class ExampleTest :
 **Static analysis:** Detekt (config: `config/detekt/detekt.yml`)
 **Max line length:** 180 characters
 
+**Multiplatform:** This is a Kotlin Multiplatform project.
+- `commonMain`: Shared logic, DTOs, interfaces.
+- `jvmMain`: JVM-specific implementations (e.g., JMH benchmarks, specialized performance optimizations).
+- Always prefer `commonMain` unless platform-specific APIs are required.
+- Use `expect`/`actual` for platform-specific functionality.
+
 ```powershell
 ./gradlew.bat formatKotlin    # Auto-format code
 ./gradlew.bat lintKotlin      # Check formatting
@@ -105,12 +112,15 @@ class ExampleTest :
 
 - **JvmRecord:** Use `@JvmRecord` for all DTOs and simple data classes to improve performance and Java interop.
 - **Performance Maps:** Use `EfficientStringKeyMap` for `Feature` properties and commands instead of standard
-  `Map<String, T>`.
+  `Map<String, T>`. Note that `EfficientStringKeyMap` is **immutable** and optimized for fast lookups using precomputed hashes.
 - **Feature Descriptors:** Use `FeatureDescriptor` and `FeatureFactory` for typed feature access.
-- **Factory Methods:** Prefer using the DSL-like factory methods in `FactoryMethods.kt` and `Property.Companion.of...`.
+- **Feature Resolver:** Use `FeatureResolver` to find and convert features from a list. It provides convenient methods like `findOf`, `firstOf`, and `allOf`.
+- **Factory Methods:** Prefer using the DSL-like factory methods in `FactoryMethods.kt` and `Property.of...`.
 - **Validation:** Use the `validation` package rules for consistency.
 - **Enum Pattern:** For API enums, use the `sealed interface` with `Strict` and `Unknown` subclasses to handle future
-  API changes safely (see `AggregatedStatus` for reference).
+  API changes safely.
+- **FeatureEnumFactory:** When a feature property is an enum-like string, implement `FeatureEnumFactory` in the property's companion object to provide type-safe conversion from `StringValue`.
+- **Property Access:** Always use the provided type-safe property accessors in generated features instead of manually querying the `properties` map.
 
 ---
 
@@ -125,6 +135,8 @@ For each module, there is a standard `README.md` for human developers and a `REA
 | `:api:feature:processor`   | KSP2 processor generating feature implementations ([README](api/feature/processor/README.md), [AI Hints](api/feature/processor/README.ai.md))                   |
 | `:api:feature:common`      | Core types (`Feature`, `Property`, `Command`), validation, efficient maps ([README](api/feature/common/README.md), [AI Hints](api/feature/common/README.ai.md)) |
 | `:api:feature:benchmark`   | JMH benchmarks (JVM only) ([README](api/feature/benchmark/README.md), [AI Hints](api/feature/benchmark/README.ai.md))                                           |
+| `:api:feature:definitions` | Generated feature interfaces from YAML ([README](api/feature/definitions/README.md), [AI Hints](api/feature/definitions/README.ai.md))                       |
+| `:api:feature:implementations` | KSP-generated feature implementation classes ([README](api/feature/implementations/README.md), [AI Hints](api/feature/implementations/README.ai.md)) |
 
 ---
 

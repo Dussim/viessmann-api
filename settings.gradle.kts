@@ -34,9 +34,10 @@ rootProject.name = "viessmann-api"
 
 include(
     ":api:dto",
-    ":api:yaml-generator",
     ":api:feature:annotations",
     ":api:feature:processor",
     ":api:feature:common",
     ":api:feature:benchmark",
+    ":api:feature:definitions",
+    ":api:feature:implementations",
 )

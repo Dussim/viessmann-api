@@ -1,0 +1,24 @@
+# Module :api:feature:definitions
+
+## Overview
+This module contains the generated feature interface definitions. These interfaces are automatically created from Viessmann API YAML specifications.
+
+## Functionality
+- **Interface Generation**: Uses the `xyz.dussim.generate.features.yaml` Gradle plugin to parse API specifications and generate Kotlin interfaces.
+- **API Modeling**: Serves as the source of truth for feature structures, properties, and commands as defined in the official API.
+
+## Integration
+This module is primarily a dependency for `:api:feature:implementations`, where the concrete logic for these features is generated using KSP.
+
+## Gradle Configuration
+The module uses the following configuration to point to the YAML sources:
+
+```kotlin
+generateFeatureInterfacesFromYaml {
+    featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
+    packageName = "xyz.dussim.viessmann.api.features.generated"
+}
+```
+
+## Documentation
+For more information on the generation process, refer to the [Feature Processor Code Generation Guide](../../../docs/feature-processor-guide.md).
