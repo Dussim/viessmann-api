@@ -36,4 +36,5 @@ bin/
 .kotlin
 
 ### ANything else that should be ignored ###
+.output.txt
 .ignored
