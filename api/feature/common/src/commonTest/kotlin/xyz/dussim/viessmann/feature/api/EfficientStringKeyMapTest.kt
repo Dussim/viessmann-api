@@ -254,4 +254,40 @@ class EfficientStringKeyMapTest :
                 map["鍵"] shouldBe "値"
             }
         }
+
+        context("Very long keys (>= 64 chars)") {
+            test("falls back to PassThrough and returns correct values") {
+                val longKey = "a".repeat(64)
+                val map =
+                    EfficientStringKeyMap(
+                        mapOf(
+                            longKey to "value",
+                            "regular" to "regValue",
+                            "other" to "otherValue",
+                            "fourth" to "four",
+                            "fifth" to "five",
+                        ),
+                    )
+                map[longKey] shouldBe "value"
+                map["regular"] shouldBe "regValue"
+                map["other"] shouldBe "otherValue"
+            }
+
+            test("returns null for non-existing keys when long keys are present") {
+                val longKey = "a".repeat(64)
+                val map =
+                    EfficientStringKeyMap(
+                        mapOf(
+                            longKey to "value",
+                            "k1" to 1,
+                            "k2" to 2,
+                            "k3" to 3,
+                            "k4" to 4,
+                        ),
+                    )
+                map["nonexistent"].shouldBeNull()
+                map["a".repeat(63)].shouldBeNull()
+                map["a".repeat(65)].shouldBeNull()
+            }
+        }
     })

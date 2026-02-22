@@ -18,7 +18,8 @@ sealed class EfficientStringKeyMap<out T>(
                 2 -> TwoElements(from)
                 3 -> ThreeElements(from)
                 4 -> FourElements(from)
-                else -> NElements(from)
+                else if (from.keys.maxOfOrNull { it.length } ?: 0) < 64 -> NElements(from)
+                else -> PassThrough(from)
             }
     }
 
@@ -201,6 +202,15 @@ private data class NElements<T>(
 
     @Suppress("NOTHING_TO_INLINE")
     private inline fun extractLow(value: Long): Int = (value and 0xFFFFFFFFL).toInt()
+}
+
+private class PassThrough<T>(
+    private val originalMap: Map<String, T>,
+) : EfficientStringKeyMap<T>(originalMap) {
+    override fun get(
+        key: String,
+        precomputedHash: Long,
+    ): T? = originalMap[key]
 }
 
 data object ParametersSerializer : EfficientStringKeyMap.Serializer<Parameter>(Parameter.serializer())
