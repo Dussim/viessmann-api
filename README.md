@@ -49,10 +49,10 @@ This is a multi-module Gradle project with type-safe project accessors.
 - `:api:dto` — Kotlin Multiplatform DTOs and feature models used by consumers.
   - Targets: JVM 21, JS (Node + Browser, ES modules, TypeScript definitions generated)
   - Depends on `:api:feature:common` and uses KSP-generated sources
-- `:api:feature:annotations` — Annotation definitions used by the KSP processor (e.g., `@GenerateFeatureImplementation`).
-- `:api:feature:processor` — KSP2 processor which generates concrete feature/command implementations.
-- `:api:feature:common` — Common feature API (core types like `Feature`, `Property`, `Command`, validation utilities, and efficient maps).
-- `:api:feature:benchmark` — JMH benchmarks for selected feature scenarios (JVM only).
+- `:api:feature:annotations` — Annotation definitions used by the KSP processor (e.g., `@GenerateFeatureImplementation`). [See README](api/feature/annotations/README.md).
+- `:api:feature:processor` — KSP2 processor which generates concrete feature/command implementations. [See README](api/feature/processor/README.md).
+- `:api:feature:common` — Common feature API (core types like `Feature`, `Property`, `Command`, validation utilities, and efficient maps). [See README](api/feature/common/README.md).
+- `:api:feature:benchmark` — JMH benchmarks for selected feature scenarios (JVM only). [See README](api/feature/benchmark/README.md).
 
 Root project metadata:
 - Group: `xyz.dussim`
@@ -159,6 +159,7 @@ This project uses KSP2 to generate feature and command implementations based on 
 Key facts:
 - KSP2 is enabled (`ksp.useKSP2=true` in `gradle.properties`).
 - All Kotlin compilation tasks depend on `kspCommonMainKotlinMetadata` to ensure generated code is available during compilation.
+- Note: `kspCommonMainMetadata` should only be used if code should be generated directly into `commonMain`.
 - Generated sources live under:
   - `build/generated/ksp/` (module-local)
   - For `:api:dto`: `build/generated/ksp/metadata/commonMain/kotlin`
