@@ -1,4 +1,4 @@
-package xyz.dussim.feature.benchmark
+package xyz.dussim.feature.benchmark.featurevalidation
 
 import kotlinx.serialization.json.Json
 import org.openjdk.jmh.annotations.Benchmark
@@ -12,6 +12,8 @@ import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
+import xyz.dussim.feature.benchmark.DeviceTimeseriesMonitoringIonizationFeature
+import xyz.dussim.feature.benchmark.descriptor
 import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
@@ -188,6 +190,7 @@ private const val ALL_TYPES_INCORRECT_FEATURE = """
 open class ValidationBenchmark {
     lateinit var factory: FeatureFactory<DeviceTimeseriesMonitoringIonizationFeature>
     lateinit var validator: ValidationRule<Feature, ValidationError>
+    lateinit var validatorFailFast: ValidationRule<Feature, ValidationError>
     lateinit var feature: Feature
     lateinit var incorrectFeature: Feature
 
@@ -202,6 +205,7 @@ open class ValidationBenchmark {
 
         factory = DeviceTimeseriesMonitoringIonizationFeature.descriptor
         validator = DeviceTimeseriesMonitoringIonizationFeature.descriptor.structureValidator
+        validatorFailFast = DeviceTimeseriesMonitoringIonizationFeature.descriptor.failFastStructureValidator
         feature =
             json.decodeFromString(
                 DeviceFeature.serializer(),
@@ -220,6 +224,11 @@ open class ValidationBenchmark {
     }
 
     @Benchmark
+    fun validateFeatureFailFast(blackHole: Blackhole) {
+        blackHole.consume(validatorFailFast(feature))
+    }
+
+    @Benchmark
     fun constructFeature(blackHole: Blackhole) {
         blackHole.consume(factory(feature))
     }
@@ -227,5 +236,10 @@ open class ValidationBenchmark {
     @Benchmark
     fun validateIncorrectFeature(blackHole: Blackhole) {
         blackHole.consume(validator(incorrectFeature))
+    }
+
+    @Benchmark
+    fun validateIncorrectFeatureFailFast(blackHole: Blackhole) {
+        blackHole.consume(validatorFailFast(incorrectFeature))
     }
 }

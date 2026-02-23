@@ -138,10 +138,10 @@ private fun CodeBlock.Builder.addValidationException(implName: ClassName) {
 }
 
 /**
- * Generates companion object that implements validation rules for the feature.
+ * Generates rule expressions for the feature.
  */
 context(context: SymbolContext)
-fun companionObject(implName: ClassName): TypeSpec {
+private fun ruleExpressions(): List<CodeBlock> {
     val subTypeValidationMember =
         when (context.baseFeature.delegate) {
             typeNameOf<Feature.Device>() -> DEVICE_FEATURE_RULE
@@ -150,39 +150,54 @@ fun companionObject(implName: ClassName): TypeSpec {
             else -> error("Unreachable")
         }
 
-    val ruleExpressions =
-        listOf(
-            CodeBlock.of(
-                "%M",
-                context.ruleRegistry.register(subTypeValidationMember, emptyList(), FEATURE_VALIDATION_RULE_TYPE),
-            ),
-        ).plus(
-            context
-                .parameterProperties
-                .map {
-                    CodeBlock.of(
-                        "%M",
-                        context.ruleRegistry.register(
-                            it.validationFunction,
-                            listOf(it.name, !it.isNullable),
-                            FEATURE_VALIDATION_RULE_TYPE,
-                        ),
-                    )
-                },
-        ).plus(
-            context
-                .nestedCommands
-                .map {
-                    CodeBlock.of("%T.rule", it.implType)
-                },
-        )
+    return listOf(
+        CodeBlock.of(
+            "%M",
+            context.ruleRegistry.register(subTypeValidationMember, emptyList(), FEATURE_VALIDATION_RULE_TYPE),
+        ),
+    ).plus(
+        context
+            .parameterProperties
+            .map {
+                CodeBlock.of(
+                    "%M",
+                    context.ruleRegistry.register(
+                        it.validationFunction,
+                        listOf(it.name, !it.isNullable),
+                        FEATURE_VALIDATION_RULE_TYPE,
+                    ),
+                )
+            },
+    ).plus(
+        context
+            .nestedCommands
+            .map {
+                CodeBlock.of("%T.rule", it.implType)
+            },
+    )
+}
 
-    return TypeSpec
+/**
+ * Generates companion object that implements validation rules for the feature.
+ */
+context(context: SymbolContext)
+fun companionObject(implName: ClassName): TypeSpec =
+    TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(FEATURE_VALIDATION_RULE_TYPE)
-        .addFunction(generateValidateFunction(typeNameOf<Feature>(), ruleExpressions))
+        .addFunction(generateValidateFunction(typeNameOf<Feature>(), ruleExpressions()))
         .build()
-}
+
+/**
+ * Generates fail-fast validation object.
+ */
+context(context: SymbolContext)
+private fun failFastObject(targetType: TypeName): TypeSpec =
+    TypeSpec
+        .objectBuilder("FailFast")
+        .addSuperinterface(validationRuleType(targetType))
+        .addFunction(generateValidateFunction(targetType, ruleExpressions(), isFailFast = true))
+        .build()
 
 /**
  * Generates extension properties for feature companion objects.
@@ -258,6 +273,7 @@ fun generateSharedFeatureImplementation(
                     )
                 }
             }.addType(companionObject(implName))
+            .addType(failFastObject(typeNameOf<Feature>()))
             .addProperties(properties)
             .apply {
                 if (initBlock.isNotEmpty()) {
@@ -299,6 +315,7 @@ fun generateFeatureDescriptorAndExtensions(
                     indent()
                     add("wildcardName = %S,\n", context.featureName)
                     add("rule = %T,\n", implName)
+                    add("failFast = %T.FailFast,\n", implName)
                     unindent()
                     add(") { feature ->\n")
                     indent()

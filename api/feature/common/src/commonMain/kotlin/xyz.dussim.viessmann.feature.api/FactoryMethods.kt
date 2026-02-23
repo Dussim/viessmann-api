@@ -7,38 +7,49 @@ import kotlin.reflect.KClass
 fun Indexed(
     wildcardName: String,
     validation: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
 ): FeatureMatchers.Indexed =
     object : FeatureMatchers.Indexed {
         override val structureValidator = validation
+        override val failFastStructureValidator = failFast
 
         override val byWildcardName = FeatureMatcher.byWildcardName(wildcardName)
         override val byStructure = FeatureMatcher.byStructure(validation)
+        override val byFailFastStructure = FeatureMatcher.byStructure(failFast)
         override val byWildcardNameThenStructure = byWildcardName andThen byStructure
+        override val byWildcardNameThenFailFastStructure = byWildcardName andThen byFailFastStructure
 
         override fun byName(index: Int): FeatureMatcher = FeatureMatcher.byName(wildcardName.replace("{}", index.toString()))
 
         override fun byNameThenStructure(index: Int): FeatureMatcher = byName(index) andThen byStructure
+
+        override fun byNameThenFailFastStructure(index: Int): FeatureMatcher = byName(index) andThen byFailFastStructure
     }
 
 fun Static(
     wildcardName: String,
     validation: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
 ): FeatureMatchers.Static =
     object : FeatureMatchers.Static {
         override val structureValidator = validation
+        override val failFastStructureValidator = failFast
 
         override val byWildcardName = FeatureMatcher.byWildcardName(wildcardName)
         override val byStructure = FeatureMatcher.byStructure(validation)
+        override val byFailFastStructure = FeatureMatcher.byStructure(failFast)
         override val byWildcardNameThenStructure = byWildcardName andThen byStructure
+        override val byWildcardNameThenFailFastStructure = byWildcardName andThen byFailFastStructure
     }
 
 fun FeatureMatchers(
     featureName: String,
     validation: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
 ): FeatureMatchers =
     when (featureName.contains("{}")) {
-        true -> Indexed(featureName, validation)
-        false -> Static(featureName, validation)
+        true -> Indexed(featureName, validation, failFast)
+        false -> Static(featureName, validation, failFast)
     }
 
 inline fun <reified F : Feature> FeatureDescriptor(
@@ -72,11 +83,12 @@ inline fun <reified F : Feature> FeatureDescriptor(
 inline fun <reified F : Feature> FeatureDescriptor(
     wildcardName: String,
     rule: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
     factory: FeatureFactory<F>,
 ): FeatureDescriptor<F> =
     FeatureDescriptor(
         wildcardName = wildcardName,
-        matchers = FeatureMatchers(wildcardName, rule),
+        matchers = FeatureMatchers(wildcardName, rule, failFast),
         factory = factory,
         rule = rule,
     )
@@ -84,26 +96,28 @@ inline fun <reified F : Feature> FeatureDescriptor(
 inline fun <reified F : Feature> staticFeatureDescriptor(
     wildcardName: String,
     rule: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
     factory: FeatureFactory<F>,
 ): FeatureDescriptor.Static<F> =
     FeatureDescriptorStaticImpl(
         featureClass = F::class,
         wildcardName = wildcardName,
         factory = factory,
-        matchers = Static(wildcardName, rule),
+        matchers = Static(wildcardName, rule, failFast),
         rule = rule,
     )
 
 inline fun <reified F : Feature> indexedFeatureDescriptor(
     wildcardName: String,
     rule: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
     factory: FeatureFactory<F>,
 ): FeatureDescriptor.Indexed<F> =
     FeatureDescriptorIndexedImpl(
         featureClass = F::class,
         wildcardName = wildcardName,
         factory = factory,
-        matchers = Indexed(wildcardName, rule),
+        matchers = Indexed(wildcardName, rule, failFast),
         rule = rule,
     )
 

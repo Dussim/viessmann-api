@@ -1,4 +1,4 @@
-package xyz.dussim.feature.benchmark
+package xyz.dussim.feature.benchmark.maps
 
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode

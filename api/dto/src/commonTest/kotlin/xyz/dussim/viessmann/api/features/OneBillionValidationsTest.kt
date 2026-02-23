@@ -143,4 +143,24 @@ class OneBillionValidationsTest :
             }
             println("Finished in ${Clock.System.now() - startTime}")
         }
+
+        context("!One billion validations fail fast test") {
+            val size = 850
+            val step = size / 100
+            val startTime = Clock.System.now()
+            repeat(size) { repeatIndex ->
+                descriptors.forEachIndexed { _, (descriptor, expected) ->
+                    val result = features.allOf(descriptor, descriptor.byFailFastStructure)
+                    try {
+                        result shouldHaveSize expected
+                    } catch (e: AssertionError) {
+                        throw AssertionError("Failed for $descriptor", e)
+                    }
+                }
+                if (repeatIndex % step == 0) {
+                    println("Finished $repeatIndex/$size")
+                }
+            }
+            println("Finished in ${Clock.System.now() - startTime}")
+        }
     })

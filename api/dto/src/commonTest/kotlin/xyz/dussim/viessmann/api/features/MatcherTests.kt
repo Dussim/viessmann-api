@@ -72,4 +72,56 @@ class MatcherTests :
                 result shouldHaveSize expected
             }
         }
+
+        context("Finds and decorates all DeviceFeature's via fail fast validation") {
+            listOf(
+                DeviceEtnFeature.descriptor to 936,
+                DeviceSerialFeature.descriptor to 936,
+                DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
+                DeviceZigbeeActiveFeature.descriptor to 156,
+                HeatingBoilerPumpsInternalFeature.descriptor to 1794,
+                HeatingBoilerPumpsInternalTargetFeature.descriptor to 1326,
+                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 234,
+                HeatingBoilerSerialFeature.descriptor to 936,
+                HeatingBoilerTemperatureFeature.descriptor to 1326,
+                HeatingBufferCylinderSensorsTemperatureMainFeature.descriptor to 1794,
+                DeviceZigbeeCoordinatorFeature.descriptor to 0,
+                RoomsFeature.descriptor to 0,
+                RoomsOthersNFeature.descriptor to 0,
+                DeviceTimezoneFeature.descriptor to 0,
+                TcuModeFeature.descriptor to 78,
+                HeatingCircuitsNHeatingScheduleFeature.descriptor to 390,
+                DeviceConfigurationFeature.descriptor to 78,
+            ).forEach { (descriptor, expected) ->
+                val result = features.allOf(descriptor, descriptor.byFailFastStructure)
+
+                result shouldHaveSize expected
+            }
+        }
+
+        context("Finds and decorates all DeviceFeature's via name then fail fast validation") {
+            listOf(
+                DeviceEtnFeature.descriptor to 78,
+                DeviceSerialFeature.descriptor to 78,
+                DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
+                DeviceZigbeeActiveFeature.descriptor to 78,
+                HeatingBoilerPumpsInternalFeature.descriptor to 78,
+                HeatingBoilerPumpsInternalTargetFeature.descriptor to 78,
+                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 78,
+                HeatingBoilerSerialFeature.descriptor to 78,
+                HeatingBoilerTemperatureFeature.descriptor to 78,
+                HeatingBufferCylinderSensorsTemperatureMainFeature.descriptor to 78,
+                DeviceZigbeeCoordinatorFeature.descriptor to 0,
+                RoomsFeature.descriptor to 0,
+                RoomsOthersNFeature.descriptor to 0,
+                DeviceTimezoneFeature.descriptor to 0,
+                TcuModeFeature.descriptor to 0,
+                HeatingCircuitsNHeatingScheduleFeature.descriptor to 234,
+                DeviceConfigurationFeature.descriptor to 78,
+            ).forEach { (descriptor, expected) ->
+                val result = features.allOf(descriptor, descriptor.byWildcardNameThenFailFastStructure)
+
+                result shouldHaveSize expected
+            }
+        }
     })

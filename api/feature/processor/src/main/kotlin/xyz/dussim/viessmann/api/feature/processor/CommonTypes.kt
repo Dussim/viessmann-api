@@ -43,7 +43,6 @@ val ABSTRACT_GEOFENCING_FEATURE = ClassName(FEATURE_API_PACKAGE, "AbstractGeofen
 val COMMAND_RULE = MemberName(VALIDATION_PACKAGE, "commandRule")
 val EQUALS_IMPL = MemberName(FEATURE_API_PACKAGE, "equalsImpl")
 val VALIDATION_RESULT_OF = ValidationResult.Companion::class.member("of")
-val FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "FeatureDescriptor")
 val STATIC_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "staticFeatureDescriptor")
 val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexedFeatureDescriptor")
 
@@ -178,6 +177,7 @@ fun varArgFunctionCall(
 fun generateValidateFunction(
     targetType: TypeName,
     ruleExpressions: List<CodeBlock>,
+    isFailFast: Boolean = false,
 ): FunSpec =
     FunSpec
         .builder("validate")
@@ -190,13 +190,24 @@ fun generateValidateFunction(
         ).addCode(
             CodeBlock
                 .builder()
-                .add("return ")
-                .add(
-                    varArgFunctionCall(
-                        VALIDATION_RESULT_OF,
-                        ruleExpressions.map { CodeBlock.of("%L.validate(value),\n", it) },
-                    ),
-                ).build(),
+                .apply {
+                    if (isFailFast) {
+                        ruleExpressions.forEachIndexed { index, expr ->
+                            val resultVar = "result$index"
+                            add("val %L = %L.validate(value)\n", resultVar, expr)
+                            add("if (%L.isInvalid) return %L\n", resultVar, resultVar)
+                        }
+                        add("return %M()\n", MemberName(VALIDATION_PACKAGE, "Valid"))
+                    } else {
+                        add("return ")
+                        add(
+                            varArgFunctionCall(
+                                VALIDATION_RESULT_OF,
+                                ruleExpressions.map { CodeBlock.of("%L.validate(value),\n", it) },
+                            ),
+                        )
+                    }
+                }.build(),
         ).build()
 
 /**

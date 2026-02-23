@@ -71,33 +71,37 @@ fun initBlock() =
         .build()
 
 /**
+ * Generates rule expressions for the command.
+ */
+context(context: CommandSymbolContext)
+private fun ruleExpressions(): List<CodeBlock> =
+    context
+        .constraintsProperties
+        .map {
+            CodeBlock.of(
+                "%M",
+                context.parentContext.ruleRegistry.register(
+                    CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type),
+                    listOf(it.name),
+                    COMMAND_VALIDATION_RULE_TYPE,
+                ),
+            )
+        }.plus(
+            CodeBlock.of(
+                "%M",
+                context.parentContext.ruleRegistry.register(
+                    NUMBER_OF_PARAMETERS_RULE,
+                    listOf(context.constraintsProperties.size, context.lowerCaseName.replace("_", "")),
+                    COMMAND_VALIDATION_RULE_TYPE,
+                ),
+            ),
+        )
+
+/**
  * Generates companion object with validation rules for command constraints.
  */
 context(context: CommandSymbolContext)
 fun companionObject(): TypeSpec {
-    val ruleExpressions =
-        context
-            .constraintsProperties
-            .map {
-                CodeBlock.of(
-                    "%M",
-                    context.parentContext.ruleRegistry.register(
-                        CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type),
-                        listOf(it.name),
-                        COMMAND_VALIDATION_RULE_TYPE,
-                    ),
-                )
-            }.plus(
-                CodeBlock.of(
-                    "%M",
-                    context.parentContext.ruleRegistry.register(
-                        NUMBER_OF_PARAMETERS_RULE,
-                        listOf(context.constraintsProperties.size, context.lowerCaseName.replace("_", "")),
-                        COMMAND_VALIDATION_RULE_TYPE,
-                    ),
-                ),
-            )
-
     val commandRuleProperty =
         overrideProperty(
             "rule",
@@ -110,9 +114,20 @@ fun companionObject(): TypeSpec {
         .addSuperinterface(typeNameOf<CommandValidationRule>())
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
         .addProperty(commandRuleProperty)
-        .addFunction(generateValidateFunction(typeNameOf<Command>(), ruleExpressions))
+        .addFunction(generateValidateFunction(typeNameOf<Command>(), ruleExpressions()))
         .build()
 }
+
+/**
+ * Generates fail-fast validation object.
+ */
+context(context: CommandSymbolContext)
+fun failFastObject(targetType: TypeName): TypeSpec =
+    TypeSpec
+        .objectBuilder("FailFast")
+        .addSuperinterface(validationRuleType(targetType))
+        .addFunction(generateValidateFunction(targetType, ruleExpressions(), isFailFast = true))
+        .build()
 
 /**
  * Generates complete command implementation class in a separate file.
@@ -143,6 +158,7 @@ fun generateCommandImplementation(
                         addInitializerBlock(initBlock())
                     }
                 }.addType(companionObject())
+                .addType(failFastObject(typeNameOf<Command>()))
                 .build()
         }
 

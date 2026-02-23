@@ -1,4 +1,4 @@
-package xyz.dussim.feature.benchmark
+package xyz.dussim.feature.benchmark.maps
 
 @PublishedApi
 internal inline fun combineToLong(

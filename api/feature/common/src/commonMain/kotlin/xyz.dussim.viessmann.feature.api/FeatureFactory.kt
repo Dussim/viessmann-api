@@ -83,10 +83,13 @@ infix fun FeatureMatcher.andThen(other: FeatureMatcher): FeatureMatcher = Featur
 
 sealed interface FeatureMatcherProvider {
     val structureValidator: ValidationRule<Feature, ValidationError>
+    val failFastStructureValidator: ValidationRule<Feature, ValidationError>
 
     val byWildcardName: FeatureMatcher
     val byStructure: FeatureMatcher
+    val byFailFastStructure: FeatureMatcher
     val byWildcardNameThenStructure: FeatureMatcher
+    val byWildcardNameThenFailFastStructure: FeatureMatcher
 }
 
 sealed interface FeatureMatchers : FeatureMatcherProvider {
@@ -96,6 +99,8 @@ sealed interface FeatureMatchers : FeatureMatcherProvider {
         fun byName(index: Int): FeatureMatcher
 
         fun byNameThenStructure(index: Int): FeatureMatcher
+
+        fun byNameThenFailFastStructure(index: Int): FeatureMatcher
     }
 }
 
