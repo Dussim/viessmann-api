@@ -1,7 +1,5 @@
 package xyz.dussim.buildlogic
 
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -17,7 +15,6 @@ fun Project.configureCommonPlugins() {
     with(pluginManager) {
         apply(libs.plugins.dokka)
         apply(libs.plugins.kotlinter)
-        apply(libs.plugins.detekt)
         apply(libs.plugins.ksp)
         apply(libs.plugins.kotest)
     }
@@ -41,17 +38,6 @@ fun Project.configureTestTasks() {
             events = setOf(FAILED, PASSED)
             exceptionFormat = FULL
         }
-    }
-}
-
-fun Project.configureDetekt() {
-    extensions.configure<DetektExtension> {
-        buildUponDefaultConfig = true
-        source.setFrom("src")
-    }
-
-    tasks.withType<Detekt>().configureEach {
-        jvmTarget = "21"
     }
 }
 
@@ -103,6 +89,5 @@ fun Project.configurePublishing() {
 fun Project.configureCommon() {
     configureKotlinter()
     configureTestTasks()
-    configureDetekt()
     configureGroupAndVersion()
 }

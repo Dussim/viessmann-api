@@ -1,15 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
-import org.jmailen.gradle.kotlinter.tasks.FormatTask
 
 plugins {
     alias(conventions.plugins.xyz.dussim.kotlin.common)
     alias(conventions.plugins.xyz.dussim.anonymize.json)
-    alias(conventions.plugins.xyz.dussim.generate.features)
-}
-
-dependencies {
-    add("kspCommonMainMetadata", projects.api.feature.processor)
 }
 
 kotlin {
@@ -28,36 +22,6 @@ kotlin {
     }
 }
 
-generateFeatureInterfaces {
-    featuresJsons = layout.projectDirectory.dir("src/commonTest/resources/features/device")
-    generatedSources = layout.buildDirectory.dir("generated/features")
-    packageName.set("xyz.dussim.viessmann.api.features")
-
-    ignoredFeatures.addAll(
-        "heating.boiler.pumps.internal",
-    )
-}
-
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
     dependsOn(tasks.anonymizeJsonVerify)
-    if (name != "kspCommonMainKotlinMetadata") {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-}
-
-tasks.withType<FormatTask>().configureEach {
-    dependsOn("kspCommonMainKotlinMetadata")
-    source = source.minus(fileTree("build/generated/ksp")).asFileTree
-}
-
-tasks.sourcesJar {
-    dependsOn("kspCommonMainKotlinMetadata")
-}
-
-tasks.jvmSourcesJar {
-    dependsOn("kspCommonMainKotlinMetadata")
-}
-
-tasks.jsSourcesJar {
-    dependsOn("kspCommonMainKotlinMetadata")
 }

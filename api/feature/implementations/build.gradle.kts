@@ -24,7 +24,6 @@ kotlin {
 }
 
 generateFeatureInterfacesFromYaml {
-    @Suppress("UnstableApiUsage")
     featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
     generatedSources = layout.buildDirectory.dir("generated/features")
     packageName = "xyz.dussim.viessmann.api.features.generated"
@@ -35,4 +34,23 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
         dependsOn("kspCommonMainKotlinMetadata")
     }
     dependsOn("generateFeatureInterfacesFromYaml")
+}
+
+tasks.sourcesJar {
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+
+tasks.jvmSourcesJar {
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+
+tasks.jsSourcesJar {
+    dependsOn("kspCommonMainKotlinMetadata")
+}
+
+dokka {
+    dokkaSourceSets.commonMain {
+        sourceRoots.from(tasks.generateFeatureInterfacesFromYaml.map { it.outputs })
+        sourceRoots.from(tasks.named("kspCommonMainKotlinMetadata").map { it.outputs })
+    }
 }

@@ -11,7 +11,6 @@ dependencies {
 
     implementation(libs.plugins.kotest)
     implementation(libs.plugins.kotlinter)
-    implementation(libs.plugins.detekt)
     implementation(libs.plugins.dokka)
     implementation(libs.plugins.kotlin.jvm)
     implementation(libs.plugins.kotlin.multiplatform)
