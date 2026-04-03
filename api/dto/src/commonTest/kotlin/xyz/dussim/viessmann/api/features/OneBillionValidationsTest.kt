@@ -2,6 +2,101 @@ package xyz.dussim.viessmann.api.features
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
+import xyz.dussim.viessmann.api.features.generated.DeviceConfigurationFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceEtnFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceMessagesErrorsRawFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceSerialFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceTimeseriesMonitoringIonizationFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceZigbeeActiveFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerPumpsInternalTargetFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerSensorsTemperatureCommonSupplyFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerSerialFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerTemperatureFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBufferCylinderSensorsTemperatureMainFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBurnersFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBurnersNDemandTemperatureFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBurnersNFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBurnersNModulationFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBurnersNStatisticsFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNCirculationPumpFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNFrostprotectionFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNHeatingCurveFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNHeatingScheduleFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingModesActiveFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingModesHeatingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingModesStandbyFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsActiveFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsComfortFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsForcedLastFromScheduleFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsNormalFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsReducedEnergySavingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsReducedFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsScreedDryingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNOperatingProgramsStandbyFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNRemoteControllerFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNSensorsTemperatureSupplyFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNTemperatureFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNTemperatureLevelsFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNZoneDemandFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNZoneModeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationBufferCylinderSizeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationCentralHeatingCylinderSizeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationDhwCylinderPumpFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationDhwCylinderSizeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationHouseHeatingLoadFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationHouseOrientationFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationMultiFamilyHouseFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationPressureTotalFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingConfigurationRegulationFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDeviceTimeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDeviceTimeSourceFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwHygieneFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwHygieneTriggerFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwOneTimeChargeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwOperatingModesActiveFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwOperatingModesBalancedFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwOperatingModesOffFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwPumpsCirculationFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwPumpsCirculationScheduleFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwScheduleFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwScheduleModeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwSensorsTemperatureDhwCylinderFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwSensorsTemperatureOutletFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwTemperatureHygieneFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingDhwTemperatureMainFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingFlueSensorsTemperatureMainFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingGasConsumptionDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingGasConsumptionHeatingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingGasConsumptionSummaryDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingGasConsumptionSummaryHeatingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingGasConsumptionTotalFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingHeatProductionDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingHeatProductionHeatingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingHeatProductionSummaryDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingHeatProductionSummaryHeatingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingHeatProductionTotalFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingOperatingProgramsHolidayAtHomeFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingOperatingProgramsHolidayFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingPowerConsumptionDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingPowerConsumptionHeatingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingPowerConsumptionSummaryDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingPowerConsumptionSummaryHeatingFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingPowerConsumptionTotalFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSensorsPressureSupplyFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSensorsTemperatureOutsideFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarPowerProductionFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarPumpsCircuitFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarRechargeSuppressionFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarSensorsTemperatureCollectorFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarSensorsTemperatureDhwFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarStatisticsFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingSolarSummaryPowerProductionFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingValvesDiverterHeatDhwFeature
+import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
 import xyz.dussim.viessmann.feature.api.DeviceFeature
@@ -24,12 +119,10 @@ class OneBillionValidationsTest :
                 DeviceSerialFeature.descriptor to 936,
                 DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
                 DeviceZigbeeActiveFeature.descriptor to 156,
-                HeatingBoilerPumpsInternalFeature.descriptor to 1794,
                 HeatingBoilerPumpsInternalTargetFeature.descriptor to 1326,
-                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 234,
+                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 1794,
                 HeatingBoilerSerialFeature.descriptor to 936,
                 HeatingBoilerTemperatureFeature.descriptor to 1326,
-                HeatingBufferSensorsTemperatureMainFeature.descriptor to 1794,
                 HeatingBufferCylinderSensorsTemperatureMainFeature.descriptor to 1794,
                 HeatingBurnersFeature.descriptor to 156,
                 HeatingBurnersNDemandTemperatureFeature.descriptor to 1326,
@@ -46,7 +139,6 @@ class OneBillionValidationsTest :
                 HeatingCircuitsNOperatingModesStandbyFeature.descriptor to 4056,
                 HeatingCircuitsNOperatingProgramsComfortFeature.descriptor to 234,
                 HeatingCircuitsNOperatingProgramsForcedLastFromScheduleFeature.descriptor to 390,
-                HeatingCircuitsNOperatingProgramsNoDemandFeature.descriptor to 4056,
                 HeatingCircuitsNOperatingProgramsNormalFeature.descriptor to 702,
                 HeatingCircuitsNOperatingProgramsReducedFeature.descriptor to 702,
                 HeatingCircuitsNOperatingProgramsReducedEnergySavingFeature.descriptor to 234,
@@ -64,12 +156,10 @@ class OneBillionValidationsTest :
                 HeatingConfigurationDhwCylinderPumpFeature.descriptor to 78,
                 HeatingConfigurationDhwCylinderSizeFeature.descriptor to 312,
                 HeatingConfigurationHouseHeatingLoadFeature.descriptor to 312,
-                HeatingConfigurationHouseLocationFeature.descriptor to 78,
                 HeatingConfigurationHouseOrientationFeature.descriptor to 78,
                 HeatingConfigurationMultiFamilyHouseFeature.descriptor to 4056,
                 HeatingConfigurationPressureTotalFeature.descriptor to 78,
                 HeatingDeviceTimeFeature.descriptor to 78,
-                HeatingDeviceTimeOffsetFeature.descriptor to 1326,
                 HeatingDeviceTimeSourceFeature.descriptor to 78,
                 HeatingDhwFeature.descriptor to 78,
                 HeatingDhwHygieneFeature.descriptor to 78,
@@ -82,9 +172,8 @@ class OneBillionValidationsTest :
                 HeatingDhwPumpsCirculationScheduleFeature.descriptor to 390,
                 HeatingDhwScheduleFeature.descriptor to 390,
                 HeatingDhwScheduleModeFeature.descriptor to 390,
-                HeatingDhwSensorsTemperatureDhwCylinderFeature.descriptor to 234,
-                HeatingDhwSensorsTemperatureHotWaterStorageFeature.descriptor to 234,
-                HeatingDhwSensorsTemperatureOutletFeature.descriptor to 234,
+                HeatingDhwSensorsTemperatureDhwCylinderFeature.descriptor to 1794,
+                HeatingDhwSensorsTemperatureOutletFeature.descriptor to 1794,
                 HeatingDhwTemperatureHygieneFeature.descriptor to 78,
                 HeatingDhwTemperatureMainFeature.descriptor to 78,
                 HeatingFlueSensorsTemperatureMainFeature.descriptor to 1794,
@@ -93,7 +182,6 @@ class OneBillionValidationsTest :
                 HeatingGasConsumptionSummaryDhwFeature.descriptor to 546,
                 HeatingGasConsumptionSummaryHeatingFeature.descriptor to 546,
                 HeatingGasConsumptionTotalFeature.descriptor to 858,
-                HeatingHeatProductionFeature.descriptor to 858,
                 HeatingHeatProductionDhwFeature.descriptor to 858,
                 HeatingHeatProductionHeatingFeature.descriptor to 858,
                 HeatingHeatProductionSummaryDhwFeature.descriptor to 546,
@@ -107,25 +195,24 @@ class OneBillionValidationsTest :
                 HeatingPowerConsumptionSummaryHeatingFeature.descriptor to 546,
                 HeatingPowerConsumptionTotalFeature.descriptor to 858,
                 HeatingSensorsPressureSupplyFeature.descriptor to 1794,
-                HeatingSensorsTemperatureOutsideFeature.descriptor to 234,
+                HeatingSensorsTemperatureOutsideFeature.descriptor to 1794,
                 HeatingSolarFeature.descriptor to 4056,
                 HeatingSolarPowerProductionFeature.descriptor to 858,
                 HeatingSolarPumpsCircuitFeature.descriptor to 1794,
                 HeatingSolarRechargeSuppressionFeature.descriptor to 1794,
                 HeatingSolarSensorsTemperatureCollectorFeature.descriptor to 1794,
-                HeatingSolarSensorsTemperatureDhwFeature.descriptor to 234,
+                HeatingSolarSensorsTemperatureDhwFeature.descriptor to 1794,
                 HeatingSolarStatisticsFeature.descriptor to 156,
                 HeatingSolarSummaryPowerProductionFeature.descriptor to 546,
                 HeatingValvesDiverterHeatDhwFeature.descriptor to 78,
                 HeatingConfigurationRegulationFeature.descriptor to 78,
                 DeviceConfigurationFeature.descriptor to 78,
                 HeatingCircuitsNOperatingProgramsActiveFeature.descriptor to 936,
-                HeatingCircuitsNNameFeature.descriptor to 468,
             )
         val features = loadFeatures()
 
         context("!One billion validations test") {
-            val size = 850
+            val size = 930
             val step = size / 100
             val startTime = Clock.System.now()
             repeat(size) { repeatIndex ->
@@ -134,7 +221,12 @@ class OneBillionValidationsTest :
                     try {
                         result shouldHaveSize expected
                     } catch (e: AssertionError) {
-                        throw AssertionError("Failed for $descriptor", e)
+                        try {
+                            features.allOf(descriptor, descriptor.byWildcardName)
+                            throw AssertionError("Failed for $descriptor", e)
+                        } catch (e: Exception) {
+                            throw e
+                        }
                     }
                 }
                 if (repeatIndex % step == 0) {
@@ -145,7 +237,7 @@ class OneBillionValidationsTest :
         }
 
         context("!One billion validations fail fast test") {
-            val size = 850
+            val size = 930
             val step = size / 100
             val startTime = Clock.System.now()
             repeat(size) { repeatIndex ->

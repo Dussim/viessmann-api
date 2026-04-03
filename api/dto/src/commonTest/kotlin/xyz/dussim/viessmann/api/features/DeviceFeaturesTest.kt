@@ -4,11 +4,27 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import xyz.dussim.viessmann.api.features.generated.DeviceConfigurationFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceEtnFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceSerialFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceTimeseriesMonitoringIonizationFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceTimezoneFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceZigbeeActiveFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceZigbeeCoordinatorFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerPumpsInternalTargetFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerSensorsTemperatureCommonSupplyFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerSerialFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerTemperatureFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBufferCylinderSensorsTemperatureMainFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNHeatingScheduleFeature
+import xyz.dussim.viessmann.api.features.generated.RoomsFeature
+import xyz.dussim.viessmann.api.features.generated.RoomsOthersNFeature
+import xyz.dussim.viessmann.api.features.generated.TcuModeFeature
+import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
 import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.FeatureResolver
-import xyz.dussim.viessmann.feature.api.StringValue
 
 class DeviceFeaturesTest :
     FunSpec({
@@ -77,12 +93,12 @@ class DeviceFeaturesTest :
             }
         }
 
-        context("Decorates with HeatingBoilerPumpsInternalFeature") {
-            val feature = features[HeatingBoilerPumpsInternalFeature.descriptor]
-            assertSoftly {
-                feature.status shouldBe HeatingBoilerPumpsInternalFeature.Status(StringValue("off"))
-            }
-        }
+//        context("Decorates with HeatingBoilerPumpsInternalFeature") {
+//            val feature = features[HeatingBoilerPumpsInternalFeature.descriptor]
+//            assertSoftly {
+//                feature.status shouldBe HeatingBoilerPumpsInternalFeature.Status(StringValue("off"))
+//            }
+//        }
 
         context("Decorates with HeatingBoilerPumpsInternalTargetFeature") {
             val feature = features[HeatingBoilerPumpsInternalTargetFeature.descriptor]

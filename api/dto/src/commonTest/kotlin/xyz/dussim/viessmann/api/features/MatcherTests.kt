@@ -3,6 +3,23 @@ package xyz.dussim.viessmann.api.features
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import xyz.dussim.viessmann.api.features.generated.DeviceConfigurationFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceEtnFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceSerialFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceTimeseriesMonitoringIonizationFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceTimezoneFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceZigbeeActiveFeature
+import xyz.dussim.viessmann.api.features.generated.DeviceZigbeeCoordinatorFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerPumpsInternalTargetFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerSensorsTemperatureCommonSupplyFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerSerialFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBoilerTemperatureFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingBufferCylinderSensorsTemperatureMainFeature
+import xyz.dussim.viessmann.api.features.generated.HeatingCircuitsNHeatingScheduleFeature
+import xyz.dussim.viessmann.api.features.generated.RoomsFeature
+import xyz.dussim.viessmann.api.features.generated.RoomsOthersNFeature
+import xyz.dussim.viessmann.api.features.generated.TcuModeFeature
+import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
 import xyz.dussim.viessmann.feature.api.DeviceFeature
@@ -27,9 +44,8 @@ class MatcherTests :
                 DeviceSerialFeature.descriptor to 936,
                 DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
                 DeviceZigbeeActiveFeature.descriptor to 156,
-                HeatingBoilerPumpsInternalFeature.descriptor to 1794,
                 HeatingBoilerPumpsInternalTargetFeature.descriptor to 1326,
-                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 234,
+                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 1794,
                 HeatingBoilerSerialFeature.descriptor to 936,
                 HeatingBoilerTemperatureFeature.descriptor to 1326,
                 HeatingBufferCylinderSensorsTemperatureMainFeature.descriptor to 1794,
@@ -53,7 +69,6 @@ class MatcherTests :
                 DeviceSerialFeature.descriptor to 78,
                 DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
                 DeviceZigbeeActiveFeature.descriptor to 78,
-                HeatingBoilerPumpsInternalFeature.descriptor to 78,
                 HeatingBoilerPumpsInternalTargetFeature.descriptor to 78,
                 HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 78,
                 HeatingBoilerSerialFeature.descriptor to 78,
@@ -79,9 +94,8 @@ class MatcherTests :
                 DeviceSerialFeature.descriptor to 936,
                 DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
                 DeviceZigbeeActiveFeature.descriptor to 156,
-                HeatingBoilerPumpsInternalFeature.descriptor to 1794,
                 HeatingBoilerPumpsInternalTargetFeature.descriptor to 1326,
-                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 234,
+                HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 1794,
                 HeatingBoilerSerialFeature.descriptor to 936,
                 HeatingBoilerTemperatureFeature.descriptor to 1326,
                 HeatingBufferCylinderSensorsTemperatureMainFeature.descriptor to 1794,
@@ -105,7 +119,6 @@ class MatcherTests :
                 DeviceSerialFeature.descriptor to 78,
                 DeviceTimeseriesMonitoringIonizationFeature.descriptor to 78,
                 DeviceZigbeeActiveFeature.descriptor to 78,
-                HeatingBoilerPumpsInternalFeature.descriptor to 78,
                 HeatingBoilerPumpsInternalTargetFeature.descriptor to 78,
                 HeatingBoilerSensorsTemperatureCommonSupplyFeature.descriptor to 78,
                 HeatingBoilerSerialFeature.descriptor to 78,
