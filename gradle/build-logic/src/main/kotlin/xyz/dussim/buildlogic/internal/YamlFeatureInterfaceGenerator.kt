@@ -82,6 +82,7 @@ class YamlFeatureInterfaceGenerator(
                     when (param.type) {
                         "Boolean" -> "boolean"
                         "Double" -> "number"
+                        "Schedule" -> "Schedule"
                         else -> "string"
                     }
                 ParameterSignature(param.name, apiType)
@@ -660,6 +661,7 @@ class YamlFeatureInterfaceGenerator(
                 when (type) {
                     "boolean" -> "Boolean" to "BooleanConstraints"
                     "number" -> "Double" to "NumberConstraints"
+                    "Schedule" -> "Schedule" to "ScheduleConstraints"
                     else -> "String" to "StringConstraints"
                 }
 

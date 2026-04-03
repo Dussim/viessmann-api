@@ -132,7 +132,7 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
     FeatureFactory<F> by factory,
     FeatureMatchers.Indexed by matchers,
     ValidationRule<Feature, ValidationError> by rule {
-    override fun toString(): String = "FeatureDescriptor.Indexed[$wildcardName]"
+    override fun toString(): String = "FeatureDescriptor.Indexed[$wildcardName](${featureClass.simpleName})"
 }
 
 @PublishedApi
@@ -146,5 +146,5 @@ internal class FeatureDescriptorStaticImpl<F : Feature>(
     FeatureFactory<F> by factory,
     FeatureMatchers.Static by matchers,
     ValidationRule<Feature, ValidationError> by rule {
-    override fun toString(): String = "FeatureDescriptor.Static[$wildcardName]"
+    override fun toString(): String = "FeatureDescriptor.Static[$wildcardName](${featureClass.simpleName})"
 }
