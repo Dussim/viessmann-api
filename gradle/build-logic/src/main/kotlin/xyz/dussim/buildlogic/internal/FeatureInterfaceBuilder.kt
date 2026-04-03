@@ -15,6 +15,7 @@ data class PropertyModel(
 data class CommandModel(
     val name: String,
     val signature: CommandSignature,
+    val isRequired: Boolean = true,
 )
 
 data class FeatureModel(
@@ -69,9 +70,10 @@ fun buildFeatureInterface(
         val propertyName = escapeIfKeyword(command.name)
 
         if (sharedClassName != null) {
+            val commandType = if (command.isRequired) sharedClassName else sharedClassName.copy(nullable = true)
             typeSpec.addProperty(
                 PropertySpec
-                    .builder(propertyName, sharedClassName)
+                    .builder(propertyName, commandType)
                     .build(),
             )
         } else {
@@ -84,9 +86,11 @@ fun buildFeatureInterface(
                 )
             typeSpec.addType(commandInterface)
 
+            val nestedType = ClassName("", model.className, interfaceName)
+            val commandType = if (command.isRequired) nestedType else nestedType.copy(nullable = true)
             typeSpec.addProperty(
                 PropertySpec
-                    .builder(propertyName, ClassName("", model.className, interfaceName))
+                    .builder(propertyName, commandType)
                     .build(),
             )
         }

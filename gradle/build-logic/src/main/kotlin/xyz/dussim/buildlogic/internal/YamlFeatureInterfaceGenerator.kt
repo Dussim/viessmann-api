@@ -34,6 +34,7 @@ data class YamlCommandDeclaration(
     val commandName: String,
     val interfaceName: String,
     val parameters: List<YamlCommandParameter>,
+    val isRequired: Boolean = true,
 )
 
 data class YamlCommandParameter(
@@ -101,6 +102,7 @@ class YamlFeatureInterfaceGenerator(
                 CommandModel(
                     name = command.propertyName,
                     signature = getCommandSignature(command),
+                    isRequired = command.isRequired,
                 )
             }
 
@@ -628,7 +630,9 @@ class YamlFeatureInterfaceGenerator(
         featureName: String,
         responseSchema: Schema<*>,
     ): List<YamlCommandDeclaration> {
-        val commandEntries = responseSchema.properties?.get("commands")?.properties ?: return emptyList()
+        val commandsSchema = responseSchema.properties?.get("commands") ?: return emptyList()
+        val commandEntries = commandsSchema.properties ?: return emptyList()
+        val requiredCommands = commandsSchema.required?.toSet() ?: emptySet()
 
         return commandEntries.mapNotNull { (propertyName, cmdSchema) ->
             val cmdFields = cmdSchema.properties ?: return@mapNotNull null
@@ -639,6 +643,7 @@ class YamlFeatureInterfaceGenerator(
                 commandName = commandName,
                 interfaceName = propertyName.replaceFirstChar { it.uppercaseChar() },
                 parameters = extractCommandParameters(cmdFields["params"]),
+                isRequired = propertyName in requiredCommands,
             )
         }
     }

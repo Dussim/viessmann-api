@@ -110,9 +110,21 @@ fun identifySharedCommands(
     val signaturesByName = allUniqueSignatures.groupBy { it.name }
 
     val sharedCommandsPackage = "$packageName.commands"
-    return shareableSignatures.associateWith { sig ->
-        val useShortName = (signaturesByName[sig.name]?.size ?: 0) == 1
-        val interfaceName = if (useShortName) sig.capitalizedName else sig.interfaceName
-        ClassName(sharedCommandsPackage, interfaceName)
+    val result =
+        shareableSignatures
+            .associateWith { sig ->
+                val useShortName = (signaturesByName[sig.name]?.size ?: 0) == 1
+                val interfaceName = if (useShortName) sig.capitalizedName else sig.interfaceName()
+                ClassName(sharedCommandsPackage, interfaceName)
+            }.toMutableMap()
+
+    // Fix collisions where different signatures map to the same ClassName
+    val collisions = result.entries.groupBy { it.value }.filter { it.value.size > 1 }
+    for ((_, entries) in collisions) {
+        for (entry in entries) {
+            result[entry.key] = ClassName(sharedCommandsPackage, entry.key.interfaceName(forceFullParamNames = true))
+        }
     }
+
+    return result
 }

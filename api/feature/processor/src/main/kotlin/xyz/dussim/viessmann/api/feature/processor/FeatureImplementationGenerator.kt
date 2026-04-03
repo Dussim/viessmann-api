@@ -127,7 +127,17 @@ private fun CodeBlock.Builder.addCommandInitialization(
 ) {
     val name = property.name
     val propertyHash = propertyHash(name.hashCode(), name.length)
-    add("%N = %T(delegate.commands[%S, %L]!!)\n", name, property.implType, name, propertyHash)
+    if (property.isNullable) {
+        add(
+            "%N = delegate.commands[%S, %L]?.let { %T(it) }\n",
+            name,
+            name,
+            propertyHash,
+            property.implType.copy(nullable = false),
+        )
+    } else {
+        add("%N = %T(delegate.commands[%S, %L]!!)\n", name, property.implType, name, propertyHash)
+    }
 }
 
 /**
@@ -138,7 +148,7 @@ private fun CodeBlock.Builder.addValidationException(
     implName: ClassName,
 ) {
     add(
-        "throw %T(%S, validate($DELEGATE))\n",
+        "throw %T(%S, validate($DELEGATE), $DELEGATE.feature)\n",
         FeatureValidationException::class.asTypeName(),
         implName.simpleName.replace("_", "").removeSuffix("Impl"),
     )
@@ -176,9 +186,10 @@ private fun ruleExpressions(context: SymbolContext): List<CodeBlock> {
             },
     ).plus(
         context
-            .nestedCommands
+            .commandProperties
+            .filter { !it.isNullable }
             .map {
-                CodeBlock.of("%T.rule", it.implType)
+                CodeBlock.of("%T.rule", it.implType.copy(nullable = false))
             },
     )
 }

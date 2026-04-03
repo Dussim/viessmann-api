@@ -192,14 +192,17 @@ data class CommandProperty(
     val implType: TypeName,
     val signature: CommandSignature,
     val command: KSClassDeclaration,
+    val isNullable: Boolean,
 ) : ConvertibleToPropertySpec {
     companion object {
         fun from(
             context: SymbolContext,
             property: KSPropertyDeclaration,
         ): CommandProperty {
-            val type = property.type.resolve().toTypeName()
-            val declaration = property.type.resolve().declaration as KSClassDeclaration
+            val resolvedType = property.type.resolve()
+            val type = resolvedType.toTypeName()
+            val isNullable = resolvedType.isMarkedNullable
+            val declaration = resolvedType.makeNotNullable().declaration as KSClassDeclaration
             val commandContext = CommandSymbolContext(context, declaration)
 
             val signature = commandContext.signature
@@ -208,9 +211,10 @@ data class CommandProperty(
             return CommandProperty(
                 name = property.simpleName.asString(),
                 type = type,
-                implType = implType,
+                implType = if (isNullable) implType.copy(nullable = true) else implType,
                 signature = signature,
                 command = property.parentDeclaration as KSClassDeclaration,
+                isNullable = isNullable,
             )
         }
     }
@@ -243,7 +247,7 @@ data class SymbolContext(
         FeatureSignature(
             baseFeature = baseFeature,
             properties = parameterProperties.map { it.name to it.type }.sortedBy { it.first },
-            commands = commandProperties.map { it.name to it.signature }.sortedBy { it.first },
+            commands = commandProperties.map { Triple(it.name, it.signature, it.isNullable) }.sortedBy { it.first },
         )
     }
 
@@ -328,5 +332,12 @@ fun nestedCommands(context: SymbolContext): List<CommandSymbolContext> =
         .symbol
         .getDeclaredProperties()
         .filter { it.type.implementsInterface(OfCommand::class) }
-        .map { CommandSymbolContext(context, it.type.resolve().declaration as KSClassDeclaration) }
-        .toList()
+        .map {
+            CommandSymbolContext(
+                context,
+                it.type
+                    .resolve()
+                    .makeNotNullable()
+                    .declaration as KSClassDeclaration,
+            )
+        }.toList()

@@ -396,7 +396,7 @@ enum class BaseFeature(
 data class FeatureSignature(
     val baseFeature: BaseFeature,
     val properties: List<Pair<String, TypeName>>,
-    val commands: List<Pair<String, CommandSignature>>,
+    val commands: List<Triple<String, CommandSignature, Boolean>>,
 ) {
     val implName: String
         get() {
@@ -411,9 +411,10 @@ data class FeatureSignature(
                             .replaceFirstChar { it.uppercase() }
                 }
             val cmdsPart =
-                commands.joinToString("") { (name, sig) ->
+                commands.joinToString("") { (name, sig, isNullable) ->
                     name.replaceFirstChar { it.uppercase() } +
-                        sig.implName.removeSuffix("Impl")
+                        sig.implName.removeSuffix("Impl") +
+                        if (isNullable) "Opt" else ""
                 }
             val rawName = "Feat${basePart}${propsPart}$cmdsPart"
             val hash =
