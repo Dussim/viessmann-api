@@ -19,6 +19,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import xyz.dussim.viessmann.api.feature.annotations.FeatureEnum
@@ -196,6 +197,10 @@ class FeatureImplementationProcessor(
 
                         val symbols = ksSymbols.map { SymbolContext(it, ruleRegistry) }
 
+                        val allDescriptorProperties =
+                            mutableListOf<com.squareup.kotlinpoet.PropertySpec>()
+                        var descriptorPackage = ""
+
                         // Group features by signature for deduplication
                         symbols.groupBy { it.featureSignature }.forEach { (signature, group) ->
                             val firstContext = group.first()
@@ -213,14 +218,25 @@ class FeatureImplementationProcessor(
                                     Dependencies(true, *group.map { it.symbol.containingFile!! }.toTypedArray()),
                                 )
 
-                            // Generate descriptor and extensions for each feature in the group
+                            // Collect descriptor and extension properties for each feature in the group
                             group.forEach { context ->
-                                generateFeatureDescriptorAndExtensions(context, implName)
-                                    .writeTo(
-                                        codeGenerator,
-                                        Dependencies(true, context.symbol.containingFile!!),
-                                    )
+                                if (descriptorPackage.isEmpty()) {
+                                    descriptorPackage = context.implName.packageName
+                                }
+                                allDescriptorProperties += generateFeatureDescriptorAndExtensions(context, implName)
                             }
+                        }
+
+                        // Write all descriptors into a single file
+                        if (allDescriptorProperties.isNotEmpty()) {
+                            FileSpec
+                                .builder(descriptorPackage, "GeneratedDescriptors")
+                                .addProperties(allDescriptorProperties)
+                                .build()
+                                .writeTo(
+                                    codeGenerator,
+                                    Dependencies(true, *ksSymbols.map { it.containingFile!! }.toTypedArray()),
+                                )
                         }
 
                         symbols

@@ -309,16 +309,16 @@ fun generateSharedFeatureImplementation(
 }
 
 /**
- * Generates feature descriptor and extension property for a specific feature interface.
+ * Generates feature descriptor and extension properties for a specific feature interface.
  *
  * @param context The symbol context for the feature
  * @param implName The name of the shared implementation class
- * @return FileSpec containing the descriptor and extensions
+ * @return List of PropertySpec containing the descriptor and extensions
  */
 fun generateFeatureDescriptorAndExtensions(
     context: SymbolContext,
     implName: ClassName,
-): FileSpec {
+): List<PropertySpec> {
     val descriptorName = generateDescriptorName(context.superInterface)
     val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
     val abstractClass = context.baseFeature.abstractClass
@@ -358,9 +358,5 @@ fun generateFeatureDescriptorAndExtensions(
                 },
             ).build()
 
-    return FileSpec
-        .builder(context.implName.packageName, context.implName.simpleName)
-        .addProperty(descriptorProperty)
-        .addProperties(featureExtensions(context, descriptorName, descriptorType))
-        .build()
+    return listOf(descriptorProperty) + featureExtensions(context, descriptorName, descriptorType)
 }
