@@ -4,8 +4,8 @@ plugins {
 
 tasks.wrapper {
     group = "gradle"
-    distributionType = Wrapper.DistributionType.ALL
-    gradleVersion = "release-candidate"
+    distributionType = Wrapper.DistributionType.BIN
+    gradleVersion = "latest"
 }
 
 tasks.dependencyUpdates {
