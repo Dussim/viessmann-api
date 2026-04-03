@@ -31,8 +31,7 @@ private val CONSTRAINTS_VALIDATION_FUNCTIONS =
 /**
  * Generates constructor for command implementation.
  */
-context(context: CommandSymbolContext)
-fun constructor() =
+fun constructor(context: CommandSymbolContext) =
     FunSpec
         .constructorBuilder()
         .addParameter(
@@ -44,15 +43,13 @@ fun constructor() =
 /**
  * Generates command property that overrides the base command.
  */
-context(context: CommandSymbolContext)
-fun constructorProperty() = overrideProperty(COMMAND, typeNameOf<Command>(), COMMAND)
+fun constructorProperty(context: CommandSymbolContext) = overrideProperty(COMMAND, typeNameOf<Command>(), COMMAND)
 
 /**
  * Generates init block that extracts and validates command constraints.
  * Throws CommandValidationException if constraints are invalid.
  */
-context(context: CommandSymbolContext)
-fun initBlock() =
+fun initBlock(context: CommandSymbolContext) =
     CodeBlock
         .builder()
         .beginControlFlow("try")
@@ -73,8 +70,7 @@ fun initBlock() =
 /**
  * Generates rule expressions for the command.
  */
-context(context: CommandSymbolContext)
-private fun ruleExpressions(): List<CodeBlock> =
+private fun ruleExpressions(context: CommandSymbolContext): List<CodeBlock> =
     context
         .constraintsProperties
         .map {
@@ -100,8 +96,7 @@ private fun ruleExpressions(): List<CodeBlock> =
 /**
  * Generates companion object with validation rules for command constraints.
  */
-context(context: CommandSymbolContext)
-fun companionObject(): TypeSpec {
+fun companionObject(context: CommandSymbolContext): TypeSpec {
     val commandRuleProperty =
         overrideProperty(
             "rule",
@@ -114,19 +109,21 @@ fun companionObject(): TypeSpec {
         .addSuperinterface(typeNameOf<CommandValidationRule>())
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
         .addProperty(commandRuleProperty)
-        .addFunction(generateValidateFunction(typeNameOf<Command>(), ruleExpressions()))
+        .addFunction(generateValidateFunction(typeNameOf<Command>(), ruleExpressions(context)))
         .build()
 }
 
 /**
  * Generates fail-fast validation object.
  */
-context(context: CommandSymbolContext)
-fun failFastObject(targetType: TypeName): TypeSpec =
+fun failFastObject(
+    context: CommandSymbolContext,
+    targetType: TypeName,
+): TypeSpec =
     TypeSpec
         .objectBuilder("FailFast")
         .addSuperinterface(validationRuleType(targetType))
-        .addFunction(generateValidateFunction(targetType, ruleExpressions(), isFailFast = true))
+        .addFunction(generateValidateFunction(targetType, ruleExpressions(context), isFailFast = true))
         .build()
 
 /**
@@ -144,23 +141,21 @@ fun generateCommandImplementation(
     context: CommandSymbolContext,
 ): FileSpec {
     val typeSpec =
-        context(context) {
-            TypeSpec
-                .classBuilder(implName)
-                .addAnnotation(PUBLISHED_API_ANNOTATION)
-                .addModifiers(KModifier.INTERNAL)
-                .addSuperinterfaces(superInterfaces)
-                .primaryConstructor(constructor())
-                .addProperty(constructorProperty())
-                .addProperties(context.allPropertiesImpl)
-                .apply {
-                    if (context.constraintsProperties.isNotEmpty()) {
-                        addInitializerBlock(initBlock())
-                    }
-                }.addType(companionObject())
-                .addType(failFastObject(typeNameOf<Command>()))
-                .build()
-        }
+        TypeSpec
+            .classBuilder(implName)
+            .addAnnotation(PUBLISHED_API_ANNOTATION)
+            .addModifiers(KModifier.INTERNAL)
+            .addSuperinterfaces(superInterfaces)
+            .primaryConstructor(constructor(context))
+            .addProperty(constructorProperty(context))
+            .addProperties(context.allPropertiesImpl)
+            .apply {
+                if (context.constraintsProperties.isNotEmpty()) {
+                    addInitializerBlock(initBlock(context))
+                }
+            }.addType(companionObject(context))
+            .addType(failFastObject(context, typeNameOf<Command>()))
+            .build()
 
     return FileSpec
         .builder(implName.packageName, implName.simpleName)

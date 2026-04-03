@@ -194,8 +194,10 @@ data class CommandProperty(
     val command: KSClassDeclaration,
 ) : ConvertibleToPropertySpec {
     companion object {
-        context(context: SymbolContext)
-        fun from(property: KSPropertyDeclaration): CommandProperty {
+        fun from(
+            context: SymbolContext,
+            property: KSPropertyDeclaration,
+        ): CommandProperty {
             val type = property.type.resolve().toTypeName()
             val declaration = property.type.resolve().declaration as KSClassDeclaration
             val commandContext = CommandSymbolContext(context, declaration)
@@ -257,9 +259,9 @@ data class SymbolContext(
         }
     }
 
-    val featureProperties by lazy { featureProperties() }
-    val parameterProperties by lazy { parameterProperties(nestedEnums) }
-    val commandProperties by lazy { commandProperties() }
+    val featureProperties by lazy { featureProperties(this) }
+    val parameterProperties by lazy { parameterProperties(this, nestedEnums) }
+    val commandProperties by lazy { commandProperties(this) }
 
     val featurePropertiesImpl by lazy { featureProperties.map { it.asPropertySpec() } }
     val parameterPropertiesImpl by lazy { parameterProperties.map { it.asPropertySpec() } }
@@ -269,7 +271,7 @@ data class SymbolContext(
 
     val allPropertiesImpl by lazy { featurePropertiesImpl + parameterPropertiesImpl + commandPropertiesImpl }
 
-    val nestedCommands by lazy { nestedCommands() }
+    val nestedCommands by lazy { nestedCommands(this) }
 
     @OptIn(KspExperimental::class)
     val nestedEnums by lazy {
@@ -296,15 +298,16 @@ data class EnumSymbolContext(
     val symbol: KSClassDeclaration,
 )
 
-context(context: SymbolContext)
-fun featureProperties(): List<SuperInterfaceProperty> =
+fun featureProperties(context: SymbolContext): List<SuperInterfaceProperty> =
     context
         .baseFeature
         .superInterfaceProperties
         .map(SuperInterfaceProperty::from)
 
-context(context: SymbolContext)
-fun parameterProperties(nestedEnums: List<EnumSymbolContext>): List<ParameterProperty> =
+fun parameterProperties(
+    context: SymbolContext,
+    nestedEnums: List<EnumSymbolContext>,
+): List<ParameterProperty> =
     context
         .symbol
         .getDeclaredProperties()
@@ -312,17 +315,15 @@ fun parameterProperties(nestedEnums: List<EnumSymbolContext>): List<ParameterPro
         .map { ParameterProperty.from(it, nestedEnums) }
         .toList()
 
-context(context: SymbolContext)
-fun commandProperties(): List<CommandProperty> =
+fun commandProperties(context: SymbolContext): List<CommandProperty> =
     context
         .symbol
         .getDeclaredProperties()
         .filter { it.type.implementsInterface(OfCommand::class) }
-        .map { CommandProperty.from(it) }
+        .map { CommandProperty.from(context, it) }
         .toList()
 
-context(context: SymbolContext)
-fun nestedCommands(): List<CommandSymbolContext> =
+fun nestedCommands(context: SymbolContext): List<CommandSymbolContext> =
     context
         .symbol
         .getDeclaredProperties()

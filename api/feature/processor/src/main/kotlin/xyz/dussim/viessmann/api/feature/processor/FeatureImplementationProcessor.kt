@@ -136,9 +136,15 @@ class FeatureImplementationProcessor(
                 .transform(PROPERTY_TO_KS_CLASS_DECLARATION)
     }
 
-    override fun process(resolver: Resolver): List<KSAnnotated> =
-        context(resolver, logger) {
-            val featureDeclarations = FEATURE_SUBTYPES.map { it.declaration }
+    override fun process(resolver: Resolver): List<KSAnnotated> {
+        fun KClass<*>.declaration(): KSClassDeclaration {
+            val qualifiedName = requireName()
+            return requireNotNull(resolver.getClassDeclarationByName(qualifiedName)) {
+                "$qualifiedName class not found on classpath. Did you forget to add it as dependency?"
+            }
+        }
+        return run {
+            val featureDeclarations = FEATURE_SUBTYPES.map { it.declaration() }
             val propertiesSupportedPrimitiveTypes =
                 PROPERTY_VALIDATION_FUNCTIONS.keys
                     .mapNotNull { typeName ->
@@ -146,9 +152,9 @@ class FeatureImplementationProcessor(
                         val fqName = "${className.packageName}.${className.simpleName}"
                         resolver.getClassDeclarationByName(fqName)
                     }
-            val propertiesSupportedSuperTypes = PROPERTY_COMMAND_TYPES.map { it.declaration }
+            val propertiesSupportedSuperTypes = PROPERTY_COMMAND_TYPES.map { it.declaration() }
 
-            val featureEnumFactory = FeatureEnumFactory::class.declaration
+            val featureEnumFactory = FeatureEnumFactory::class.declaration()
 
             val propertyValidation =
                 ValidationRule.or(
@@ -243,6 +249,7 @@ class FeatureImplementationProcessor(
 
             return emptyList()
         }
+    }
 }
 
 sealed interface SymbolValidationError : (KSAnnotated) -> SymbolErrorMetadata {
@@ -271,15 +278,6 @@ data class SymbolErrorMetadata(
     val symbol: KSAnnotated,
     val error: SymbolValidationError,
 )
-
-context(resolver: Resolver)
-val KClass<*>.declaration: KSClassDeclaration
-    get() {
-        val qualifiedName = requireName()
-        return requireNotNull(resolver.getClassDeclarationByName(qualifiedName)) {
-            "$qualifiedName class not found on classpath. Did you forget to add it as dependency?"
-        }
-    }
 
 fun KClass<*>.requireName() = qualifiedName ?: error("Class $this has no qualified name")
 

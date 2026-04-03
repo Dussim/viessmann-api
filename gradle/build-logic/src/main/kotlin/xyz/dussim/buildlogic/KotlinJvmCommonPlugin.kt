@@ -21,13 +21,9 @@ class KotlinJvmCommonPlugin : Plugin<Project> {
             extensions.configure<KotlinJvmProjectExtension> {
                 compilerOptions {
                     freeCompilerArgs.addAll(
-                        "-opt-in=kotlin.time.ExperimentalTime",
                         "-Xjdk-release=21",
-                        "-Xcontext-parameters",
                         "-Xcontext-sensitive-resolution",
-                        "-Xannotation-target-all",
                         "-Xreturn-value-checker=check",
-                        "-Xexplicit-backing-fields",
                     )
                     jvmTarget.set(JvmTarget.JVM_21)
                 }

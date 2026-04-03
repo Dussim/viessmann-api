@@ -22,8 +22,7 @@ import xyz.dussim.viessmann.feature.api.FeatureValidationException
  * When using abstract class, only delegate parameter is needed.
  * Otherwise, all feature parameters and hashCode are included.
  */
-context(context: SymbolContext)
-fun constructor(): FunSpec {
+fun constructor(context: SymbolContext): FunSpec {
     val builder =
         FunSpec
             .constructorBuilder()
@@ -45,8 +44,10 @@ fun constructor(): FunSpec {
  * Generates initialization block that validates and assigns properties and commands.
  * Throws FeatureValidationException if validation fails.
  */
-context(context: SymbolContext)
-fun initBlock(implName: ClassName): CodeBlock {
+fun initBlock(
+    context: SymbolContext,
+    implName: ClassName,
+): CodeBlock {
     if (context.parameterProperties.isEmpty() && context.commandProperties.isEmpty()) {
         return CodeBlock.of("")
     }
@@ -56,13 +57,13 @@ fun initBlock(implName: ClassName): CodeBlock {
         .apply {
             beginControlFlow("try")
             context.parameterProperties.forEachIndexed { index, property ->
-                addPropertyInitialization(property)
+                addPropertyInitialization(context, property)
             }
             context.commandProperties.forEachIndexed { index, property ->
-                addCommandInitialization(property)
+                addCommandInitialization(context, property)
             }
             nextControlFlow("catch (_: Exception)")
-            addValidationException(implName)
+            addValidationException(context, implName)
             endControlFlow()
         }.build()
 }
@@ -70,8 +71,10 @@ fun initBlock(implName: ClassName): CodeBlock {
 /**
  * Adds property initialization code with validation.
  */
-context(context: SymbolContext)
-private fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
+private fun CodeBlock.Builder.addPropertyInitialization(
+    context: SymbolContext,
+    property: ParameterProperty,
+) {
     val (name, type, _, isListProperty, isEnumProperty) = property
     val combined = propertyHash(name.hashCode(), name.length)
     val isNullable = property.isNullable
@@ -118,8 +121,10 @@ private fun CodeBlock.Builder.addPropertyInitialization(property: ParameterPrope
 /**
  * Adds command initialization code with validation.
  */
-context(context: SymbolContext)
-private fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty) {
+private fun CodeBlock.Builder.addCommandInitialization(
+    context: SymbolContext,
+    property: CommandProperty,
+) {
     val name = property.name
     val propertyHash = propertyHash(name.hashCode(), name.length)
     add("%N = %T(delegate.commands[%S, %L]!!)\n", name, property.implType, name, propertyHash)
@@ -128,8 +133,10 @@ private fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty
 /**
  * Adds FeatureValidationException throw statement.
  */
-context(context: SymbolContext)
-private fun CodeBlock.Builder.addValidationException(implName: ClassName) {
+private fun CodeBlock.Builder.addValidationException(
+    context: SymbolContext,
+    implName: ClassName,
+) {
     add(
         "throw %T(%S, validate($DELEGATE))\n",
         FeatureValidationException::class.asTypeName(),
@@ -140,8 +147,7 @@ private fun CodeBlock.Builder.addValidationException(implName: ClassName) {
 /**
  * Generates rule expressions for the feature.
  */
-context(context: SymbolContext)
-private fun ruleExpressions(): List<CodeBlock> {
+private fun ruleExpressions(context: SymbolContext): List<CodeBlock> {
     val subTypeValidationMember =
         when (context.baseFeature.delegate) {
             typeNameOf<Feature.Device>() -> DEVICE_FEATURE_RULE
@@ -180,31 +186,35 @@ private fun ruleExpressions(): List<CodeBlock> {
 /**
  * Generates companion object that implements validation rules for the feature.
  */
-context(context: SymbolContext)
-fun companionObject(implName: ClassName): TypeSpec =
+fun companionObject(
+    context: SymbolContext,
+    implName: ClassName,
+): TypeSpec =
     TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(FEATURE_VALIDATION_RULE_TYPE)
-        .addFunction(generateValidateFunction(typeNameOf<Feature>(), ruleExpressions()))
+        .addFunction(generateValidateFunction(typeNameOf<Feature>(), ruleExpressions(context)))
         .build()
 
 /**
  * Generates fail-fast validation object.
  */
-context(context: SymbolContext)
-private fun failFastObject(targetType: TypeName): TypeSpec =
+private fun failFastObject(
+    context: SymbolContext,
+    targetType: TypeName,
+): TypeSpec =
     TypeSpec
         .objectBuilder("FailFast")
         .addSuperinterface(validationRuleType(targetType))
-        .addFunction(generateValidateFunction(targetType, ruleExpressions(), isFailFast = true))
+        .addFunction(generateValidateFunction(targetType, ruleExpressions(context), isFailFast = true))
         .build()
 
 /**
  * Generates extension properties for feature companion objects.
  * Includes descriptor property.
  */
-context(context: SymbolContext)
 fun featureExtensions(
+    context: SymbolContext,
     descriptorName: String,
     descriptorType: TypeName,
 ): List<PropertySpec> =
@@ -233,10 +243,10 @@ fun generateSharedFeatureImplementation(
     implName: ClassName,
     superInterfaces: List<TypeName>,
     context: SymbolContext,
-) = context(context) {
-    val constructor = constructor()
+): FileSpec {
+    val constructor = constructor(context)
     val properties = context.parameterPropertiesImpl + context.commandPropertiesImpl
-    val initBlock = initBlock(implName)
+    val initBlock = initBlock(context, implName)
     val abstractClass = context.baseFeature.abstractClass
 
     val classImpl =
@@ -272,8 +282,8 @@ fun generateSharedFeatureImplementation(
                             .build(),
                     )
                 }
-            }.addType(companionObject(implName))
-            .addType(failFastObject(typeNameOf<Feature>()))
+            }.addType(companionObject(context, implName))
+            .addType(failFastObject(context, typeNameOf<Feature>()))
             .addProperties(properties)
             .apply {
                 if (initBlock.isNotEmpty()) {
@@ -281,7 +291,7 @@ fun generateSharedFeatureImplementation(
                 }
             }.build()
 
-    FileSpec
+    return FileSpec
         .builder(implName.packageName, implName.simpleName)
         .addType(classImpl)
         .build()
@@ -297,7 +307,7 @@ fun generateSharedFeatureImplementation(
 fun generateFeatureDescriptorAndExtensions(
     context: SymbolContext,
     implName: ClassName,
-) = context(context) {
+): FileSpec {
     val descriptorName = generateDescriptorName(context.superInterface)
     val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
     val abstractClass = context.baseFeature.abstractClass
@@ -337,9 +347,9 @@ fun generateFeatureDescriptorAndExtensions(
                 },
             ).build()
 
-    FileSpec
+    return FileSpec
         .builder(context.implName.packageName, context.implName.simpleName)
         .addProperty(descriptorProperty)
-        .addProperties(featureExtensions(descriptorName, descriptorType))
+        .addProperties(featureExtensions(context, descriptorName, descriptorType))
         .build()
 }
