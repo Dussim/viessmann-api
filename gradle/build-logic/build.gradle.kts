@@ -44,6 +44,14 @@ gradlePlugin {
             id = "xyz.dussim.generate.features.yaml"
             implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromYamlPlugin"
         }
+        register("generateFeatureJsonsFromYaml") {
+            id = "xyz.dussim.generate.features.json"
+            implementationClass = "xyz.dussim.buildlogic.GenerateFeatureJsonsFromYamlPlugin"
+        }
+        register("generateFeatureJsonTests") {
+            id = "xyz.dussim.generate.features.json.tests"
+            implementationClass = "xyz.dussim.buildlogic.GenerateFeatureJsonTestsPlugin"
+        }
     }
 }
 

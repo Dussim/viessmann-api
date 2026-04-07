@@ -4,6 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 plugins {
     alias(conventions.plugins.xyz.dussim.kotlin.common)
     alias(conventions.plugins.xyz.dussim.generate.features.yaml)
+    alias(conventions.plugins.xyz.dussim.generate.features.json)
+    alias(conventions.plugins.xyz.dussim.generate.features.json.tests)
 }
 
 dependencies {
@@ -21,6 +23,10 @@ kotlin {
             api(projects.api.feature.annotations)
         }
     }
+    sourceSets.getByName("jvmTest") {
+        kotlin.srcDir(layout.buildDirectory.dir("generated/feature-json-tests"))
+        resources.srcDir(layout.buildDirectory.dir("generated/feature-jsons"))
+    }
 }
 
 generateFeatureInterfacesFromYaml {
@@ -29,11 +35,26 @@ generateFeatureInterfacesFromYaml {
     packageName = "xyz.dussim.viessmann.api.features.generated"
 }
 
+generateFeatureJsonsFromYaml {
+    featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
+    generatedJsons = layout.buildDirectory.dir("generated/feature-jsons")
+}
+
+generateFeatureJsonTests {
+    generatedJsons = layout.buildDirectory.dir("generated/feature-jsons")
+    generatedTests = layout.buildDirectory.dir("generated/feature-json-tests")
+}
+
+tasks.named("generateFeatureJsonTests") {
+    dependsOn("generateFeatureJsonsFromYaml")
+}
+
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
     if (name != "kspCommonMainKotlinMetadata") {
         dependsOn("kspCommonMainKotlinMetadata")
     }
     dependsOn("generateFeatureInterfacesFromYaml")
+    dependsOn("generateFeatureJsonTests")
 }
 
 tasks.sourcesJar {

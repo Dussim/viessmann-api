@@ -71,8 +71,8 @@ class YamlFeatureInterfaceGenerator(
         } catch (
             @Suppress("TooGenericExceptionCaught") e: Exception,
         ) {
-            logger.warn("FAIL: ${file.name} — ${e::class.simpleName}: ${e.message}")
-            null
+            logger.error("FAIL: ${file.name} — ${e::class.simpleName}: ${e.message}")
+            throw e
         }
 
     fun getCommandSignature(command: YamlCommandDeclaration): CommandSignature {
@@ -141,17 +141,16 @@ class YamlFeatureInterfaceGenerator(
         val idx = path.indexOf(prefix)
         if (idx == -1) return null
         val afterFeatures = path.substring(idx + prefix.length)
-        return afterFeatures.split("/").first().replace("{N}", "{}")
+        return afterFeatures.split("/").first()
     }
 
     private fun featureNameToClassName(featureName: String): String =
         featureName
+            .replace("{N}", "{}")
             .split(".")
             .joinToString("") { part ->
-                if (part == "{}") {
-                    "N"
-                } else {
-                    part.split("{", "}").joinToString("") { it.replaceFirstChar { c -> c.uppercaseChar() } }
+                part.split("{}").joinToString("N") { subPart ->
+                    subPart.split("{", "}").joinToString("") { it.replaceFirstChar { c -> c.uppercaseChar() } }
                 }
             } + "Feature"
 
@@ -243,7 +242,7 @@ class YamlFeatureInterfaceGenerator(
                 else -> "ListPowerBalanceEntryValue"
             }
         }
-        if ((featureName == "rooms.{}" || featureName == "rooms.others.{}") && propertyName == "actors") {
+        if ((featureName == "rooms.{N}" || featureName == "rooms.others.{N}") && propertyName == "actors") {
             return "ListRoomActorValue"
         }
         return null

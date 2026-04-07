@@ -10,6 +10,8 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 import org.jmailen.gradle.kotlinter.KotlinterExtension
+import org.jmailen.gradle.kotlinter.tasks.FormatTask
+import org.jmailen.gradle.kotlinter.tasks.LintTask
 
 fun Project.configureCommonPlugins() {
     with(pluginManager) {
@@ -23,6 +25,23 @@ fun Project.configureCommonPlugins() {
 fun Project.configureKotlinter() {
     extensions.configure<KotlinterExtension> {
         ktlintVersion = "1.8.0"
+    }
+
+    val buildDir =
+        project.layout.buildDirectory
+            .get()
+            .asFile
+
+    val kspTasks = tasks.matching { it.name.startsWith("ksp") }
+
+    tasks.withType<LintTask> {
+        exclude { it.file.startsWith(buildDir) }
+        mustRunAfter(kspTasks)
+    }
+
+    tasks.withType<FormatTask> {
+        exclude { it.file.startsWith(buildDir) }
+        mustRunAfter(kspTasks)
     }
 }
 

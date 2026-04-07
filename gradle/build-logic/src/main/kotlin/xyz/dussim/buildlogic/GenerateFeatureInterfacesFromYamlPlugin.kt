@@ -15,6 +15,8 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.work.DisableCachingByDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jmailen.gradle.kotlinter.tasks.FormatTask
+import org.jmailen.gradle.kotlinter.tasks.LintTask
 import xyz.dussim.buildlogic.internal.CommandInterfaceGenerator
 import xyz.dussim.buildlogic.internal.YamlFeatureInterfaceGenerator
 import xyz.dussim.buildlogic.internal.identifySharedCommands
@@ -32,7 +34,9 @@ abstract class GenerateFeatureInterfacesFromYamlPlugin : Plugin<Project> {
                     featuresYamls = extension.featuresYamls
                     generatedSources = extension.generatedSources
                     packageName = extension.packageName
+                    currentDate = extension.currentDate
                 }
+            extension.currentDate.convention(LocalDate.now())
             pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
                 extensions.configure<KotlinMultiplatformExtension> {
                     sourceSets.named("commonMain") {
@@ -43,6 +47,12 @@ abstract class GenerateFeatureInterfacesFromYamlPlugin : Plugin<Project> {
                     }
                 }
             }
+            tasks.withType(FormatTask::class.java).configureEach {
+                mustRunAfter(generateFeatureInterfaces)
+            }
+            tasks.withType(LintTask::class.java).configureEach {
+                mustRunAfter(generateFeatureInterfaces)
+            }
         }
 }
 
@@ -52,6 +62,8 @@ abstract class GenerateFeatureInterfacesFromYamlExtension {
     abstract val generatedSources: DirectoryProperty
 
     abstract val packageName: Property<String>
+
+    abstract val currentDate: Property<LocalDate>
 }
 
 @DisableCachingByDefault
@@ -64,6 +76,9 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
 
     @get:Input
     abstract val packageName: Property<String>
+
+    @get:Input
+    abstract val currentDate: Property<LocalDate>
 
     init {
         group = "build"
@@ -117,7 +132,7 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
         var success = 0
         var duplicate = 0
         var omitted = 0
-        val now = LocalDate.now()
+        val now = currentDate.get()
 
         for (feature in parsedFeatures) {
             val removalDate = feature.removalDate

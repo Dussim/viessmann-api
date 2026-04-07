@@ -32,10 +32,11 @@ fun buildFeatureInterface(
     packageName: String,
     sharedCommands: Map<CommandSignature, ClassName>,
 ): FileSpec {
+    val superInterfaceName = if (model.featureName.startsWith("gateway")) "Gateway" else "Device"
     val typeSpec =
         TypeSpec
             .interfaceBuilder(model.className)
-            .addSuperinterface(ClassName("xyz.dussim.viessmann.feature.api", "Feature", "Device"))
+            .addSuperinterface(ClassName("xyz.dussim.viessmann.feature.api", "Feature", superInterfaceName))
             .addAnnotation(
                 AnnotationSpec
                     .builder(ClassName("xyz.dussim.viessmann.api.feature.annotations", "GenerateFeatureImplementation"))

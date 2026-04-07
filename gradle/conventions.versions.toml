@@ -4,3 +4,5 @@ xyz-dussim-kotlin-jvm-common = { id = "xyz.dussim.kotlin.jvm.common" }
 xyz-dussim-anonymize-json = { id = "xyz.dussim.anonymize.json" }
 xyz-dussim-generate-features = { id = "xyz.dussim.generate.features" }
 xyz-dussim-generate-features-yaml = { id = "xyz.dussim.generate.features.yaml" }
+xyz-dussim-generate-features-json = { id = "xyz.dussim.generate.features.json" }
+xyz-dussim-generate-features-json-tests = { id = "xyz.dussim.generate.features.json.tests" }
