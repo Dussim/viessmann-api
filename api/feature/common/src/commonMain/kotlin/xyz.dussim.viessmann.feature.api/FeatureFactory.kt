@@ -126,16 +126,16 @@ class FeatureResolver(
     val size: Int
         get() = features.size
 
-    fun find(matcher: FeatureMatcher): Feature? = features.find { matcher.matches(it) }
+    fun find(matcher: FeatureMatcher): Feature? = features.find(matcher::matches)
 
     fun first(matcher: FeatureMatcher): Feature = find(matcher) ?: throw NoSuchElementException("No feature matching $matcher")
 
-    fun all(matcher: FeatureMatcher): List<Feature> = features.filter { matcher.matches(it) }
+    fun all(matcher: FeatureMatcher): List<Feature> = features.filter(matcher::matches)
 
     fun <F : Feature> findOf(
         factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
-    ) = factory.ofNullable(find(matcher))
+    ) = find(matcher)?.let(factory::getOrNull)
 
     fun <F : Feature> firstOf(
         factory: FeatureFactory<F>,
@@ -145,13 +145,7 @@ class FeatureResolver(
     fun <F : Feature> allOf(
         factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
-    ) = buildList {
-        for (feature in features) {
-            if (matcher.matches(feature)) {
-                add(factory.getOrThrow(feature))
-            }
-        }
-    }
+    ) = all(matcher).map(factory::getOrThrow)
 
     operator fun <F : Feature> get(
         factory: FeatureFactory<F>,
@@ -166,10 +160,4 @@ class FeatureResolver(
         descriptor: FeatureDescriptor.Indexed<F>,
         index: Int,
     ) = firstOf(descriptor, descriptor.byNameThenStructure(index))
-
-    private fun <F : Feature> FeatureFactory<F>.ofNullable(feature: Feature?) =
-        when (feature) {
-            null -> null
-            else -> getOrNull(feature)
-        }
 }
