@@ -9,7 +9,7 @@ import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
 
 @GenerateFeatureImplementation("device.zigbee.coordinator")
-interface DeviceZigbeeCoordinatorFeature : Feature.Device {
+interface DeviceZigbeeCoordinatorFeature : Feature {
     companion object
 
     interface AddDevice : Command3<String, String, String> {

@@ -6,7 +6,7 @@ import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.StringValue
 
 @GenerateFeatureImplementation("device.timeseries.monitoringIonization")
-interface DeviceTimeseriesMonitoringIonizationFeature : Feature.Device {
+interface DeviceTimeseriesMonitoringIonizationFeature : Feature {
     companion object
 
     val countOne: DoubleValue

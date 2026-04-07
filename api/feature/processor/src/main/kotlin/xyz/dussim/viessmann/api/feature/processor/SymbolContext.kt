@@ -25,7 +25,6 @@ import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
-import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListBusTypeValue
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
 import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
@@ -102,7 +101,7 @@ interface ConvertibleToParameterSpec {
 }
 
 /**
- * Represents a property inherited from the superinterface (e.g., Feature.Device).
+ * Represents a property inherited from the Feature superinterface.
  * These properties are delegated to the underlying feature instance.
  */
 data class SuperInterfaceProperty(
@@ -251,17 +250,7 @@ data class SymbolContext(
         )
     }
 
-    val baseFeature by lazy {
-        symbol.superTypes.firstNotNullOf {
-            when (it.toTypeName()) {
-                typeNameOf<Feature>() -> BaseFeature.Feature
-                typeNameOf<Feature.Device>() -> BaseFeature.Device
-                typeNameOf<Feature.Gateway>() -> BaseFeature.Gateway
-                typeNameOf<Feature.Geofencing>() -> BaseFeature.Geofencing
-                else -> error("Unreachable")
-            }
-        }
-    }
+    val baseFeature = BaseFeature.Feature
 
     val featureProperties by lazy { featureProperties(this) }
     val parameterProperties by lazy { parameterProperties(this, nestedEnums) }

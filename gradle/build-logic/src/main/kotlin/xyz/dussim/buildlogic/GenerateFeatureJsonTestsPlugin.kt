@@ -79,8 +79,7 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
 
             val resourcePath = jsonFile.name
 
-            val isGatewayFeature = baseName.startsWith("gateway.")
-            val featureType = if (isGatewayFeature) "GatewayFeature" else "DeviceFeature"
+            val featureType = "ViessmannFeature"
 
             val testContent =
                 buildString {

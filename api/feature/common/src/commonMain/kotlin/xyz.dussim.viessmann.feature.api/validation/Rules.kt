@@ -47,42 +47,6 @@ import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParam
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch.Expected
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 
-private val GEOFENCING_BUT_SHOULD_BE_DEVICE =
-    ExpectedActualClass.of(
-        expected = FEATURE_DEVICE_CLASS_INDEX,
-        actual = FEATURE_GEOFENCING_CLASS_INDEX,
-    )
-
-private val GATEWAY_BUT_SHOULD_BE_DEVICE =
-    ExpectedActualClass.of(
-        expected = FEATURE_DEVICE_CLASS_INDEX,
-        actual = FEATURE_GATEWAY_CLASS_INDEX,
-    )
-
-private val DEVICE_BUT_SHOULD_BE_GEOFENCING =
-    ExpectedActualClass.of(
-        expected = FEATURE_GEOFENCING_CLASS_INDEX,
-        actual = FEATURE_DEVICE_CLASS_INDEX,
-    )
-
-private val GATEWAY_BUT_SHOULD_BE_GEOFENCING =
-    ExpectedActualClass.of(
-        expected = FEATURE_GEOFENCING_CLASS_INDEX,
-        actual = FEATURE_GATEWAY_CLASS_INDEX,
-    )
-
-private val DEVICE_BUT_SHOULD_BE_GATEWAY =
-    ExpectedActualClass.of(
-        expected = FEATURE_GATEWAY_CLASS_INDEX,
-        actual = FEATURE_DEVICE_CLASS_INDEX,
-    )
-
-private val GEOFENCING_BUT_SHOULD_BE_GATEWAY =
-    ExpectedActualClass.of(
-        expected = FEATURE_GATEWAY_CLASS_INDEX,
-        actual = FEATURE_GEOFENCING_CLASS_INDEX,
-    )
-
 val MISSING_COMMAND_EXPECTED_CLASS = ExpectedActualClass.of(COMMAND_CLASS_INDEX)
 
 @PublishedApi
@@ -350,52 +314,3 @@ fun commandRule(
         innerRule.validate(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
     }
 }
-
-private val featureTypeErrors = mutableMapOf<String, ValidationResult<ValidationError>>()
-
-private inline fun cachedFeatureError(
-    featureName: String,
-    expectedActualClass: ExpectedActualClass,
-): ValidationResult<ValidationError> =
-    featureTypeErrors.getOrPut(featureName) {
-        Invalid(ComponentTypeMismatch(featureName, expectedActualClass))
-    }
-
-private inline fun featureTypeRule(
-    deviceError: ExpectedActualClass,
-    gatewayError: ExpectedActualClass,
-    geofencingError: ExpectedActualClass,
-    crossinline isValid: (Feature) -> Boolean,
-): ValidationRule<Feature, ValidationError> =
-    ValidationRule { feature ->
-        if (isValid(feature)) {
-            ValidationResult.Valid
-        } else {
-            when (feature) {
-                is Feature.Device -> cachedFeatureError(feature.feature, deviceError)
-                is Feature.Gateway -> cachedFeatureError(feature.feature, gatewayError)
-                is Feature.Geofencing -> cachedFeatureError(feature.feature, geofencingError)
-            }
-        }
-    }
-
-fun deviceFeatureRule(): ValidationRule<Feature, ValidationError> =
-    featureTypeRule(
-        deviceError = GATEWAY_BUT_SHOULD_BE_DEVICE, // unused, but needed for exhaustive when
-        gatewayError = GATEWAY_BUT_SHOULD_BE_DEVICE,
-        geofencingError = GEOFENCING_BUT_SHOULD_BE_DEVICE,
-    ) { it is Feature.Device }
-
-fun gatewayFeatureRule(): ValidationRule<Feature, ValidationError> =
-    featureTypeRule(
-        deviceError = DEVICE_BUT_SHOULD_BE_GATEWAY,
-        gatewayError = DEVICE_BUT_SHOULD_BE_GATEWAY, // unused
-        geofencingError = GEOFENCING_BUT_SHOULD_BE_GATEWAY,
-    ) { it is Feature.Gateway }
-
-fun geofencingFeatureRule(): ValidationRule<Feature, ValidationError> =
-    featureTypeRule(
-        deviceError = DEVICE_BUT_SHOULD_BE_GEOFENCING,
-        gatewayError = GATEWAY_BUT_SHOULD_BE_GEOFENCING,
-        geofencingError = DEVICE_BUT_SHOULD_BE_GEOFENCING, // unused
-    ) { it is Feature.Geofencing }

@@ -6,12 +6,9 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
-import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.Feature
-import xyz.dussim.viessmann.feature.api.GatewayFeature
-import xyz.dussim.viessmann.feature.api.GeofencingFeature
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
@@ -28,16 +25,17 @@ import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
+import xyz.dussim.viessmann.feature.api.ViessmannFeature
 import xyz.dussim.viessmann.feature.api.of
 import kotlin.time.Instant
 
 class RulesTest :
     FunSpec({
-        fun createDeviceFeature(
+        fun createFeature(
             properties: Map<String, Property> = emptyMap(),
             commands: Map<String, Command> = emptyMap(),
-        ): Feature.Device =
-            DeviceFeature(
+        ): Feature =
+            ViessmannFeature(
                 feature = "test.feature",
                 deviceId = "device1",
                 gatewayId = "gateway1",
@@ -51,42 +49,6 @@ class RulesTest :
                 isActive = null,
             )
 
-        fun createGatewayFeature(
-            properties: Map<String, Property> = emptyMap(),
-            commands: Map<String, Command> = emptyMap(),
-        ): Feature.Gateway =
-            GatewayFeature(
-                feature = "test.feature",
-                gatewayId = "gateway1",
-                isEnabled = true,
-                isReady = true,
-                apiVersion = 1,
-                timestamp = Instant.fromEpochMilliseconds(0),
-                uri = "http://test",
-                properties = EfficientStringKeyMap(properties),
-                commands = EfficientStringKeyMap(commands),
-                deviceId = null,
-                isActive = null,
-            )
-
-        fun createGeofencingFeature(
-            properties: Map<String, Property> = emptyMap(),
-            commands: Map<String, Command> = emptyMap(),
-        ): Feature.Geofencing =
-            GeofencingFeature(
-                feature = "test.feature",
-                isActive = true,
-                isEnabled = true,
-                isReady = true,
-                apiVersion = 1,
-                timestamp = Instant.fromEpochMilliseconds(0),
-                uri = "http://test",
-                properties = EfficientStringKeyMap(properties),
-                commands = EfficientStringKeyMap(commands),
-                deviceId = null,
-                gatewayId = null,
-            )
-
         fun createCommand(params: Map<String, Parameter> = emptyMap()): Command =
             Command(
                 uri = "http://test/command",
@@ -97,13 +59,13 @@ class RulesTest :
 
         context("stringPropertyRule") {
             test("returns Valid when property exists with StringValue") {
-                val feature = createDeviceFeature(mapOf("value" to Property("string", StringValue("test"))))
+                val feature = createFeature(mapOf("value" to Property("string", StringValue("test"))))
                 val rule = stringPropertyRule("value")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns MissingComponent when property is missing") {
-                val feature = createDeviceFeature()
+                val feature = createFeature()
                 val rule = stringPropertyRule("value")
                 val result = rule.validate(feature)
                 result.isInvalid shouldBe true
@@ -111,7 +73,7 @@ class RulesTest :
             }
 
             test("returns ComponentTypeMismatch when property has wrong type") {
-                val feature = createDeviceFeature(mapOf("value" to Property("boolean", BooleanValue(true))))
+                val feature = createFeature(mapOf("value" to Property("boolean", BooleanValue(true))))
                 val rule = stringPropertyRule("value")
                 val result = rule.validate(feature)
                 result.isInvalid shouldBe true
@@ -121,20 +83,20 @@ class RulesTest :
 
         context("booleanPropertyRule") {
             test("returns Valid when property exists with BooleanValue") {
-                val feature = createDeviceFeature(mapOf("active" to Property("boolean", BooleanValue(true))))
+                val feature = createFeature(mapOf("active" to Property("boolean", BooleanValue(true))))
                 val rule = booleanPropertyRule("active")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns MissingComponent when property is missing") {
-                val feature = createDeviceFeature()
+                val feature = createFeature()
                 val rule = booleanPropertyRule("active")
                 val result = rule.validate(feature)
                 result.isInvalid shouldBe true
             }
 
             test("returns ComponentTypeMismatch when property has wrong type") {
-                val feature = createDeviceFeature(mapOf("active" to Property("string", StringValue("yes"))))
+                val feature = createFeature(mapOf("active" to Property("string", StringValue("yes"))))
                 val rule = booleanPropertyRule("active")
                 val result = rule.validate(feature)
                 result.isInvalid shouldBe true
@@ -143,13 +105,13 @@ class RulesTest :
 
         context("doublePropertyRule") {
             test("returns Valid when property exists with DoubleValue") {
-                val feature = createDeviceFeature(mapOf("temperature" to Property("number", DoubleValue(20.5))))
+                val feature = createFeature(mapOf("temperature" to Property("number", DoubleValue(20.5))))
                 val rule = doublePropertyRule("temperature")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns MissingComponent when property is missing") {
-                val feature = createDeviceFeature()
+                val feature = createFeature()
                 val rule = doublePropertyRule("temperature")
                 rule.validate(feature).isInvalid shouldBe true
             }
@@ -157,19 +119,19 @@ class RulesTest :
 
         context("listDoublePropertyRule") {
             test("returns Valid when property exists with ListDoubleValue") {
-                val feature = createDeviceFeature(mapOf("values" to Property("array", ListDoubleValue(listOf(1.0, 2.0)))))
+                val feature = createFeature(mapOf("values" to Property("array", ListDoubleValue(listOf(1.0, 2.0)))))
                 val rule = listDoublePropertyRule("values")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns Valid when property exists with ListEmptyValue") {
-                val feature = createDeviceFeature(mapOf("values" to Property("array", ListEmptyValue)))
+                val feature = createFeature(mapOf("values" to Property("array", ListEmptyValue)))
                 val rule = listDoublePropertyRule("values")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns ComponentTypeMismatch for wrong list type") {
-                val feature = createDeviceFeature(mapOf("values" to Property("array", ListStringValue(listOf("a")))))
+                val feature = createFeature(mapOf("values" to Property("array", ListStringValue(listOf("a")))))
                 val rule = listDoublePropertyRule("values")
                 rule.validate(feature).isInvalid shouldBe true
             }
@@ -177,13 +139,13 @@ class RulesTest :
 
         context("listStringPropertyRule") {
             test("returns Valid when property exists with ListStringValue") {
-                val feature = createDeviceFeature(mapOf("modes" to Property("array", ListStringValue(listOf("on", "off")))))
+                val feature = createFeature(mapOf("modes" to Property("array", ListStringValue(listOf("on", "off")))))
                 val rule = listStringPropertyRule("modes")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns Valid when property exists with ListEmptyValue") {
-                val feature = createDeviceFeature(mapOf("modes" to Property("array", ListEmptyValue)))
+                val feature = createFeature(mapOf("modes" to Property("array", ListEmptyValue)))
                 val rule = listStringPropertyRule("modes")
                 rule.validate(feature).isInvalid shouldBe false
             }
@@ -191,13 +153,13 @@ class RulesTest :
 
         context("listDeviceErrorPropertyRule") {
             test("returns Valid when property exists with ListDeviceErrorValue") {
-                val feature = createDeviceFeature(mapOf("errors" to Property("array", ListDeviceErrorValue.EMPTY)))
+                val feature = createFeature(mapOf("errors" to Property("array", ListDeviceErrorValue.EMPTY)))
                 val rule = listDeviceErrorPropertyRule("errors")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns Valid when property exists with ListEmptyValue") {
-                val feature = createDeviceFeature(mapOf("errors" to Property("array", ListEmptyValue)))
+                val feature = createFeature(mapOf("errors" to Property("array", ListEmptyValue)))
                 val rule = listDeviceErrorPropertyRule("errors")
                 rule.validate(feature).isInvalid shouldBe false
             }
@@ -205,13 +167,13 @@ class RulesTest :
 
         context("listZigbeeDeviceStatusPropertyRule") {
             test("returns Valid when property exists with ListZigbeeDeviceStatusValue") {
-                val feature = createDeviceFeature(mapOf("status" to Property("array", ListZigbeeDeviceStatusValue.EMPTY)))
+                val feature = createFeature(mapOf("status" to Property("array", ListZigbeeDeviceStatusValue.EMPTY)))
                 val rule = listZigbeeDeviceStatusPropertyRule("status")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns Valid with ListEmptyValue") {
-                val feature = createDeviceFeature(mapOf("status" to Property("array", ListEmptyValue)))
+                val feature = createFeature(mapOf("status" to Property("array", ListEmptyValue)))
                 val rule = listZigbeeDeviceStatusPropertyRule("status")
                 rule.validate(feature).isInvalid shouldBe false
             }
@@ -219,13 +181,13 @@ class RulesTest :
 
         context("listRoomActorPropertyRule") {
             test("returns Valid when property exists with ListRoomActorValue") {
-                val feature = createDeviceFeature(mapOf("actors" to Property("array", ListRoomActorValue.EMPTY)))
+                val feature = createFeature(mapOf("actors" to Property("array", ListRoomActorValue.EMPTY)))
                 val rule = listRoomActorPropertyRule("actors")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns Valid with ListEmptyValue") {
-                val feature = createDeviceFeature(mapOf("actors" to Property("array", ListEmptyValue)))
+                val feature = createFeature(mapOf("actors" to Property("array", ListEmptyValue)))
                 val rule = listRoomActorPropertyRule("actors")
                 rule.validate(feature).isInvalid shouldBe false
             }
@@ -233,13 +195,13 @@ class RulesTest :
 
         context("listDevicePropertyRule") {
             test("returns Valid when property exists with ListDeviceValue") {
-                val feature = createDeviceFeature(mapOf("devices" to Property("DeviceList", ListDeviceValue.EMPTY)))
+                val feature = createFeature(mapOf("devices" to Property("DeviceList", ListDeviceValue.EMPTY)))
                 val rule = listDevicePropertyRule("devices")
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns Valid with ListEmptyValue") {
-                val feature = createDeviceFeature(mapOf("devices" to Property("DeviceList", ListEmptyValue)))
+                val feature = createFeature(mapOf("devices" to Property("DeviceList", ListEmptyValue)))
                 val rule = listDevicePropertyRule("devices")
                 rule.validate(feature).isInvalid shouldBe false
             }
@@ -258,7 +220,7 @@ class RulesTest :
                         useTrvOpenWindow = false,
                         heatOnTime = true,
                     )
-                val feature = createDeviceFeature(mapOf("config" to Property("object", ObjectOtherRoomConfigurationValue(config))))
+                val feature = createFeature(mapOf("config" to Property("object", ObjectOtherRoomConfigurationValue(config))))
                 val rule = objectOtherRoomConfigurationPropertyRule("config")
                 rule.validate(feature).isInvalid shouldBe false
             }
@@ -266,7 +228,7 @@ class RulesTest :
 
         context("schedulePropertyRule") {
             test("returns Valid when property exists with ScheduleValue") {
-                val feature = createDeviceFeature(mapOf("schedule" to Property("Schedule", ScheduleValue(emptyMap()))))
+                val feature = createFeature(mapOf("schedule" to Property("Schedule", ScheduleValue(emptyMap()))))
                 val rule = schedulePropertyRule("schedule")
                 rule.validate(feature).isInvalid shouldBe false
             }
@@ -357,13 +319,13 @@ class RulesTest :
         context("commandRule") {
             test("returns Valid when command exists and passes inner rule") {
                 val command = createCommand(mapOf("temp" to Parameter.of(NumberConstraints())))
-                val feature = createDeviceFeature(commands = mapOf("setTemperature" to command))
+                val feature = createFeature(commands = mapOf("setTemperature" to command))
                 val rule = commandRule("setTemperature", numberOfParametersRule(1, "setTemperature"))
                 rule.validate(feature).isInvalid shouldBe false
             }
 
             test("returns MissingComponent when command is missing") {
-                val feature = createDeviceFeature()
+                val feature = createFeature()
                 val rule = commandRule("setTemperature", numberOfParametersRule(1, "setTemperature"))
                 val result = rule.validate(feature)
                 result.isInvalid shouldBe true
@@ -372,74 +334,11 @@ class RulesTest :
 
             test("returns inner rule error when command exists but fails inner validation") {
                 val command = createCommand() // 0 params
-                val feature = createDeviceFeature(commands = mapOf("setTemperature" to command))
+                val feature = createFeature(commands = mapOf("setTemperature" to command))
                 val rule = commandRule("setTemperature", numberOfParametersRule(1, "setTemperature"))
                 val result = rule.validate(feature)
                 result.isInvalid shouldBe true
                 result.asIterable().first().shouldBeInstanceOf<ValidationError.NumberOfParametersMismatch>()
-            }
-        }
-
-        context("deviceFeatureRule") {
-            test("returns Valid for Feature.Device") {
-                val feature = createDeviceFeature()
-                val rule = deviceFeatureRule()
-                rule.validate(feature).isInvalid shouldBe false
-            }
-
-            test("returns Invalid for Feature.Gateway") {
-                val feature = createGatewayFeature()
-                val rule = deviceFeatureRule()
-                val result = rule.validate(feature)
-                result.isInvalid shouldBe true
-                result.asIterable().first().shouldBeInstanceOf<ValidationError.ComponentTypeMismatch>()
-            }
-
-            test("returns Invalid for Feature.Geofencing") {
-                val feature = createGeofencingFeature()
-                val rule = deviceFeatureRule()
-                val result = rule.validate(feature)
-                result.isInvalid shouldBe true
-            }
-        }
-
-        context("gatewayFeatureRule") {
-            test("returns Valid for Feature.Gateway") {
-                val feature = createGatewayFeature()
-                val rule = gatewayFeatureRule()
-                rule.validate(feature).isInvalid shouldBe false
-            }
-
-            test("returns Invalid for Feature.Device") {
-                val feature = createDeviceFeature()
-                val rule = gatewayFeatureRule()
-                rule.validate(feature).isInvalid shouldBe true
-            }
-
-            test("returns Invalid for Feature.Geofencing") {
-                val feature = createGeofencingFeature()
-                val rule = gatewayFeatureRule()
-                rule.validate(feature).isInvalid shouldBe true
-            }
-        }
-
-        context("geofencingFeatureRule") {
-            test("returns Valid for Feature.Geofencing") {
-                val feature = createGeofencingFeature()
-                val rule = geofencingFeatureRule()
-                rule.validate(feature).isInvalid shouldBe false
-            }
-
-            test("returns Invalid for Feature.Device") {
-                val feature = createDeviceFeature()
-                val rule = geofencingFeatureRule()
-                rule.validate(feature).isInvalid shouldBe true
-            }
-
-            test("returns Invalid for Feature.Gateway") {
-                val feature = createGatewayFeature()
-                val rule = geofencingFeatureRule()
-                rule.validate(feature).isInvalid shouldBe true
             }
         }
 

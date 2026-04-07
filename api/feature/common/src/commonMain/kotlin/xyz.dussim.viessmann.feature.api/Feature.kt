@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmRecord
 import kotlin.time.Instant
 
-sealed interface Feature {
+interface Feature {
     val feature: String
 
     val isEnabled: Boolean
@@ -22,28 +22,16 @@ sealed interface Feature {
     val isActive: Boolean?
 
     val wildcardFeature: String get() = feature.toWildcardFeature()
-
-    interface Device : Feature {
-        override val deviceId: String
-        override val gatewayId: String
-    }
-
-    interface Gateway : Feature {
-        override val gatewayId: String
-    }
-
-    interface Geofencing : Feature {
-        override val isActive: Boolean
-    }
 }
 
 @Serializable
 @JvmRecord
-data class DeviceFeature(
+data class ViessmannFeature(
     override val feature: String,
     override val wildcardFeature: String = feature.toWildcardFeature(),
-    override val deviceId: String,
-    override val gatewayId: String,
+    override val deviceId: String? = null,
+    override val gatewayId: String? = null,
+    override val isActive: Boolean? = null,
     override val isEnabled: Boolean,
     override val isReady: Boolean,
     override val apiVersion: Int,
@@ -53,46 +41,16 @@ data class DeviceFeature(
     override val properties: EfficientStringKeyMap<Property>,
     @Serializable(with = CommandsSerializer::class)
     override val commands: EfficientStringKeyMap<Command>,
-    override val isActive: Boolean?,
-) : Feature.Device
+) : Feature
 
-@Serializable
-@JvmRecord
-data class GatewayFeature(
-    override val feature: String,
-    override val wildcardFeature: String = feature.toWildcardFeature(),
-    override val gatewayId: String,
-    override val isEnabled: Boolean,
-    override val isReady: Boolean,
-    override val apiVersion: Int,
-    override val timestamp: Instant,
-    override val uri: String,
-    @Serializable(with = PropertiesSerializer::class)
-    override val properties: EfficientStringKeyMap<Property>,
-    @Serializable(with = CommandsSerializer::class)
-    override val commands: EfficientStringKeyMap<Command>,
-    override val deviceId: String?,
-    override val isActive: Boolean?,
-) : Feature.Gateway
+@Deprecated("Use ViessmannFeature", ReplaceWith("ViessmannFeature"))
+typealias DeviceFeature = ViessmannFeature
 
-@Serializable
-@JvmRecord
-data class GeofencingFeature(
-    override val feature: String,
-    override val wildcardFeature: String = feature.toWildcardFeature(),
-    override val isActive: Boolean,
-    override val isEnabled: Boolean,
-    override val isReady: Boolean,
-    override val apiVersion: Int,
-    override val timestamp: Instant,
-    override val uri: String,
-    @Serializable(with = PropertiesSerializer::class)
-    override val properties: EfficientStringKeyMap<Property>,
-    @Serializable(with = CommandsSerializer::class)
-    override val commands: EfficientStringKeyMap<Command>,
-    override val deviceId: String?,
-    override val gatewayId: String?,
-) : Feature.Geofencing
+@Deprecated("Use ViessmannFeature", ReplaceWith("ViessmannFeature"))
+typealias GatewayFeature = ViessmannFeature
+
+@Deprecated("Use ViessmannFeature", ReplaceWith("ViessmannFeature"))
+typealias GeofencingFeature = ViessmannFeature
 
 fun Feature.equalsImpl(other: Any?): Boolean {
     if (other === this) return true

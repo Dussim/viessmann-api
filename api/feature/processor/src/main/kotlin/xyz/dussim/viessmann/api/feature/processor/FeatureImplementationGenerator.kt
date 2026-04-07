@@ -4,7 +4,6 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
@@ -22,23 +21,14 @@ import xyz.dussim.viessmann.feature.api.FeatureValidationException
  * When using abstract class, only delegate parameter is needed.
  * Otherwise, all feature parameters and hashCode are included.
  */
-fun constructor(context: SymbolContext): FunSpec {
-    val builder =
-        FunSpec
-            .constructorBuilder()
-            .addParameter(
-                ParameterSpec
-                    .builder(DELEGATE, context.baseFeature.delegate)
-                    .build(),
-            )
-
-    if (context.baseFeature.abstractClass == null) {
-        builder.addParameters(context.featureParametersImpl)
-        builder.addParameter(ParameterSpec("hashCode", INT))
-    }
-
-    return builder.build()
-}
+fun constructor(context: SymbolContext): FunSpec =
+    FunSpec
+        .constructorBuilder()
+        .addParameter(
+            ParameterSpec
+                .builder(DELEGATE, context.baseFeature.delegate)
+                .build(),
+        ).build()
 
 /**
  * Generates initialization block that validates and assigns properties and commands.
@@ -157,42 +147,25 @@ private fun CodeBlock.Builder.addValidationException(
 /**
  * Generates rule expressions for the feature.
  */
-private fun ruleExpressions(context: SymbolContext): List<CodeBlock> {
-    val subTypeValidationMember =
-        when (context.baseFeature.delegate) {
-            typeNameOf<Feature.Device>() -> DEVICE_FEATURE_RULE
-            typeNameOf<Feature.Gateway>() -> GATEWAY_FEATURE_RULE
-            typeNameOf<Feature.Geofencing>() -> GEOFENCING_FEATURE_RULE
-            else -> error("Unreachable")
-        }
-
-    return listOf(
-        CodeBlock.of(
-            "%M",
-            context.ruleRegistry.register(subTypeValidationMember, emptyList(), FEATURE_VALIDATION_RULE_TYPE),
-        ),
-    ).plus(
-        context
-            .parameterProperties
-            .map {
-                CodeBlock.of(
-                    "%M",
-                    context.ruleRegistry.register(
-                        it.validationFunction,
-                        listOf(it.name, !it.isNullable),
-                        FEATURE_VALIDATION_RULE_TYPE,
-                    ),
-                )
-            },
-    ).plus(
+private fun ruleExpressions(context: SymbolContext): List<CodeBlock> =
+    context
+        .parameterProperties
+        .map {
+            CodeBlock.of(
+                "%M",
+                context.ruleRegistry.register(
+                    it.validationFunction,
+                    listOf(it.name, !it.isNullable),
+                    FEATURE_VALIDATION_RULE_TYPE,
+                ),
+            )
+        } +
         context
             .commandProperties
             .filter { !it.isNullable }
             .map {
                 CodeBlock.of("%T.rule", it.implType.copy(nullable = false))
-            },
-    )
-}
+            }
 
 /**
  * Generates companion object that implements validation rules for the feature.
@@ -258,42 +231,16 @@ fun generateSharedFeatureImplementation(
     val constructor = constructor(context)
     val properties = context.parameterPropertiesImpl + context.commandPropertiesImpl
     val initBlock = initBlock(context, implName)
-    val abstractClass = context.baseFeature.abstractClass
-
     val classImpl =
         TypeSpec
             .classBuilder(implName)
             .addModifiers(KModifier.INTERNAL)
             .addAnnotation(PUBLISHED_API_ANNOTATION)
             .primaryConstructor(constructor)
-            .apply {
-                if (abstractClass != null) {
-                    superclass(abstractClass)
-                    addSuperclassConstructorParameter("$DELEGATE")
-                    addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
-                } else {
-                    addSuperinterfaces(superInterfaces)
-                    addProperties(context.featurePropertiesImpl)
-                    addProperty(PropertySpec.builder("hashCode", INT, KModifier.PRIVATE).initializer("hashCode").build())
-                    addFunction(
-                        FunSpec
-                            .builder("equals")
-                            .addModifiers(KModifier.OVERRIDE)
-                            .addParameter("other", Any::class.asClassName().copy(nullable = true))
-                            .returns(Boolean::class)
-                            .addStatement("return %M(other)", EQUALS_IMPL)
-                            .build(),
-                    )
-                    addFunction(
-                        FunSpec
-                            .builder("hashCode")
-                            .addModifiers(KModifier.OVERRIDE)
-                            .returns(Int::class)
-                            .addStatement("return hashCode")
-                            .build(),
-                    )
-                }
-            }.addType(companionObject(context, implName))
+            .superclass(context.baseFeature.abstractClass)
+            .addSuperclassConstructorParameter("$DELEGATE")
+            .addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
+            .addType(companionObject(context, implName))
             .addType(failFastObject(context, typeNameOf<Feature>()))
             .addProperties(properties)
             .apply {
@@ -321,8 +268,6 @@ fun generateFeatureDescriptorAndExtensions(
 ): List<PropertySpec> {
     val descriptorName = generateDescriptorName(context.superInterface)
     val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
-    val abstractClass = context.baseFeature.abstractClass
-
     val descriptorFactory = if (context.isIndexed) INDEXED_FEATURE_DESCRIPTOR_FACTORY else STATIC_FEATURE_DESCRIPTOR_FACTORY
 
     val descriptorProperty =
@@ -340,19 +285,7 @@ fun generateFeatureDescriptorAndExtensions(
                     unindent()
                     add(") { feature ->\n")
                     indent()
-                    if (abstractClass != null) {
-                        add("feature as? %T ?: %T(feature as %T)\n", context.superInterface, implName, context.baseFeature.delegate)
-                    } else {
-                        add("feature as? %T ?: %T(\n", context.superInterface, implName)
-                        indent()
-                        add("delegate = feature as %T,\n", context.baseFeature.delegate)
-                        context.featureProperties.forEach {
-                            add("${it.name} = feature.${it.name},\n")
-                        }
-                        add("hashCode = feature.hashCode(),\n")
-                        unindent()
-                        add(")\n")
-                    }
+                    add("feature as? %T ?: %T(feature)\n", context.superInterface, implName)
                     unindent()
                     add("}")
                 },

@@ -6,7 +6,6 @@ import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
-import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListBusTypeValue
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
 import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
@@ -64,9 +63,6 @@ private val CLASS_REGISTRY: List<KClass<*>> =
         ScheduleConstraints::class,
         UnknownConstraints::class,
         Command::class,
-        Feature.Device::class,
-        Feature.Gateway::class,
-        Feature.Geofencing::class,
         Nothing::class,
         ListBusTypeValue::class,
         EnergyMatrixValue::class,
@@ -143,15 +139,6 @@ internal val UNKNOWN_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(UnknownCon
 
 @PublishedApi
 internal val COMMAND_CLASS_INDEX = CLASS_REGISTRY.indexOf(Command::class)
-
-@PublishedApi
-internal val FEATURE_DEVICE_CLASS_INDEX = CLASS_REGISTRY.indexOf(Feature.Device::class)
-
-@PublishedApi
-internal val FEATURE_GATEWAY_CLASS_INDEX = CLASS_REGISTRY.indexOf(Feature.Gateway::class)
-
-@PublishedApi
-internal val FEATURE_GEOFENCING_CLASS_INDEX = CLASS_REGISTRY.indexOf(Feature.Geofencing::class)
 
 @PublishedApi
 internal val MISSING_COMPONENT_CLASS_INDEX = CLASS_REGISTRY.indexOf(Nothing::class)

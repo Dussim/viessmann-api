@@ -7,7 +7,6 @@ import io.kotest.matchers.string.shouldContain
 import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
-import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.StringValue
 
 class ExpectedActualClassTest :
@@ -23,12 +22,6 @@ class ExpectedActualClassTest :
                 val eac = ExpectedActualClass.of(DOUBLE_VALUE_CLASS_INDEX, DOUBLE_VALUE_CLASS_INDEX)
                 eac.expectedClass shouldBe DoubleValue::class
                 eac.actualClass shouldBe DoubleValue::class
-            }
-
-            test("handles feature types") {
-                val eac = ExpectedActualClass.of(FEATURE_DEVICE_CLASS_INDEX, FEATURE_GATEWAY_CLASS_INDEX)
-                eac.expectedClass shouldBe Feature.Device::class
-                eac.actualClass shouldBe Feature.Gateway::class
             }
 
             test("handles command type") {
@@ -76,7 +69,7 @@ class ExpectedActualClassTest :
 
             test("throws for index exceeding maximum") {
                 shouldThrow<IllegalArgumentException> {
-                    ExpectedActualClass(40 * 40) // SIZE * SIZE
+                    ExpectedActualClass(37 * 37) // SIZE * SIZE
                 }
             }
 
@@ -84,7 +77,7 @@ class ExpectedActualClassTest :
                 // Should not throw - index 0 is valid
                 ExpectedActualClass(0)
                 // Index just below max should work
-                ExpectedActualClass(40 * 40 - 1)
+                ExpectedActualClass(37 * 37 - 1)
             }
         }
 
@@ -99,18 +92,6 @@ class ExpectedActualClassTest :
 
             test("DOUBLE_VALUE_CLASS_INDEX resolves correctly") {
                 ExpectedActualClass.of(DOUBLE_VALUE_CLASS_INDEX).expectedClass shouldBe DoubleValue::class
-            }
-
-            test("FEATURE_DEVICE_CLASS_INDEX resolves correctly") {
-                ExpectedActualClass.of(FEATURE_DEVICE_CLASS_INDEX).expectedClass shouldBe Feature.Device::class
-            }
-
-            test("FEATURE_GATEWAY_CLASS_INDEX resolves correctly") {
-                ExpectedActualClass.of(FEATURE_GATEWAY_CLASS_INDEX).expectedClass shouldBe Feature.Gateway::class
-            }
-
-            test("FEATURE_GEOFENCING_CLASS_INDEX resolves correctly") {
-                ExpectedActualClass.of(FEATURE_GEOFENCING_CLASS_INDEX).expectedClass shouldBe Feature.Geofencing::class
             }
         }
     })

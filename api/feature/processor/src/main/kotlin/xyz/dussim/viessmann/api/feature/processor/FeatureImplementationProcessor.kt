@@ -90,9 +90,7 @@ class FeatureImplementationProcessor(
 
         private val FEATURE_SUBTYPES =
             listOf(
-                Feature.Device::class,
-                Feature.Gateway::class,
-                Feature.Geofencing::class,
+                Feature::class,
             )
 
         private val PROPERTY_COMMAND_TYPES =

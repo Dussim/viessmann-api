@@ -8,7 +8,7 @@ import xyz.dussim.viessmann.feature.api.StringValue
 import kotlin.jvm.JvmRecord
 
 @GenerateFeatureImplementation("heating.boiler.pumps.internal")
-interface HeatingBoilerPumpsInternalFeature : Feature.Device {
+interface HeatingBoilerPumpsInternalFeature : Feature {
     companion object;
 
     @FeatureEnum

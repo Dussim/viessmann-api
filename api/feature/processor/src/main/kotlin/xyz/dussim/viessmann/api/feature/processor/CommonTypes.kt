@@ -35,9 +35,7 @@ private const val IMPL_SUFFIX = "Impl"
 private const val DESCRIPTOR_SUFFIX = "Descriptor"
 
 val FEATURE_DESCRIPTOR_CLASS = ClassName(FEATURE_API_PACKAGE, "FeatureDescriptor")
-val ABSTRACT_DEVICE_FEATURE = ClassName(FEATURE_API_PACKAGE, "AbstractDeviceFeature")
-val ABSTRACT_GATEWAY_FEATURE = ClassName(FEATURE_API_PACKAGE, "AbstractGatewayFeature")
-val ABSTRACT_GEOFENCING_FEATURE = ClassName(FEATURE_API_PACKAGE, "AbstractGeofencingFeature")
+val BASE_FEATURE = ClassName(FEATURE_API_PACKAGE, "BaseFeature")
 
 // Common member names
 val COMMAND_RULE = MemberName(VALIDATION_PACKAGE, "commandRule")
@@ -45,10 +43,6 @@ val EQUALS_IMPL = MemberName(FEATURE_API_PACKAGE, "equalsImpl")
 val VALIDATION_RESULT_OF = ValidationResult.Companion::class.member("of")
 val STATIC_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "staticFeatureDescriptor")
 val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexedFeatureDescriptor")
-
-val DEVICE_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "deviceFeatureRule")
-val GATEWAY_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "gatewayFeatureRule")
-val GEOFENCING_FEATURE_RULE = MemberName(VALIDATION_PACKAGE, "geofencingFeatureRule")
 
 val FEATURE_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Feature>())
 val COMMAND_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Command>())
@@ -363,34 +357,12 @@ private val SUPERINTERFACE_PROPERTIES =
         "isActive" to typeNameOf<Boolean?>(),
     )
 
-private val DEVICE_PROPERTIES =
-    SUPERINTERFACE_PROPERTIES +
-        mapOf(
-            "deviceId" to typeNameOf<String>(),
-            "gatewayId" to typeNameOf<String>(),
-        )
-
-private val GATEWAY_PROPERTIES =
-    SUPERINTERFACE_PROPERTIES +
-        mapOf(
-            "gatewayId" to typeNameOf<String>(),
-        )
-
-private val GEOFENCING_PROPERTIES =
-    SUPERINTERFACE_PROPERTIES +
-        mapOf(
-            "isActive" to typeNameOf<Boolean>(),
-        )
-
 enum class BaseFeature(
     val superInterfaceProperties: Map<String, TypeName>,
     val delegate: TypeName,
-    val abstractClass: ClassName?,
+    val abstractClass: ClassName,
 ) {
-    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>(), null),
-    Device(DEVICE_PROPERTIES, typeNameOf<Feature.Device>(), ABSTRACT_DEVICE_FEATURE),
-    Gateway(GATEWAY_PROPERTIES, typeNameOf<Feature.Gateway>(), ABSTRACT_GATEWAY_FEATURE),
-    Geofencing(GEOFENCING_PROPERTIES, typeNameOf<Feature.Geofencing>(), ABSTRACT_GEOFENCING_FEATURE),
+    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>(), BASE_FEATURE),
 }
 
 data class FeatureSignature(
