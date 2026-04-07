@@ -49,24 +49,80 @@ fun interface FeatureFactory<F : Feature> {
     operator fun invoke(feature: Feature): F = getOrThrow(feature)
 }
 
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+expect class IdentityHashMap<K, V>() : MutableMap<K, V> {
+    override fun clear()
+
+    override fun put(
+        key: K,
+        value: V,
+    ): V?
+
+    override fun putAll(from: Map<out K, V>)
+
+    override fun remove(key: K): V?
+
+    override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
+    override val keys: MutableSet<K>
+    override val values: MutableCollection<V>
+
+    override fun containsKey(key: K): Boolean
+
+    override fun containsValue(value: V): Boolean
+
+    override fun get(key: K): V?
+
+    override fun isEmpty(): Boolean
+
+    override val size: Int
+}
+
 fun interface FeatureMatcher {
     companion object {
-        private class ByStructureImpl(
-            private val rule: ValidationRule<Feature, *>,
+        internal class ByStructureImpl(
+            internal val rule: ValidationRule<Feature, *>,
         ) : FeatureMatcher {
             override fun matches(feature: Feature): Boolean = !rule.validate(feature).isInvalid
         }
 
-        private class ByNameImpl(
-            private val name: String,
+        internal class ByNameImpl(
+            internal val name: String,
         ) : FeatureMatcher {
             override fun matches(feature: Feature): Boolean = feature.feature == name
         }
 
-        private class ByWildcardNameImpl(
-            private val name: String,
+        internal class ByWildcardNameImpl(
+            internal val name: String,
         ) : FeatureMatcher {
             override fun matches(feature: Feature): Boolean = feature.wildcardFeature == name
+        }
+
+        internal class ByWildcardNameThenStructureImpl(
+            internal val wildcardName: ByWildcardNameImpl,
+            internal val structure: ByStructureImpl,
+        ) : FeatureMatcher {
+            override fun matches(feature: Feature): Boolean = wildcardName.matches(feature) && structure.matches(feature)
+        }
+
+        internal class ByWildcardNameThenFailFastStructureImpl(
+            internal val wildcardName: ByWildcardNameImpl,
+            internal val structure: ByStructureImpl,
+        ) : FeatureMatcher {
+            override fun matches(feature: Feature): Boolean = wildcardName.matches(feature) && structure.matches(feature)
+        }
+
+        internal class ByNameThenStructureImpl(
+            internal val name: ByNameImpl,
+            internal val structure: ByStructureImpl,
+        ) : FeatureMatcher {
+            override fun matches(feature: Feature): Boolean = name.matches(feature) && structure.matches(feature)
+        }
+
+        internal class ByNameThenFailFastStructureImpl(
+            internal val name: ByNameImpl,
+            internal val structure: ByStructureImpl,
+        ) : FeatureMatcher {
+            override fun matches(feature: Feature): Boolean = name.matches(feature) && structure.matches(feature)
         }
 
         fun byName(name: String): FeatureMatcher = ByNameImpl(name)
@@ -74,6 +130,26 @@ fun interface FeatureMatcher {
         fun byWildcardName(name: String): FeatureMatcher = ByWildcardNameImpl(name)
 
         fun byStructure(rule: ValidationRule<Feature, ValidationError>): FeatureMatcher = ByStructureImpl(rule)
+
+        fun byWildcardNameThenStructure(
+            name: String,
+            rule: ValidationRule<Feature, ValidationError>,
+        ): FeatureMatcher = ByWildcardNameThenStructureImpl(ByWildcardNameImpl(name), ByStructureImpl(rule))
+
+        fun byWildcardNameThenFailFastStructure(
+            name: String,
+            rule: ValidationRule<Feature, ValidationError>,
+        ): FeatureMatcher = ByWildcardNameThenFailFastStructureImpl(ByWildcardNameImpl(name), ByStructureImpl(rule))
+
+        fun byNameThenStructure(
+            name: String,
+            rule: ValidationRule<Feature, ValidationError>,
+        ): FeatureMatcher = ByNameThenStructureImpl(ByNameImpl(name), ByStructureImpl(rule))
+
+        fun byNameThenFailFastStructure(
+            name: String,
+            rule: ValidationRule<Feature, ValidationError>,
+        ): FeatureMatcher = ByNameThenFailFastStructureImpl(ByNameImpl(name), ByStructureImpl(rule))
     }
 
     fun matches(feature: Feature): Boolean
@@ -120,44 +196,14 @@ sealed interface FeatureDescriptor<F : Feature> :
         FeatureMatchers.Indexed
 }
 
-class FeatureResolver(
-    private val features: List<Feature>,
-) {
-    val size: Int
-        get() = features.size
+/**
+ * Creates an indexed and caching [FeatureRegistry] from the given list of features.
+ *
+ * This is a convenience constructor-like function that delegates to [FeatureRegistry.indexed].
+ */
+@Suppress("FunctionName")
+fun FeatureRegistry(features: List<Feature>): FeatureRegistry = FeatureRegistry.indexed(features)
 
-    fun find(matcher: FeatureMatcher): Feature? = features.find(matcher::matches)
-
-    fun first(matcher: FeatureMatcher): Feature = find(matcher) ?: throw NoSuchElementException("No feature matching $matcher")
-
-    fun all(matcher: FeatureMatcher): List<Feature> = features.filter(matcher::matches)
-
-    fun <F : Feature> findOf(
-        factory: FeatureFactory<F>,
-        matcher: FeatureMatcher,
-    ) = find(matcher)?.let(factory::getOrNull)
-
-    fun <F : Feature> firstOf(
-        factory: FeatureFactory<F>,
-        matcher: FeatureMatcher,
-    ) = factory.getOrThrow(first(matcher))
-
-    fun <F : Feature> allOf(
-        factory: FeatureFactory<F>,
-        matcher: FeatureMatcher,
-    ) = all(matcher).map(factory::getOrThrow)
-
-    operator fun <F : Feature> get(
-        factory: FeatureFactory<F>,
-        matcher: FeatureMatcher,
-    ) = firstOf(factory, matcher)
-
-    operator fun <F : Feature> get(descriptor: FeatureDescriptor.Static<F>) = firstOf(descriptor, descriptor.byWildcardNameThenStructure)
-
-    operator fun <F : Feature> get(descriptor: FeatureDescriptor.Indexed<F>) = firstOf(descriptor, descriptor.byWildcardNameThenStructure)
-
-    operator fun <F : Feature> get(
-        descriptor: FeatureDescriptor.Indexed<F>,
-        index: Int,
-    ) = firstOf(descriptor, descriptor.byNameThenStructure(index))
-}
+@Deprecated("Use FeatureRegistry", ReplaceWith("FeatureRegistry", "xyz.dussim.viessmann.feature.api.FeatureRegistry"))
+@Suppress("FunctionName")
+fun FeatureResolver(features: List<Feature>): FeatureRegistry = FeatureRegistry(features)

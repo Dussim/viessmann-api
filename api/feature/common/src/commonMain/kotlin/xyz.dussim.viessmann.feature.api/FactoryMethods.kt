@@ -16,14 +16,14 @@ fun Indexed(
         override val byWildcardName = FeatureMatcher.byWildcardName(wildcardName)
         override val byStructure = FeatureMatcher.byStructure(validation)
         override val byFailFastStructure = FeatureMatcher.byStructure(failFast)
-        override val byWildcardNameThenStructure = byWildcardName andThen byStructure
-        override val byWildcardNameThenFailFastStructure = byWildcardName andThen byFailFastStructure
+        override val byWildcardNameThenStructure = FeatureMatcher.byWildcardNameThenStructure(wildcardName, validation)
+        override val byWildcardNameThenFailFastStructure = FeatureMatcher.byWildcardNameThenFailFastStructure(wildcardName, failFast)
 
         override fun byName(index: Int): FeatureMatcher = FeatureMatcher.byName(wildcardName.replace("{}", index.toString()))
 
-        override fun byNameThenStructure(index: Int): FeatureMatcher = byName(index) andThen byStructure
+        override fun byNameThenStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenStructure(wildcardName.replace("{}", index.toString()), validation)
 
-        override fun byNameThenFailFastStructure(index: Int): FeatureMatcher = byName(index) andThen byFailFastStructure
+        override fun byNameThenFailFastStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenFailFastStructure(wildcardName.replace("{}", index.toString()), failFast)
     }
 
 fun Static(
@@ -38,8 +38,8 @@ fun Static(
         override val byWildcardName = FeatureMatcher.byWildcardName(wildcardName)
         override val byStructure = FeatureMatcher.byStructure(validation)
         override val byFailFastStructure = FeatureMatcher.byStructure(failFast)
-        override val byWildcardNameThenStructure = byWildcardName andThen byStructure
-        override val byWildcardNameThenFailFastStructure = byWildcardName andThen byFailFastStructure
+        override val byWildcardNameThenStructure = FeatureMatcher.byWildcardNameThenStructure(wildcardName, validation)
+        override val byWildcardNameThenFailFastStructure = FeatureMatcher.byWildcardNameThenFailFastStructure(wildcardName, failFast)
     }
 
 fun FeatureMatchers(

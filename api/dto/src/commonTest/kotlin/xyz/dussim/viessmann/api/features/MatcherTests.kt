@@ -23,7 +23,7 @@ import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
 import xyz.dussim.viessmann.feature.api.DeviceFeature
-import xyz.dussim.viessmann.feature.api.FeatureResolver
+import xyz.dussim.viessmann.feature.api.FeatureRegistry
 
 class MatcherTests :
     FunSpec({
@@ -32,7 +32,7 @@ class MatcherTests :
                 .decodeFromString<ResponseData<DeviceFeature>>(
                     readFileFromResources("features/device/very_long.json"),
                 ).data
-                .let(::FeatureResolver)
+                .let(::FeatureRegistry)
 
         context("Deserializes 10000+ features") {
             features.size shouldBe 11544

@@ -24,7 +24,7 @@ import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
 import xyz.dussim.viessmann.feature.api.DeviceFeature
-import xyz.dussim.viessmann.feature.api.FeatureResolver
+import xyz.dussim.viessmann.feature.api.FeatureRegistry
 
 class DeviceFeaturesTest :
     FunSpec({
@@ -33,21 +33,21 @@ class DeviceFeaturesTest :
                 .decodeFromString<ResponseData<DeviceFeature>>(
                     readFileFromResources("features/device/features_0.json"),
                 ).data
-                .let(::FeatureResolver)
+                .let(::FeatureRegistry)
 
         val featuresRoomControl =
             json
                 .decodeFromString<ResponseData<DeviceFeature>>(
                     readFileFromResources("features/device/features_34772_7637415001735184_RoomControl-1.json"),
                 ).data
-                .let(::FeatureResolver)
+                .let(::FeatureRegistry)
 
         val features7637415001735184Gateway =
             json
                 .decodeFromString<ResponseData<DeviceFeature>>(
                     readFileFromResources("features/device/features_34772_7637415001735184_gateway.json"),
                 ).data
-                .let(::FeatureResolver)
+                .let(::FeatureRegistry)
 
         context("Decorates with DeviceEtnFeature") {
             val feature = features[DeviceEtnFeature.descriptor]

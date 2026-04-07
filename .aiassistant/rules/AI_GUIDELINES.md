@@ -114,7 +114,7 @@ class ExampleTest :
 - **Performance Maps:** Use `EfficientStringKeyMap` for `Feature` properties and commands instead of standard
   `Map<String, T>`. Note that `EfficientStringKeyMap` is **immutable** and optimized for fast lookups using precomputed hashes.
 - **Feature Descriptors:** Use `FeatureDescriptor` and `FeatureFactory` for typed feature access.
-- **Feature Resolver:** Use `FeatureResolver` to find and convert features from a list. It provides convenient methods like `findOf`, `firstOf`, and `allOf`.
+- **Feature Registry:** Use `FeatureRegistry` to find and convert features from a list. Create instances via `FeatureRegistry(features)` (indexed+caching, default), `FeatureRegistry.indexed(features)`, `FeatureRegistry.caching(features)`, or `FeatureRegistry.of(features)` (basic, no caching). The `indexed` variant builds jump tables at construction time for O(1)/O(k) lookups by dispatching on internal `FeatureMatcher` types. It provides convenient methods like `findOf`, `firstOf`, `allOf`, and operator `get` for descriptor-based lookups.
 - **Factory Methods:** Prefer using the DSL-like factory methods in `FactoryMethods.kt` and `Property.of...`.
 - **Validation:** Use the `validation` package rules for consistency.
 - **Enum Pattern:** For API enums, use the `sealed interface` with `Strict` and `Unknown` subclasses to handle future
