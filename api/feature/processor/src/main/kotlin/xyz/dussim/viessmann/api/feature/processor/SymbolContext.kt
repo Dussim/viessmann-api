@@ -238,9 +238,9 @@ data class SymbolContext(
     val implCompanion = implName.nestedClass("Companion")
 
     /**
-     * True if the feature name contains a placeholder "{}" for indexed features.
+     * True if the feature name contains a placeholder "{N}" for indexed features.
      */
-    val isIndexed by lazy { featureName.contains("{}") }
+    val isIndexed by lazy { featureName.contains("{N}") }
 
     val featureSignature by lazy {
         FeatureSignature(
