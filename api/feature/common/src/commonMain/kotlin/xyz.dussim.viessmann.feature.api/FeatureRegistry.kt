@@ -48,7 +48,7 @@ interface FeatureRegistry : Iterable<Feature> {
      * Finds and converts all features matching [matcher] using [factory].
      */
     fun <F : Feature> allOf(
-        factory: FeatureDescriptor<F>,
+        factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
     ): List<F>
 
@@ -110,13 +110,93 @@ interface FeatureRegistry : Iterable<Feature> {
     }
 }
 
+private val CACHE_MISS_MARKER = Any()
+
+@Suppress("UNCHECKED_CAST")
+private inline fun <F : Feature> cachedFindOfHelper(
+    features: List<Feature>,
+    implementations: List<IdentityHashMap<KClass<out Feature>, Any>>,
+    featureClass: KClass<F>,
+    range: IntRange,
+    matches: (Feature) -> Boolean,
+    convert: (Feature) -> F?,
+): F? {
+    for (i in range) {
+        val cache = implementations[i]
+        val cached = cache[featureClass]
+        if (cached != null && cached !== CACHE_MISS_MARKER) {
+            return cached as F
+        }
+        if (cached == null && matches(features[i])) {
+            val feature = convert(features[i]) ?: return null
+            cache[featureClass] = feature
+            return feature
+        }
+    }
+    return null
+}
+
+@Suppress("UNCHECKED_CAST")
+private inline fun <F : Feature> cachedFirstOfHelper(
+    features: List<Feature>,
+    implementations: List<IdentityHashMap<KClass<out Feature>, Any>>,
+    featureClass: KClass<F>,
+    range: IntRange,
+    matches: (Feature) -> Boolean,
+    convert: (Feature) -> F,
+    matcher: FeatureMatcher,
+): F {
+    for (i in range) {
+        val cache = implementations[i]
+        val cached = cache[featureClass]
+        if (cached != null && cached !== CACHE_MISS_MARKER) {
+            return cached as F
+        }
+        if (cached == null && matches(features[i])) {
+            val feature = convert(features[i])
+            cache[featureClass] = feature
+            return feature
+        }
+    }
+    throw NoSuchElementException("No feature matching $matcher")
+}
+
+@Suppress("UNCHECKED_CAST")
+private inline fun <F : Feature> cachedAllOfHelper(
+    features: List<Feature>,
+    implementations: List<IdentityHashMap<KClass<out Feature>, Any>>,
+    featureClass: KClass<F>,
+    range: IntRange,
+    matches: (Feature) -> Boolean,
+    convert: (Feature) -> F,
+): List<F> =
+    buildList {
+        for (i in range) {
+            val cache = implementations[i]
+            val cached = cache[featureClass]
+            if (cached != null && cached !== CACHE_MISS_MARKER) {
+                add(cached as F)
+            } else if (cached == null) {
+                if (matches(features[i])) {
+                    val feature = convert(features[i])
+                    cache[featureClass] = feature
+                    add(feature)
+                } else {
+                    cache[featureClass] = CACHE_MISS_MARKER
+                }
+            }
+        }
+    }
+
 /**
  * A basic [FeatureRegistry] implementation without any caching.
  * Every lookup performs a linear scan over the feature list.
  */
 private class BasicFeatureRegistry(
-    private val features: List<Feature>,
+    features: List<Feature>,
 ) : FeatureRegistry {
+    private val features: List<Feature> = features.toList()
+
     override val size: Int get() = features.size
 
     override fun iterator(): Iterator<Feature> = features.iterator()
@@ -138,7 +218,7 @@ private class BasicFeatureRegistry(
     ): F = factory.getOrThrow(first(matcher))
 
     override fun <F : Feature> allOf(
-        factory: FeatureDescriptor<F>,
+        factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
     ): List<F> = all(matcher).map(factory::getOrThrow)
 
@@ -175,10 +255,6 @@ private class BasicFeatureRegistry(
 private class IndexedFeatureRegistry(
     features: List<Feature>,
 ) : FeatureRegistry {
-    companion object {
-        private val MARKER = Any()
-    }
-
     // Sorted by wildcard name so features with the same wildcard are contiguous
     private val sorted: List<Feature> = features.sortedBy { it.wildcardFeature }
 
@@ -234,22 +310,17 @@ private class IndexedFeatureRegistry(
                 candidateView(matcher.name).firstOrNull()
             }
 
-            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl -> {
-                candidateView(matcher.wildcardName.name).find(matcher.structure::matches)
+            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl,
+            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl,
+            -> {
+                candidateView(matcher.wildcardNameOrNull()!!).find(matcher::matches)
             }
 
-            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl -> {
-                candidateView(matcher.wildcardName.name).find(matcher.structure::matches)
-            }
-
-            is FeatureMatcher.Companion.ByNameThenStructureImpl -> {
-                val idx = byExactNameIndex[matcher.name.name] ?: return null
-                sorted[idx].takeIf { matcher.structure.matches(it) }
-            }
-
-            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl -> {
-                val idx = byExactNameIndex[matcher.name.name] ?: return null
-                sorted[idx].takeIf { matcher.structure.matches(it) }
+            is FeatureMatcher.Companion.ByNameThenStructureImpl,
+            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl,
+            -> {
+                val idx = byExactNameIndex[matcher.exactNameOrNull()!!] ?: return null
+                sorted[idx].takeIf(matcher::matches)
             }
 
             else -> {
@@ -270,26 +341,17 @@ private class IndexedFeatureRegistry(
                 candidateView(matcher.name).toList()
             }
 
-            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl -> {
-                candidateView(matcher.wildcardName.name).filter(matcher.structure::matches)
+            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl,
+            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl,
+            -> {
+                candidateView(matcher.wildcardNameOrNull()!!).filter(matcher::matches)
             }
 
-            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl -> {
-                candidateView(matcher.wildcardName.name).filter(matcher.structure::matches)
-            }
-
-            is FeatureMatcher.Companion.ByNameThenStructureImpl -> {
-                val idx = byExactNameIndex[matcher.name.name]
-                if (idx != null && matcher.structure.matches(sorted[idx])) listOf(sorted[idx]) else emptyList()
-            }
-
-            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl -> {
-                val idx = byExactNameIndex[matcher.name.name]
-                if (idx != null && matcher.structure.matches(sorted[idx])) listOf(sorted[idx]) else emptyList()
-            }
-
-            is FeatureMatcher.Companion.ByStructureImpl -> {
-                sorted.filter(matcher::matches)
+            is FeatureMatcher.Companion.ByNameThenStructureImpl,
+            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl,
+            -> {
+                val idx = byExactNameIndex[matcher.exactNameOrNull()!!]
+                if (idx != null && matcher.matches(sorted[idx])) listOf(sorted[idx]) else emptyList()
             }
 
             else -> {
@@ -300,58 +362,26 @@ private class IndexedFeatureRegistry(
     override fun <F : Feature> findOf(
         factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
-    ): F? = find(matcher)?.let(factory::getOrNull)
+    ): F? = cachedFindOf(factory, matcher)
 
     override fun <F : Feature> firstOf(
         factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
-    ): F = factory.getOrThrow(first(matcher))
+    ): F = cachedFirstOf(factory, matcher)
 
     override fun <F : Feature> allOf(
-        factory: FeatureDescriptor<F>,
+        factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
     ): List<F> {
-        val featureClass = factory.featureClass
         val range = candidateRangeForMatcher(matcher)
-        return if (range != null) {
-            buildList {
-                for (i in range) {
-                    val cache = implementations[i]
-                    val cached = cache[featureClass]
-                    if (cached != null && cached !== MARKER) {
-                        @Suppress("UNCHECKED_CAST")
-                        add(cached as F)
-                    } else if (cached == null) {
-                        if (matchesWithoutNameCheck(matcher, sorted[i])) {
-                            val feature = factory.getOrThrow(sorted[i])
-                            cache[featureClass] = feature
-                            add(feature)
-                        } else {
-                            cache[featureClass] = MARKER
-                        }
-                    }
-                }
-            }
-        } else {
-            buildList {
-                for (i in sorted.indices) {
-                    val cache = implementations[i]
-                    val cached = cache[featureClass]
-                    if (cached != null && cached !== MARKER) {
-                        @Suppress("UNCHECKED_CAST")
-                        add(cached as F)
-                    } else if (cached == null) {
-                        if (matcher.matches(sorted[i])) {
-                            val feature = factory.getOrThrow(sorted[i])
-                            cache[featureClass] = feature
-                            add(feature)
-                        } else {
-                            cache[featureClass] = MARKER
-                        }
-                    }
-                }
-            }
-        }
+        return cachedAllOfHelper(
+            sorted,
+            implementations,
+            factory.featureClass,
+            range ?: sorted.indices,
+            if (range != null) { f -> matchesWithoutNameCheck(matcher, f) } else matcher::matches,
+            factory::getOrThrow,
+        )
     }
 
     override operator fun <F : Feature> get(
@@ -378,24 +408,20 @@ private class IndexedFeatureRegistry(
                 candidateRange(matcher.name)
             }
 
-            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl -> {
-                candidateRange(matcher.wildcardName.name)
-            }
-
-            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl -> {
-                candidateRange(matcher.wildcardName.name)
+            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl,
+            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl,
+            -> {
+                candidateRange(matcher.wildcardNameOrNull()!!)
             }
 
             is FeatureMatcher.Companion.ByNameImpl -> {
                 byExactNameIndex[matcher.name]?.let { it..it }
             }
 
-            is FeatureMatcher.Companion.ByNameThenStructureImpl -> {
-                byExactNameIndex[matcher.name.name]?.let { it..it }
-            }
-
-            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl -> {
-                byExactNameIndex[matcher.name.name]?.let { it..it }
+            is FeatureMatcher.Companion.ByNameThenStructureImpl,
+            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl,
+            -> {
+                byExactNameIndex[matcher.exactNameOrNull()!!]?.let { it..it }
             }
 
             else -> {
@@ -410,51 +436,61 @@ private class IndexedFeatureRegistry(
     private fun matchesWithoutNameCheck(
         matcher: FeatureMatcher,
         feature: Feature,
-    ): Boolean =
-        when (matcher) {
-            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl -> matcher.structure.matches(feature)
-            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl -> matcher.structure.matches(feature)
-            is FeatureMatcher.Companion.ByNameThenStructureImpl -> matcher.structure.matches(feature)
-            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl -> matcher.structure.matches(feature)
-            else -> matcher.matches(feature)
-        }
+    ): Boolean = matcher.structureOrNull()?.matches(feature) ?: matcher.matches(feature)
 
-    @Suppress("UNCHECKED_CAST")
+    private fun <F : Feature> cachedFindOf(
+        factory: FeatureFactory<F>,
+        matcher: FeatureMatcher,
+    ): F? {
+        val range = candidateRangeForMatcher(matcher)
+        return cachedFindOfHelper(
+            sorted,
+            implementations,
+            factory.featureClass,
+            range ?: sorted.indices,
+            if (range != null) { f -> matchesWithoutNameCheck(matcher, f) } else matcher::matches,
+            factory::getOrNull,
+        )
+    }
+
     private fun <F : Feature> cachedFirstOf(
-        descriptor: FeatureDescriptor<F>,
+        factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
     ): F {
-        val featureClass = descriptor.featureClass
         val range = candidateRangeForMatcher(matcher)
-        if (range != null) {
-            for (i in range) {
-                val cache = implementations[i]
-                val cached = cache[featureClass]
-                if (cached != null && cached !== MARKER) {
-                    return cached as F
-                }
-                if (cached == null && matchesWithoutNameCheck(matcher, sorted[i])) {
-                    val feature = descriptor.getOrThrow(sorted[i])
-                    cache[featureClass] = feature
-                    return feature
-                }
-            }
-        } else {
-            for (i in sorted.indices) {
-                val cache = implementations[i]
-                val cached = cache[featureClass]
-                if (cached != null && cached !== MARKER) {
-                    return cached as F
-                }
-                if (cached == null && matcher.matches(sorted[i])) {
-                    val feature = descriptor.getOrThrow(sorted[i])
-                    cache[featureClass] = feature
-                    return feature
-                }
-            }
-        }
-        throw NoSuchElementException("No feature matching ${descriptor.wildcardName}")
+        return cachedFirstOfHelper(
+            sorted,
+            implementations,
+            factory.featureClass,
+            range ?: sorted.indices,
+            if (range != null) { f -> matchesWithoutNameCheck(matcher, f) } else matcher::matches,
+            factory::getOrThrow,
+            matcher,
+        )
     }
+
+    private fun FeatureMatcher.wildcardNameOrNull(): String? =
+        when (this) {
+            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl -> wildcardName.name
+            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl -> wildcardName.name
+            else -> null
+        }
+
+    private fun FeatureMatcher.exactNameOrNull(): String? =
+        when (this) {
+            is FeatureMatcher.Companion.ByNameThenStructureImpl -> name.name
+            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl -> name.name
+            else -> null
+        }
+
+    private fun FeatureMatcher.structureOrNull(): FeatureMatcher.Companion.ByStructureImpl? =
+        when (this) {
+            is FeatureMatcher.Companion.ByWildcardNameThenStructureImpl -> structure
+            is FeatureMatcher.Companion.ByWildcardNameThenFailFastStructureImpl -> structure
+            is FeatureMatcher.Companion.ByNameThenStructureImpl -> structure
+            is FeatureMatcher.Companion.ByNameThenFailFastStructureImpl -> structure
+            else -> null
+        }
 }
 
 /**
@@ -470,13 +506,10 @@ private class IndexedFeatureRegistry(
  * the cache key.
  */
 private class CachingFeatureRegistry(
-    private val features: List<Feature>,
+    features: List<Feature>,
 ) : FeatureRegistry {
-    companion object {
-        private val MARKER = Any()
-    }
-
-    private val implementations = List(features.size) { IdentityHashMap<KClass<out Feature>, Any>() }
+    private val features: List<Feature> = features.toList()
+    private val implementations = List(this.features.size) { IdentityHashMap<KClass<out Feature>, Any>() }
 
     override val size: Int get() = features.size
 
@@ -491,36 +524,25 @@ private class CachingFeatureRegistry(
     override fun <F : Feature> findOf(
         factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
-    ): F? = find(matcher)?.let(factory::getOrNull)
+    ): F? = cachedFindOf(factory, matcher)
 
     override fun <F : Feature> firstOf(
         factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
-    ): F = factory.getOrThrow(first(matcher))
+    ): F = cachedFirstOf(factory, matcher)
 
     override fun <F : Feature> allOf(
-        factory: FeatureDescriptor<F>,
+        factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
     ): List<F> =
-        buildList {
-            val featureClass = factory.featureClass
-            for (i in features.indices) {
-                val implementations = implementations[i]
-                val implementation = implementations[featureClass]
-                if (implementation != null && implementation !== MARKER) {
-                    @Suppress("UNCHECKED_CAST")
-                    add(implementation as F)
-                } else if (implementation == null) {
-                    if (matcher.matches(features[i])) {
-                        val feature = factory.getOrThrow(features[i])
-                        implementations[featureClass] = feature
-                        add(feature)
-                    } else {
-                        implementations[featureClass] = MARKER
-                    }
-                }
-            }
-        }
+        cachedAllOfHelper(
+            features,
+            implementations,
+            factory.featureClass,
+            features.indices,
+            matcher::matches,
+            factory::getOrThrow,
+        )
 
     override operator fun <F : Feature> get(
         factory: FeatureFactory<F>,
@@ -536,24 +558,30 @@ private class CachingFeatureRegistry(
         index: Int,
     ): F = cachedFirstOf(descriptor, descriptor.byNameThenStructure(index))
 
-    @Suppress("UNCHECKED_CAST")
-    private fun <F : Feature> cachedFirstOf(
-        descriptor: FeatureDescriptor<F>,
+    private fun <F : Feature> cachedFindOf(
+        factory: FeatureFactory<F>,
         matcher: FeatureMatcher,
-    ): F {
-        val featureClass = descriptor.featureClass
-        for (i in features.indices) {
-            val cache = implementations[i]
-            val cached = cache[featureClass]
-            if (cached != null && cached !== MARKER) {
-                return cached as F
-            }
-            if (cached == null && matcher.matches(features[i])) {
-                val feature = descriptor.getOrThrow(features[i])
-                cache[featureClass] = feature
-                return feature
-            }
-        }
-        throw NoSuchElementException("No feature matching ${descriptor.wildcardName}")
-    }
+    ): F? =
+        cachedFindOfHelper(
+            features,
+            implementations,
+            factory.featureClass,
+            features.indices,
+            matcher::matches,
+            factory::getOrNull,
+        )
+
+    private fun <F : Feature> cachedFirstOf(
+        factory: FeatureFactory<F>,
+        matcher: FeatureMatcher,
+    ): F =
+        cachedFirstOfHelper(
+            features,
+            implementations,
+            factory.featureClass,
+            features.indices,
+            matcher::matches,
+            factory::getOrThrow,
+            matcher,
+        )
 }

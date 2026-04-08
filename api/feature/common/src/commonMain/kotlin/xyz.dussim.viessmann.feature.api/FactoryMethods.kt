@@ -55,7 +55,7 @@ fun FeatureMatchers(
 inline fun <reified F : Feature> FeatureDescriptor(
     wildcardName: String,
     matchers: FeatureMatchers,
-    factory: FeatureFactory<F>,
+    noinline factory: (Feature) -> F,
     rule: ValidationRule<Feature, ValidationError>,
 ): FeatureDescriptor<F> =
     when (matchers) {
@@ -63,7 +63,7 @@ inline fun <reified F : Feature> FeatureDescriptor(
             FeatureDescriptorIndexedImpl(
                 featureClass = F::class,
                 wildcardName = wildcardName,
-                factory = factory,
+                factory = FeatureFactory(F::class, factory),
                 matchers = matchers,
                 rule = rule,
             )
@@ -73,7 +73,7 @@ inline fun <reified F : Feature> FeatureDescriptor(
             FeatureDescriptorStaticImpl(
                 featureClass = F::class,
                 wildcardName = wildcardName,
-                factory = factory,
+                factory = FeatureFactory(F::class, factory),
                 matchers = matchers,
                 rule = rule,
             )
@@ -84,7 +84,7 @@ inline fun <reified F : Feature> FeatureDescriptor(
     wildcardName: String,
     rule: ValidationRule<Feature, ValidationError>,
     failFast: ValidationRule<Feature, ValidationError>,
-    factory: FeatureFactory<F>,
+    noinline factory: (Feature) -> F,
 ): FeatureDescriptor<F> =
     FeatureDescriptor(
         wildcardName = wildcardName,
@@ -97,12 +97,12 @@ inline fun <reified F : Feature> staticFeatureDescriptor(
     wildcardName: String,
     rule: ValidationRule<Feature, ValidationError>,
     failFast: ValidationRule<Feature, ValidationError>,
-    factory: FeatureFactory<F>,
+    noinline factory: (Feature) -> F,
 ): FeatureDescriptor.Static<F> =
     FeatureDescriptorStaticImpl(
         featureClass = F::class,
         wildcardName = wildcardName,
-        factory = factory,
+        factory = FeatureFactory(F::class, factory),
         matchers = Static(wildcardName, rule, failFast),
         rule = rule,
     )
@@ -111,12 +111,12 @@ inline fun <reified F : Feature> indexedFeatureDescriptor(
     wildcardName: String,
     rule: ValidationRule<Feature, ValidationError>,
     failFast: ValidationRule<Feature, ValidationError>,
-    factory: FeatureFactory<F>,
+    noinline factory: (Feature) -> F,
 ): FeatureDescriptor.Indexed<F> =
     FeatureDescriptorIndexedImpl(
         featureClass = F::class,
         wildcardName = wildcardName,
-        factory = factory,
+        factory = FeatureFactory(F::class, factory),
         matchers = Indexed(wildcardName, rule, failFast),
         rule = rule,
     )

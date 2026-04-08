@@ -15,7 +15,12 @@ import kotlin.reflect.KClass
  *
  * @param F The specific feature type that extends [Feature] into which the conversion will be performed
  */
-fun interface FeatureFactory<F : Feature> {
+interface FeatureFactory<F : Feature> {
+    /**
+     * The [KClass] of the specific feature type [F] this factory produces.
+     */
+    val featureClass: KClass<F>
+
     /**
      * Converts the given feature into a specific feature type F or throws an exception if conversion fails.
      *
@@ -48,6 +53,24 @@ fun interface FeatureFactory<F : Feature> {
      */
     operator fun invoke(feature: Feature): F = getOrThrow(feature)
 }
+
+/**
+ * Creates a [FeatureFactory] from a [KClass] and a conversion function.
+ */
+fun <F : Feature> FeatureFactory(
+    featureClass: KClass<F>,
+    getOrThrow: (Feature) -> F,
+): FeatureFactory<F> =
+    object : FeatureFactory<F> {
+        override val featureClass: KClass<F> = featureClass
+
+        override fun getOrThrow(feature: Feature): F = getOrThrow(feature)
+    }
+
+/**
+ * Creates a [FeatureFactory] using reified type parameter to infer [FeatureFactory.featureClass].
+ */
+inline fun <reified F : Feature> FeatureFactory(noinline getOrThrow: (Feature) -> F): FeatureFactory<F> = FeatureFactory(F::class, getOrThrow)
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 expect class IdentityHashMap<K, V>() : MutableMap<K, V> {
@@ -184,7 +207,7 @@ sealed interface FeatureDescriptor<F : Feature> :
     FeatureFactory<F>,
     ValidationRule<Feature, ValidationError>,
     FeatureMatcherProvider {
-    val featureClass: KClass<F>
+    override val featureClass: KClass<F>
     val wildcardName: String
 
     interface Static<F : Feature> :

@@ -84,6 +84,7 @@ typealias SymbolRule = ValidationRule<KSClassDeclaration, SymbolErrorMetadata>
 class FeatureImplementationProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
+    private val descriptorsChunkSize: Int,
 ) : SymbolProcessor {
     companion object {
         private val ANNOTATION_NAME = GenerateFeatureImplementation::class.qualifiedName!!
@@ -225,16 +226,28 @@ class FeatureImplementationProcessor(
                             }
                         }
 
-                        // Write all descriptors into a single file
+                        // Write descriptors, chunked into multiple files if configured
                         if (allDescriptorProperties.isNotEmpty()) {
-                            FileSpec
-                                .builder(descriptorPackage, "GeneratedDescriptors")
-                                .addProperties(allDescriptorProperties)
-                                .build()
-                                .writeTo(
-                                    codeGenerator,
-                                    Dependencies(true, *ksSymbols.map { it.containingFile!! }.toTypedArray()),
-                                )
+                            val allDependencies = Dependencies(true, *ksSymbols.map { it.containingFile!! }.toTypedArray())
+                            val chunks =
+                                if (descriptorsChunkSize > 0) {
+                                    allDescriptorProperties.chunked(descriptorsChunkSize)
+                                } else {
+                                    listOf(allDescriptorProperties)
+                                }
+                            chunks.forEachIndexed { index, chunk ->
+                                val fileName =
+                                    if (chunks.size == 1) {
+                                        "GeneratedDescriptors"
+                                    } else {
+                                        "GeneratedDescriptors${index + 1}"
+                                    }
+                                FileSpec
+                                    .builder(descriptorPackage, fileName)
+                                    .addProperties(chunk)
+                                    .build()
+                                    .writeTo(codeGenerator, allDependencies)
+                            }
                         }
 
                         symbols
