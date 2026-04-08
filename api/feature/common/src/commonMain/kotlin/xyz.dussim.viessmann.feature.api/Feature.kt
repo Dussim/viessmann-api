@@ -43,15 +43,6 @@ data class ViessmannFeature(
     override val commands: EfficientStringKeyMap<Command>,
 ) : Feature
 
-@Deprecated("Use ViessmannFeature", ReplaceWith("ViessmannFeature"))
-typealias DeviceFeature = ViessmannFeature
-
-@Deprecated("Use ViessmannFeature", ReplaceWith("ViessmannFeature"))
-typealias GatewayFeature = ViessmannFeature
-
-@Deprecated("Use ViessmannFeature", ReplaceWith("ViessmannFeature"))
-typealias GeofencingFeature = ViessmannFeature
-
 fun Feature.equalsImpl(other: Any?): Boolean {
     if (other === this) return true
     if (other !is Feature) return false

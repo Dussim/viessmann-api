@@ -102,10 +102,10 @@ import xyz.dussim.viessmann.api.features.generated.HeatingValvesDiverterHeatDhwF
 import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
-import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureDescriptor
 import xyz.dussim.viessmann.feature.api.FeatureRegistry
+import xyz.dussim.viessmann.feature.api.ViessmannFeature
 import kotlin.time.Clock
 
 class DescriptorExpectation<F : Feature>(
@@ -236,9 +236,9 @@ val validationDescriptors =
         HeatingCircuitsNOperatingProgramsActiveFeature.descriptor expecting 936,
     )
 
-fun loadFeatures(registryFactory: (List<DeviceFeature>) -> FeatureRegistry): FeatureRegistry =
+fun loadFeatures(registryFactory: (List<ViessmannFeature>) -> FeatureRegistry): FeatureRegistry =
     json
-        .decodeFromString<ResponseData<DeviceFeature>>(
+        .decodeFromString<ResponseData<ViessmannFeature>>(
             readFileFromResources("features/device/very_long.json"),
         ).data
         .let(registryFactory)

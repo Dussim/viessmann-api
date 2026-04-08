@@ -14,9 +14,9 @@ import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
 import xyz.dussim.feature.benchmark.DeviceTimeseriesMonitoringIonizationFeature
 import xyz.dussim.feature.benchmark.descriptor
-import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
+import xyz.dussim.viessmann.feature.api.ViessmannFeature
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 import xyz.dussim.viessmann.feature.api.validation.invoke
@@ -208,12 +208,12 @@ open class ValidationBenchmark {
         validatorFailFast = DeviceTimeseriesMonitoringIonizationFeature.descriptor.failFastStructureValidator
         feature =
             json.decodeFromString(
-                DeviceFeature.serializer(),
+                ViessmannFeature.serializer(),
                 CORRECT_FEATURE,
             )
         incorrectFeature =
             json.decodeFromString(
-                DeviceFeature.serializer(),
+                ViessmannFeature.serializer(),
                 ALL_TYPES_INCORRECT_FEATURE,
             )
     }

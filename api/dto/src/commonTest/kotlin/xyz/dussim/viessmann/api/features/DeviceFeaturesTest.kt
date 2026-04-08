@@ -23,28 +23,28 @@ import xyz.dussim.viessmann.api.features.generated.TcuModeFeature
 import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
-import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.FeatureRegistry
+import xyz.dussim.viessmann.feature.api.ViessmannFeature
 
 class DeviceFeaturesTest :
     FunSpec({
         val features =
             json
-                .decodeFromString<ResponseData<DeviceFeature>>(
+                .decodeFromString<ResponseData<ViessmannFeature>>(
                     readFileFromResources("features/device/features_0.json"),
                 ).data
                 .let(::FeatureRegistry)
 
         val featuresRoomControl =
             json
-                .decodeFromString<ResponseData<DeviceFeature>>(
+                .decodeFromString<ResponseData<ViessmannFeature>>(
                     readFileFromResources("features/device/features_34772_7637415001735184_RoomControl-1.json"),
                 ).data
                 .let(::FeatureRegistry)
 
         val features7637415001735184Gateway =
             json
-                .decodeFromString<ResponseData<DeviceFeature>>(
+                .decodeFromString<ResponseData<ViessmannFeature>>(
                     readFileFromResources("features/device/features_34772_7637415001735184_gateway.json"),
                 ).data
                 .let(::FeatureRegistry)

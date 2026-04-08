@@ -7,8 +7,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.testing.readFilesContentsIn
 import xyz.dussim.viessmann.api.utils.json
-import xyz.dussim.viessmann.feature.api.DeviceFeature
-import xyz.dussim.viessmann.feature.api.GatewayFeature
+import xyz.dussim.viessmann.feature.api.ViessmannFeature
 
 class ViessmannFeatureParsingTest :
     FunSpec(
@@ -20,7 +19,7 @@ class ViessmannFeatureParsingTest :
                         nameFn = { (it["feature"] as JsonPrimitive).content },
                         ts = features,
                     ) { featureJsonElement ->
-                        json.decodeFromJsonElement(DeviceFeature.serializer(), featureJsonElement)
+                        json.decodeFromJsonElement(ViessmannFeature.serializer(), featureJsonElement)
                     }
                 }
             }
@@ -32,7 +31,7 @@ class ViessmannFeatureParsingTest :
                         nameFn = { (it["feature"] as JsonPrimitive).content },
                         ts = features,
                     ) { featureJsonElement ->
-                        json.decodeFromJsonElement(GatewayFeature.serializer(), featureJsonElement)
+                        json.decodeFromJsonElement(ViessmannFeature.serializer(), featureJsonElement)
                     }
                 }
             }

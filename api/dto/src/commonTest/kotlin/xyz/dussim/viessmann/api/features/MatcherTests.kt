@@ -22,14 +22,14 @@ import xyz.dussim.viessmann.api.features.generated.TcuModeFeature
 import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.api.utils.json
-import xyz.dussim.viessmann.feature.api.DeviceFeature
 import xyz.dussim.viessmann.feature.api.FeatureRegistry
+import xyz.dussim.viessmann.feature.api.ViessmannFeature
 
 class MatcherTests :
     FunSpec({
         val features =
             json
-                .decodeFromString<ResponseData<DeviceFeature>>(
+                .decodeFromString<ResponseData<ViessmannFeature>>(
                     readFileFromResources("features/device/very_long.json"),
                 ).data
                 .let(::FeatureRegistry)
