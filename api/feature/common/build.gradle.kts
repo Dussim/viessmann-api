@@ -4,7 +4,7 @@ plugins {
 }
 
 generateValidationResultOf {
-    maxArity = 16
+    maxArity = 30
     validationFile =
         layout.projectDirectory.file(
             "src/commonMain/kotlin/xyz.dussim.viessmann.feature.api/validation/Validation.kt",

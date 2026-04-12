@@ -135,7 +135,7 @@ fun varArgFunctionCall(
     function: MemberName,
     args: List<CodeBlock>,
 ): CodeBlock {
-    val maxArgs = 16
+    val maxArgs = 30
     if (args.size <= maxArgs) {
         return CodeBlock
             .builder()

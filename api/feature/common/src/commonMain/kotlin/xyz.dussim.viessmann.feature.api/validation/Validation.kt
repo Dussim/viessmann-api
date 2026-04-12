@@ -1016,6 +1016,1903 @@ value class ValidationResult<out T>
                 result16.forEach { array[current++] = it }
                 return Invalid(array as Array<E>)
             }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+                result24: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22) or
+                        (result24.invalidFlag shl 23)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                        23 -> return result24
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size +
+                            result24.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                result24.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+                result24: ValidationResult<E>,
+                result25: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22) or
+                        (result24.invalidFlag shl 23) or
+                        (result25.invalidFlag shl 24)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                        23 -> return result24
+                        24 -> return result25
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size +
+                            result24.size +
+                            result25.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                result24.forEach { array[current++] = it }
+                result25.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+                result24: ValidationResult<E>,
+                result25: ValidationResult<E>,
+                result26: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22) or
+                        (result24.invalidFlag shl 23) or
+                        (result25.invalidFlag shl 24) or
+                        (result26.invalidFlag shl 25)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                        23 -> return result24
+                        24 -> return result25
+                        25 -> return result26
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size +
+                            result24.size +
+                            result25.size +
+                            result26.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                result24.forEach { array[current++] = it }
+                result25.forEach { array[current++] = it }
+                result26.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+                result24: ValidationResult<E>,
+                result25: ValidationResult<E>,
+                result26: ValidationResult<E>,
+                result27: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22) or
+                        (result24.invalidFlag shl 23) or
+                        (result25.invalidFlag shl 24) or
+                        (result26.invalidFlag shl 25) or
+                        (result27.invalidFlag shl 26)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                        23 -> return result24
+                        24 -> return result25
+                        25 -> return result26
+                        26 -> return result27
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size +
+                            result24.size +
+                            result25.size +
+                            result26.size +
+                            result27.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                result24.forEach { array[current++] = it }
+                result25.forEach { array[current++] = it }
+                result26.forEach { array[current++] = it }
+                result27.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+                result24: ValidationResult<E>,
+                result25: ValidationResult<E>,
+                result26: ValidationResult<E>,
+                result27: ValidationResult<E>,
+                result28: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22) or
+                        (result24.invalidFlag shl 23) or
+                        (result25.invalidFlag shl 24) or
+                        (result26.invalidFlag shl 25) or
+                        (result27.invalidFlag shl 26) or
+                        (result28.invalidFlag shl 27)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                        23 -> return result24
+                        24 -> return result25
+                        25 -> return result26
+                        26 -> return result27
+                        27 -> return result28
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size +
+                            result24.size +
+                            result25.size +
+                            result26.size +
+                            result27.size +
+                            result28.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                result24.forEach { array[current++] = it }
+                result25.forEach { array[current++] = it }
+                result26.forEach { array[current++] = it }
+                result27.forEach { array[current++] = it }
+                result28.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+                result24: ValidationResult<E>,
+                result25: ValidationResult<E>,
+                result26: ValidationResult<E>,
+                result27: ValidationResult<E>,
+                result28: ValidationResult<E>,
+                result29: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22) or
+                        (result24.invalidFlag shl 23) or
+                        (result25.invalidFlag shl 24) or
+                        (result26.invalidFlag shl 25) or
+                        (result27.invalidFlag shl 26) or
+                        (result28.invalidFlag shl 27) or
+                        (result29.invalidFlag shl 28)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                        23 -> return result24
+                        24 -> return result25
+                        25 -> return result26
+                        26 -> return result27
+                        27 -> return result28
+                        28 -> return result29
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size +
+                            result24.size +
+                            result25.size +
+                            result26.size +
+                            result27.size +
+                            result28.size +
+                            result29.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                result24.forEach { array[current++] = it }
+                result25.forEach { array[current++] = it }
+                result26.forEach { array[current++] = it }
+                result27.forEach { array[current++] = it }
+                result28.forEach { array[current++] = it }
+                result29.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
+
+            fun <E> of(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+                result4: ValidationResult<E>,
+                result5: ValidationResult<E>,
+                result6: ValidationResult<E>,
+                result7: ValidationResult<E>,
+                result8: ValidationResult<E>,
+                result9: ValidationResult<E>,
+                result10: ValidationResult<E>,
+                result11: ValidationResult<E>,
+                result12: ValidationResult<E>,
+                result13: ValidationResult<E>,
+                result14: ValidationResult<E>,
+                result15: ValidationResult<E>,
+                result16: ValidationResult<E>,
+                result17: ValidationResult<E>,
+                result18: ValidationResult<E>,
+                result19: ValidationResult<E>,
+                result20: ValidationResult<E>,
+                result21: ValidationResult<E>,
+                result22: ValidationResult<E>,
+                result23: ValidationResult<E>,
+                result24: ValidationResult<E>,
+                result25: ValidationResult<E>,
+                result26: ValidationResult<E>,
+                result27: ValidationResult<E>,
+                result28: ValidationResult<E>,
+                result29: ValidationResult<E>,
+                result30: ValidationResult<E>,
+            ): ValidationResult<E> {
+                val mask =
+                    result1.invalidFlag or
+                        (result2.invalidFlag shl 1) or
+                        (result3.invalidFlag shl 2) or
+                        (result4.invalidFlag shl 3) or
+                        (result5.invalidFlag shl 4) or
+                        (result6.invalidFlag shl 5) or
+                        (result7.invalidFlag shl 6) or
+                        (result8.invalidFlag shl 7) or
+                        (result9.invalidFlag shl 8) or
+                        (result10.invalidFlag shl 9) or
+                        (result11.invalidFlag shl 10) or
+                        (result12.invalidFlag shl 11) or
+                        (result13.invalidFlag shl 12) or
+                        (result14.invalidFlag shl 13) or
+                        (result15.invalidFlag shl 14) or
+                        (result16.invalidFlag shl 15) or
+                        (result17.invalidFlag shl 16) or
+                        (result18.invalidFlag shl 17) or
+                        (result19.invalidFlag shl 18) or
+                        (result20.invalidFlag shl 19) or
+                        (result21.invalidFlag shl 20) or
+                        (result22.invalidFlag shl 21) or
+                        (result23.invalidFlag shl 22) or
+                        (result24.invalidFlag shl 23) or
+                        (result25.invalidFlag shl 24) or
+                        (result26.invalidFlag shl 25) or
+                        (result27.invalidFlag shl 26) or
+                        (result28.invalidFlag shl 27) or
+                        (result29.invalidFlag shl 28) or
+                        (result30.invalidFlag shl 29)
+
+                if (mask == 0) return Valid
+
+                if (mask.countOneBits() == 1) {
+                    when (mask.countTrailingZeroBits()) {
+                        0 -> return result1
+                        1 -> return result2
+                        2 -> return result3
+                        3 -> return result4
+                        4 -> return result5
+                        5 -> return result6
+                        6 -> return result7
+                        7 -> return result8
+                        8 -> return result9
+                        9 -> return result10
+                        10 -> return result11
+                        11 -> return result12
+                        12 -> return result13
+                        13 -> return result14
+                        14 -> return result15
+                        15 -> return result16
+                        16 -> return result17
+                        17 -> return result18
+                        18 -> return result19
+                        19 -> return result20
+                        20 -> return result21
+                        21 -> return result22
+                        22 -> return result23
+                        23 -> return result24
+                        24 -> return result25
+                        25 -> return result26
+                        26 -> return result27
+                        27 -> return result28
+                        28 -> return result29
+                        29 -> return result30
+                    }
+                }
+
+                var current = 0
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size +
+                            result17.size +
+                            result18.size +
+                            result19.size +
+                            result20.size +
+                            result21.size +
+                            result22.size +
+                            result23.size +
+                            result24.size +
+                            result25.size +
+                            result26.size +
+                            result27.size +
+                            result28.size +
+                            result29.size +
+                            result30.size,
+                    )
+                result1.forEach { array[current++] = it }
+                result2.forEach { array[current++] = it }
+                result3.forEach { array[current++] = it }
+                result4.forEach { array[current++] = it }
+                result5.forEach { array[current++] = it }
+                result6.forEach { array[current++] = it }
+                result7.forEach { array[current++] = it }
+                result8.forEach { array[current++] = it }
+                result9.forEach { array[current++] = it }
+                result10.forEach { array[current++] = it }
+                result11.forEach { array[current++] = it }
+                result12.forEach { array[current++] = it }
+                result13.forEach { array[current++] = it }
+                result14.forEach { array[current++] = it }
+                result15.forEach { array[current++] = it }
+                result16.forEach { array[current++] = it }
+                result17.forEach { array[current++] = it }
+                result18.forEach { array[current++] = it }
+                result19.forEach { array[current++] = it }
+                result20.forEach { array[current++] = it }
+                result21.forEach { array[current++] = it }
+                result22.forEach { array[current++] = it }
+                result23.forEach { array[current++] = it }
+                result24.forEach { array[current++] = it }
+                result25.forEach { array[current++] = it }
+                result26.forEach { array[current++] = it }
+                result27.forEach { array[current++] = it }
+                result28.forEach { array[current++] = it }
+                result29.forEach { array[current++] = it }
+                result30.forEach { array[current++] = it }
+                return Invalid(array as Array<E>)
+            }
             // endregion generated-validation-result-of
         }
     }
