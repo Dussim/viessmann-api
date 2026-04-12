@@ -81,6 +81,21 @@ internal val GatewayTypeInstanceFactory =
             "Lancard" -> GatewayType.Lancard
             "One_Base_Evolve_Box" -> GatewayType.OneBaseEvolveBox
             "Vitocontrol_A_PRO" -> GatewayType.VitocontrolAPro
+            "TCU10x_Vitodens_SE_S1" -> GatewayType.Tcu10xVitodensSeS1
+            "TCU10x_ViAir_VitoconnectV" -> GatewayType.Tcu10xViAirVitoconnectV
+            "TCU10x_Vitopure_EU" -> GatewayType.Tcu10xVitopureEu
+            "TCU10x_Vitocal_262_060" -> GatewayType.Tcu10xVitocal262060
+            "TCU10x_Vitoset" -> GatewayType.Tcu10xVitoset
+            "SCU_1000" -> GatewayType.Scu1000
+            "TCU301_Vitocal" -> GatewayType.Tcu301Vitocal
+            "TCU301_Vitocharge" -> GatewayType.Tcu301Vitocharge
+            "TCU301_Vitodens" -> GatewayType.Tcu301Vitodens
+            "TCU301_Vitocrossal" -> GatewayType.Tcu301Vitocrossal
+            "TCU10x_DevBoards" -> GatewayType.Tcu10xDevBoards
+            "TCU301_DevBoards" -> GatewayType.Tcu301DevBoards
+            "Infinity" -> GatewayType.Infinity
+            "TCU10x_Vitodens_SE_NA" -> GatewayType.Tcu10xVitodensSeNa
+            "TCU10x_RAC" -> GatewayType.Tcu10xRac
             else -> GatewayType.Unknown(value)
         }
     }

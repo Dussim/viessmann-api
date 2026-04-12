@@ -99,6 +99,8 @@ val DEFAULT_CONSTRAINTS =
         "constraint4",
         "constraint5",
         "constraint6",
+        "constraint7",
+        "constraint8",
     )
 
 /**
@@ -278,22 +280,87 @@ data class CommandSignature(
     val parameters: List<Pair<String, TypeName>>,
 ) {
     val implName: String
-        get() {
-            val capitalizedName = name.replaceFirstChar { it.uppercase() }
-            if (parameters.isEmpty()) return "${capitalizedName}Impl"
-            val paramsPart =
-                parameters.joinToString("") { (pNameRaw, pType) ->
-                    val typePart =
-                        pType
-                            .toString()
-                            .substringAfterLast(".")
-                            .removeSuffix("?")
-                            .replaceFirstChar { it.uppercase() }
-                    val pName = pNameRaw.replaceFirstChar { it.uppercase() }
-                    pName + typePart
-                }
-            return "${capitalizedName}${paramsPart}Impl"
+        get() = buildImplName(name, parameters)
+}
+
+/**
+ * Generates a short, stable implementation class name for a command.
+ *
+ * **Normal format** (when the result fits within [MAX_IMPL_NAME_LENGTH] chars):
+ * `{CapitalizedCommandName}{params}Impl`
+ *
+ * Each parameter contributes `{CapitalizedParamName}{typeAbbrev}`:
+ *   - ParamName is the full camelCase parameter name with first letter uppercased.
+ *   - typeAbbrev is the constraint type abbreviation:
+ *       StringConstraints        → S
+ *       NumberConstraints        → N
+ *       BooleanConstraints       → B
+ *       ArrayStringConstraints   → AS
+ *       ArrayNumberConstraints   → AN
+ *       ArrayBooleanConstraints  → AB
+ *       ArrayObjectConstraints   → AO
+ *       ArrayUnknownConstraints  → AU
+ *       ArrayEmptyConstraints    → AE
+ *       ScheduleConstraints      → SC
+ *       EnergyMatrixConstraints  → EM
+ *       ObjectConstraints        → O
+ *       UnknownConstraints       → U
+ *       (anything else)          → X
+ *
+ * **Hash fallback** (when the normal name would exceed [MAX_IMPL_NAME_LENGTH] = $MAX_IMPL_NAME_LENGTH chars):
+ * `{CapitalizedCommandName}_{hash8hex}Impl`
+ * where hash8hex is the first 8 hex characters of the SHA-256 of the full
+ * (un-truncated) params part, ensuring uniqueness without length blow-up.
+ *
+ * Examples:
+ *   - setTemperature(value: StringConstraints)                         → SetTemperatureValueSImpl
+ *   - setCurve(shift: NumberConstraints, slope: NumberConstraints)     → SetCurveShiftNSlopeNImpl
+ *   - setUnitSystemAndFormatters(unitSystem:S, dateFormat:S, ×8 …)    → SetUnitSystemAndFormatters_a3f9b2c1Impl
+ */
+private const val MAX_IMPL_NAME_LENGTH = 80
+
+private fun buildImplName(
+    name: String,
+    parameters: List<Pair<String, TypeName>>,
+): String {
+    val capitalizedName = name.replaceFirstChar { it.uppercase() }
+    if (parameters.isEmpty()) return "${capitalizedName}Impl"
+
+    val typeAbbrevs =
+        mapOf(
+            "StringConstraints" to "S",
+            "NumberConstraints" to "N",
+            "BooleanConstraints" to "B",
+            "ArrayStringConstraints" to "AS",
+            "ArrayNumberConstraints" to "AN",
+            "ArrayBooleanConstraints" to "AB",
+            "ArrayObjectConstraints" to "AO",
+            "ArrayUnknownConstraints" to "AU",
+            "ArrayEmptyConstraints" to "AE",
+            "ScheduleConstraints" to "SC",
+            "EnergyMatrixConstraints" to "EM",
+            "ObjectConstraints" to "O",
+            "UnknownConstraints" to "U",
+        )
+
+    val paramsPart =
+        parameters.joinToString("") { (pName, pType) ->
+            val simpleName = pType.toString().substringAfterLast(".").removeSuffix("?")
+            val typeAbbrev = typeAbbrevs[simpleName] ?: "X"
+            pName.replaceFirstChar { it.uppercase() } + typeAbbrev
         }
+
+    val fullName = "${capitalizedName}${paramsPart}Impl"
+    if (fullName.length <= MAX_IMPL_NAME_LENGTH) return fullName
+
+    // Hash fallback: SHA-256 of paramsPart, take first 8 hex chars
+    val digest = java.security.MessageDigest.getInstance("SHA-256")
+    val hash =
+        digest
+            .digest(paramsPart.toByteArray())
+            .take(4)
+            .joinToString("") { "%02x".format(it) }
+    return "${capitalizedName}_${hash}Impl"
 }
 
 data class RuleSignature(

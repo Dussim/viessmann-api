@@ -20,7 +20,9 @@ apply: always
 
 ### Build & Configuration
 
-**Requirements:** Java 21+, Node.js (for JS tests)
+**Requirements:** Java 21+ on PATH, Node.js (for JS tests)
+
+**Java:** Do NOT set or override `JAVA_HOME`. Java 21+ is already on PATH. Run all commands using the system `java` directly. Gradle wrapper will pick it up automatically.
 
 **Build commands:**
 
@@ -166,11 +168,7 @@ Reports: `api/feature/benchmark/build/reports/jmh/results.json`
 
 ### Troubleshooting
 
-**JAVA_HOME issues on Windows:**
-
-```powershell
-$env:JAVA_HOME = "$env:USERPROFILE\.jdks\openjdk-21"
-```
+**JAVA_HOME issues on Windows:** Do not set `JAVA_HOME` manually. Java 21+ must be on PATH. If Gradle complains about `JAVA_HOME`, unset it and rely on PATH.
 
 **Configuration Cache:** Enabled by default. Problems report: `build/reports/problems/problems-report.html`
 

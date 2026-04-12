@@ -25,7 +25,16 @@ class FeatureInterfaceGenerator(
     ): CommandSignature {
         val params =
             command["params"]?.jsonObject?.entries?.sortedBy { it.key }?.map { (pName, pParam) ->
-                ParameterSignature(pName, pParam.jsonObject["type"]?.jsonPrimitive?.content ?: "")
+                val rawType =
+                    pParam.jsonObject["type"]
+                        ?.jsonPrimitive
+                        ?.content
+                        .orEmpty()
+                val normalized = ParameterSignature.normalizeCommandParameterType(rawType, "", name, pName)
+                if (normalized == "array") {
+                    ParameterSignature.unsupportedCommandParameterType("", name, pName, "array (missing element subtype)")
+                }
+                ParameterSignature(pName, normalized)
             } ?: emptyList()
         return CommandSignature(name, params)
     }

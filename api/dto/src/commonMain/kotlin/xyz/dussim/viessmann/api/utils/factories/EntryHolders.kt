@@ -97,6 +97,21 @@ internal val GatewayTypeEntryHolder =
         GatewayType.Lancard,
         GatewayType.OneBaseEvolveBox,
         GatewayType.VitocontrolAPro,
+        GatewayType.Tcu10xVitodensSeS1,
+        GatewayType.Tcu10xViAirVitoconnectV,
+        GatewayType.Tcu10xVitopureEu,
+        GatewayType.Tcu10xVitocal262060,
+        GatewayType.Tcu10xVitoset,
+        GatewayType.Scu1000,
+        GatewayType.Tcu301Vitocal,
+        GatewayType.Tcu301Vitocharge,
+        GatewayType.Tcu301Vitodens,
+        GatewayType.Tcu301Vitocrossal,
+        GatewayType.Tcu10xDevBoards,
+        GatewayType.Tcu301DevBoards,
+        GatewayType.Infinity,
+        GatewayType.Tcu10xVitodensSeNa,
+        GatewayType.Tcu10xRac,
     )
 
 internal val InstallationTypeEntryHolder =

@@ -83,6 +83,7 @@ fun buildFeatureInterface(
                     interfaceName,
                     command.signature.name,
                     command.signature.parameters,
+                    model.featureName,
                 )
             typeSpec.addType(commandInterface)
 

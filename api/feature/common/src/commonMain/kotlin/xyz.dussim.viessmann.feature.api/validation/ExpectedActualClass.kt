@@ -1,9 +1,17 @@
 package xyz.dussim.viessmann.feature.api.validation
 
+import xyz.dussim.viessmann.feature.api.ArrayBooleanConstraints
+import xyz.dussim.viessmann.feature.api.ArrayConstraints
+import xyz.dussim.viessmann.feature.api.ArrayEmptyConstraints
+import xyz.dussim.viessmann.feature.api.ArrayNumberConstraints
+import xyz.dussim.viessmann.feature.api.ArrayObjectConstraints
+import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
+import xyz.dussim.viessmann.feature.api.ArrayUnknownConstraints
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
+import xyz.dussim.viessmann.feature.api.EnergyMatrixConstraints
 import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.ListBusTypeValue
@@ -22,18 +30,21 @@ import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
 import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
+import xyz.dussim.viessmann.feature.api.ListSolarlogDeviceValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
 import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
+import xyz.dussim.viessmann.feature.api.ObjectConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
 import xyz.dussim.viessmann.feature.api.ProductInfoValue
 import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
+import xyz.dussim.viessmann.feature.api.TestResultValue
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
 import xyz.dussim.viessmann.feature.api.UnknownValue
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentTypeMismatch
@@ -60,7 +71,16 @@ private val CLASS_REGISTRY: List<KClass<*>> =
         BooleanConstraints::class,
         NumberConstraints::class,
         StringConstraints::class,
+        ArrayConstraints::class,
+        ArrayEmptyConstraints::class,
+        ArrayNumberConstraints::class,
+        ArrayStringConstraints::class,
+        ArrayBooleanConstraints::class,
+        ArrayObjectConstraints::class,
+        ArrayUnknownConstraints::class,
+        ObjectConstraints::class,
         ScheduleConstraints::class,
+        EnergyMatrixConstraints::class,
         UnknownConstraints::class,
         Command::class,
         Nothing::class,
@@ -81,6 +101,8 @@ private val CLASS_REGISTRY: List<KClass<*>> =
         ListFuelCellErrorValue::class,
         ListWifiNetworkValue::class,
         ListVentilationMessageValue::class,
+        TestResultValue::class,
+        ListSolarlogDeviceValue::class,
     )
 
 @PublishedApi
@@ -132,7 +154,34 @@ internal val NUMBER_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(NumberConst
 internal val STRING_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(StringConstraints::class)
 
 @PublishedApi
+internal val ARRAY_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ArrayConstraints::class)
+
+@PublishedApi
+internal val ARRAY_EMPTY_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ArrayEmptyConstraints::class)
+
+@PublishedApi
+internal val ARRAY_NUMBER_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ArrayNumberConstraints::class)
+
+@PublishedApi
+internal val ARRAY_STRING_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ArrayStringConstraints::class)
+
+@PublishedApi
+internal val ARRAY_BOOLEAN_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ArrayBooleanConstraints::class)
+
+@PublishedApi
+internal val ARRAY_OBJECT_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ArrayObjectConstraints::class)
+
+@PublishedApi
+internal val ARRAY_UNKNOWN_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ArrayUnknownConstraints::class)
+
+@PublishedApi
+internal val OBJECT_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ObjectConstraints::class)
+
+@PublishedApi
 internal val SCHEDULE_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(ScheduleConstraints::class)
+
+@PublishedApi
+internal val ENERGY_MATRIX_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(EnergyMatrixConstraints::class)
 
 @PublishedApi
 internal val UNKNOWN_CONSTRAINTS_CLASS_INDEX = CLASS_REGISTRY.indexOf(UnknownConstraints::class)
@@ -194,7 +243,14 @@ internal val LIST_WIFI_NETWORK_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListWi
 @PublishedApi
 internal val LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListVentilationMessageValue::class)
 
+@PublishedApi
+internal val TEST_RESULT_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(TestResultValue::class)
+
+@PublishedApi
+internal val LIST_SOLARLOG_DEVICE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListSolarlogDeviceValue::class)
+
 private val SIZE = CLASS_REGISTRY.size
+internal val CLASS_REGISTRY_SIZE = SIZE
 
 private val EXPECTED_ACTUAL_CLASSES by lazy {
     buildList(CLASS_REGISTRY.size * CLASS_REGISTRY.size) {

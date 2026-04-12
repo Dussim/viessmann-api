@@ -16,6 +16,7 @@ object CommandInterfaceGenerator {
         name: String,
         commandName: String,
         params: List<ParameterSignature>,
+        featureName: String = "",
     ): TypeSpec {
         val commandClassName =
             when (params.size) {
@@ -26,7 +27,13 @@ object CommandInterfaceGenerator {
                 4 -> ClassName("xyz.dussim.viessmann.feature.api", "Command4")
                 5 -> ClassName("xyz.dussim.viessmann.feature.api", "Command5")
                 6 -> ClassName("xyz.dussim.viessmann.feature.api", "Command6")
-                else -> error("Too many parameters for command")
+                7 -> ClassName("xyz.dussim.viessmann.feature.api", "Command7")
+                8 -> ClassName("xyz.dussim.viessmann.feature.api", "Command8")
+                else -> error(
+                    "Too many parameters (${params.size}) for command '$commandName'" +
+                        (if (featureName.isNotEmpty()) " in feature '$featureName'" else "") +
+                        ". Max supported: 8. Params: ${params.map { it.name }}",
+                )
             }
 
         val typeSpec =
@@ -81,9 +88,32 @@ object CommandInterfaceGenerator {
                 )
             }
 
-            else -> {
-                error("Unknown parameter type: $type")
+            "EnergyMatrix" -> {
+                ClassName("xyz.dussim.viessmann.feature.api", "EnergyMatrix")
             }
+
+            "array:number" -> {
+                List::class.asClassName().parameterizedBy(Double::class.asTypeName())
+            }
+
+            "array:string" -> {
+                List::class.asClassName().parameterizedBy(String::class.asTypeName())
+            }
+
+            "array:boolean" -> {
+                List::class.asClassName().parameterizedBy(Boolean::class.asTypeName())
+            }
+
+            "array:object" -> {
+                val jsonObjectClass = ClassName("kotlinx.serialization.json", "JsonObject")
+                List::class.asClassName().parameterizedBy(jsonObjectClass)
+            }
+
+            "object" -> {
+                ClassName("kotlinx.serialization.json", "JsonObject")
+            }
+
+            else -> error("Unknown parameter type: $type")
         }
 
     private fun mapParameterTypeToConstraintsTypeName(type: String): TypeName =
@@ -91,7 +121,13 @@ object CommandInterfaceGenerator {
             "string" -> ClassName("xyz.dussim.viessmann.feature.api", "StringConstraints")
             "number" -> ClassName("xyz.dussim.viessmann.feature.api", "NumberConstraints")
             "boolean" -> ClassName("xyz.dussim.viessmann.feature.api", "BooleanConstraints")
+            "array:number" -> ClassName("xyz.dussim.viessmann.feature.api", "ArrayNumberConstraints")
+            "array:string" -> ClassName("xyz.dussim.viessmann.feature.api", "ArrayStringConstraints")
+            "array:boolean" -> ClassName("xyz.dussim.viessmann.feature.api", "ArrayBooleanConstraints")
+            "array:object" -> ClassName("xyz.dussim.viessmann.feature.api", "ArrayObjectConstraints")
+            "object" -> ClassName("xyz.dussim.viessmann.feature.api", "ObjectConstraints")
             "Schedule" -> ClassName("xyz.dussim.viessmann.feature.api", "ScheduleConstraints")
+            "EnergyMatrix" -> ClassName("xyz.dussim.viessmann.feature.api", "EnergyMatrixConstraints")
             else -> error("Unknown parameter type: $type")
         }
 }

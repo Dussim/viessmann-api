@@ -19,11 +19,11 @@ fun Indexed(
         override val byWildcardNameThenStructure = FeatureMatcher.byWildcardNameThenStructure(wildcardName, validation)
         override val byWildcardNameThenFailFastStructure = FeatureMatcher.byWildcardNameThenFailFastStructure(wildcardName, failFast)
 
-        override fun byName(index: Int): FeatureMatcher = FeatureMatcher.byName(wildcardName.replace("{}", index.toString()))
+        override fun byName(index: Int): FeatureMatcher = FeatureMatcher.byName(wildcardName.replace("{N}", index.toString()))
 
-        override fun byNameThenStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenStructure(wildcardName.replace("{}", index.toString()), validation)
+        override fun byNameThenStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenStructure(wildcardName.replace("{N}", index.toString()), validation)
 
-        override fun byNameThenFailFastStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenFailFastStructure(wildcardName.replace("{}", index.toString()), failFast)
+        override fun byNameThenFailFastStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenFailFastStructure(wildcardName.replace("{N}", index.toString()), failFast)
     }
 
 fun Static(
@@ -47,7 +47,7 @@ fun FeatureMatchers(
     validation: ValidationRule<Feature, ValidationError>,
     failFast: ValidationRule<Feature, ValidationError>,
 ): FeatureMatchers =
-    when (featureName.contains("{}")) {
+    when (featureName.contains("{N}")) {
         true -> Indexed(featureName, validation, failFast)
         false -> Static(featureName, validation, failFast)
     }

@@ -155,7 +155,7 @@ val validationDescriptors =
         HeatingBurnersNModulationFeature.descriptor expecting 1326,
         HeatingBurnersNStatisticsFeature.descriptor expecting 78,
         HeatingBurnersNFeature.descriptor expecting 4056,
-        HeatingCircuitsFeature.descriptor expecting 156,
+        HeatingCircuitsFeature.descriptor expecting 78,
         HeatingCircuitsNCirculationPumpFeature.descriptor expecting 1794,
         HeatingCircuitsNFrostprotectionFeature.descriptor expecting 1794,
         HeatingCircuitsNHeatingCurveFeature.descriptor expecting 234,

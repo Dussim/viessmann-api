@@ -78,14 +78,7 @@ class YamlFeatureInterfaceGenerator(
     fun getCommandSignature(command: YamlCommandDeclaration): CommandSignature {
         val params =
             command.parameters.map { param ->
-                val apiType =
-                    when (param.type) {
-                        "Boolean" -> "boolean"
-                        "Double" -> "number"
-                        "Schedule" -> "Schedule"
-                        else -> "string"
-                    }
-                ParameterSignature(param.name, apiType)
+                ParameterSignature(param.name, ParameterSignature.normalizeCommandParameterType(param.type))
             }
         return CommandSignature(command.commandName, params)
     }
@@ -370,6 +363,10 @@ class YamlFeatureInterfaceGenerator(
                 "ListSensorValue"
             }
 
+            "testResult" -> {
+                "TestResultValue"
+            }
+
             else -> {
                 throw UnsupportedPropertyTypeException(
                     featureName = featureName,
@@ -637,40 +634,133 @@ class YamlFeatureInterfaceGenerator(
         return commandEntries.mapNotNull { (propertyName, cmdSchema) ->
             val cmdFields = cmdSchema.properties ?: return@mapNotNull null
             val commandName = cmdFields["name"]?.example?.toString() ?: propertyName
+            val requestParameterTypes = extractCommandParameterTypesFromRequestBody(api, featureName, commandName)
 
             YamlCommandDeclaration(
                 propertyName = propertyName,
                 commandName = commandName,
                 interfaceName = propertyName.replaceFirstChar { it.uppercaseChar() },
-                parameters = extractCommandParameters(cmdFields["params"]),
+                parameters = extractCommandParameters(featureName, commandName, cmdFields["params"], requestParameterTypes),
                 isRequired = propertyName in requiredCommands,
             )
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun extractCommandParameters(paramsSchema: Schema<*>?): List<YamlCommandParameter> {
+    private fun extractCommandParameters(
+        featureName: String,
+        commandName: String,
+        paramsSchema: Schema<*>?,
+        requestParameterTypes: Map<String, String>,
+    ): List<YamlCommandParameter> {
         val paramEntries = paramsSchema?.properties ?: return emptyList()
 
         return paramEntries.mapNotNull { (name, paramSchema) ->
             val fields = paramSchema.properties ?: return@mapNotNull null
             val type = fields["type"]?.example?.toString() ?: "string"
-
-            val (kotlinType, constraintType) =
-                when (type) {
-                    "boolean" -> "Boolean" to "BooleanConstraints"
-                    "number" -> "Double" to "NumberConstraints"
-                    "Schedule" -> "Schedule" to "ScheduleConstraints"
-                    else -> "String" to "StringConstraints"
+            val normalized = ParameterSignature.normalizeCommandParameterType(type, featureName, commandName, name)
+            val requestType = requestParameterTypes[name]
+            val apiType =
+                when {
+                    normalized == "array" ->
+                        requestType
+                            ?: ParameterSignature.unsupportedCommandParameterType(featureName, commandName, name, "array")
+                    else -> normalized
+                }
+            val constraintType =
+                when (apiType) {
+                    "boolean" -> "BooleanConstraints"
+                    "number" -> "NumberConstraints"
+                    "string" -> "StringConstraints"
+                    "array:number" -> "ArrayNumberConstraints"
+                    "array:string" -> "ArrayStringConstraints"
+                    "array:boolean" -> "ArrayBooleanConstraints"
+                    "array:object" -> "ArrayObjectConstraints"
+                    "object" -> "ObjectConstraints"
+                    "Schedule" -> "ScheduleConstraints"
+                    "EnergyMatrix" -> "EnergyMatrixConstraints"
+                    else -> ParameterSignature.unsupportedCommandParameterType(featureName, commandName, name, apiType)
                 }
 
             YamlCommandParameter(
                 name = name,
-                type = kotlinType,
+                type = apiType,
                 constraintType = constraintType,
             )
         }
     }
+
+    private fun extractCommandParameterTypesFromRequestBody(
+        api: OpenAPI,
+        featureName: String,
+        commandName: String,
+    ): Map<String, String> {
+        val commandPathPart = "/features/$featureName/commands/$commandName"
+        val commandOperation =
+            api.paths
+                ?.entries
+                ?.firstOrNull { (path, _) -> path.contains(commandPathPart) }
+                ?.value
+                ?.post
+                ?: return emptyMap()
+
+        val requestSchema =
+            commandOperation
+                .requestBody
+                ?.content
+                ?.get("application/json")
+                ?.schema
+                ?: return emptyMap()
+
+        val resolvedSchema = resolveSchemaComposition(requestSchema, featureName)
+        val properties = resolvedSchema.properties ?: return emptyMap()
+
+        return properties.mapValues { (parameterName, schema) ->
+            val resolved = resolveSchemaComposition(schema, featureName)
+            mapCommandParameterTypeFromSchema(resolved, featureName, commandName, parameterName)
+        }
+    }
+
+    private fun mapCommandParameterTypeFromSchema(
+        schema: Schema<*>,
+        featureName: String,
+        commandName: String,
+        parameterName: String,
+    ): String =
+        when (schema.type) {
+            "boolean" -> "boolean"
+            "number", "integer" -> "number"
+            "string" -> "string"
+            "array" -> mapArrayCommandParameterType(schema.items, featureName, commandName, parameterName)
+            "object" -> "object"
+            else ->
+                ParameterSignature.unsupportedCommandParameterType(
+                    featureName,
+                    commandName,
+                    parameterName,
+                    schema.type ?: "unknown",
+                )
+        }
+
+    private fun mapArrayCommandParameterType(
+        items: Schema<*>?,
+        featureName: String,
+        commandName: String,
+        parameterName: String,
+    ): String =
+        when (items?.type) {
+            "number", "integer" -> "array:number"
+            "string" -> "array:string"
+            "boolean" -> "array:boolean"
+            "object" -> "array:object"
+            else ->
+                ParameterSignature.unsupportedCommandParameterType(
+                    featureName,
+                    commandName,
+                    parameterName,
+                    items?.type ?: "array",
+                )
+        }
 
     // endregion
 
@@ -762,6 +852,13 @@ class YamlFeatureInterfaceGenerator(
                 ObjectArrayMatcher(
                     requiredKeys = listOf("busType"),
                     typeName = "ListBusTypeValue",
+                ),
+                // "type" omitted from requiredKeys: it conflicts with the generic
+                // matchArrayObjectType "type"/"value"/"unit" fast-path check above.
+                // "index", "manufacturer", "model", "serialNumber" are unique enough.
+                ObjectArrayMatcher(
+                    requiredKeys = listOf("index", "manufacturer", "model", "serialNumber"),
+                    typeName = "ListSolarlogDeviceValue",
                 ),
             )
 

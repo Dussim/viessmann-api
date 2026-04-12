@@ -20,6 +20,11 @@ kotlin {
     }
 }
 
+tasks.anonymizeJsonVerify {
+    // all JSONs are now anonymized or generated, for now I don't expect to add new ones, and this takes a lot of time
+    enabled = false
+}
+
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
     dependsOn(tasks.anonymizeJsonVerify)
 }

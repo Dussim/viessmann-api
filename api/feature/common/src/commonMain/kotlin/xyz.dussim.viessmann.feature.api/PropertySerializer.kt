@@ -20,6 +20,161 @@ import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+private data class ArrayElementMatcher<T>(
+    val uniqueKey: String? = null,
+    val requiredKeys: List<String>,
+    val excludedKeys: List<String> = emptyList(),
+    val serializer: KSerializer<T>,
+    val wrapper: (List<T>) -> PropertyValue<*>,
+)
+
+private val ARRAY_ELEMENT_MATCHERS: List<ArrayElementMatcher<*>> =
+    listOf(
+        // Unique-key matchers first (O(1) lookup path)
+        ArrayElementMatcher(
+            uniqueKey = "audiences",
+            requiredKeys = listOf("errorCode", "timestamp", "accessLevel", "priority", "audiences"),
+            serializer = DeviceError.serializer(),
+            wrapper = ::ListDeviceErrorValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "device",
+            requiredKeys = listOf("device", "value"),
+            serializer = ZigbeeDeviceStatus.serializer(),
+            wrapper = ::ListZigbeeDeviceStatusValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "heatingCircuit",
+            requiredKeys = listOf("deviceId", "heatingCircuit"),
+            serializer = RoomActor.serializer(),
+            wrapper = ::ListRoomActorValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "voltageValue",
+            requiredKeys = listOf("voltageValue", "cellBalance", "functionStatus", "safetyStatus"),
+            serializer = OperatingDataCellsDetail.serializer(),
+            wrapper = ::ListOperatingDataCellsDetailValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "memberId",
+            requiredKeys = listOf("id", "role", "status", "memberId"),
+            serializer = EnergyChargedDevice.serializer(),
+            wrapper = ::ListEnergyChargedDeviceValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "lowerBorder",
+            requiredKeys = listOf("level", "lowerBorder", "upperBorder"),
+            serializer = SensorValue.serializer(),
+            wrapper = ::ListSensorValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "ssid",
+            requiredKeys = listOf("ssid", "signalStrength"),
+            serializer = WifiNetwork.serializer(),
+            wrapper = ::ListWifiNetworkValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "count",
+            requiredKeys = listOf("timestamp", "errorCode", "status", "count", "priority"),
+            serializer = VentilationMessage.serializer(),
+            wrapper = ::ListVentilationMessageValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "serialNumber",
+            requiredKeys = listOf("index", "manufacturer", "model", "serialNumber"),
+            serializer = SolarlogDevice.serializer(),
+            wrapper = ::ListSolarlogDeviceValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "tariff1",
+            requiredKeys = listOf("ident", "parent", "type", "class", "tariff1", "tariff2", "unit"),
+            serializer = ElectricalEnergyMatrix.serializer(),
+            wrapper = ::ListElectricalEnergyMatrixValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "stateMachine",
+            requiredKeys = listOf("timestamp", "actor", "status", "event", "circuit", "stateMachine", "additionalInfo"),
+            serializer = LogBookEntry.serializer(),
+            wrapper = ::ListLogBookEntryValue,
+        ),
+        // Non-unique key matchers (need excludedKeys to disambiguate)
+        ArrayElementMatcher(
+            requiredKeys = listOf("type", "brand", "model", "id", "ski"),
+            serializer = EebusDevice.serializer(),
+            wrapper = ::ListEebusDeviceValue,
+        ),
+        ArrayElementMatcher(
+            requiredKeys = listOf("type", "id", "ski"),
+            excludedKeys = listOf("brand", "model"),
+            serializer = EebusServicePartner.serializer(),
+            wrapper = ::ListEebusServicePartnerValue,
+        ),
+        ArrayElementMatcher(
+            requiredKeys = listOf("deviceObjectProperty", "deviceFunction", "softwareVersion", "hardwareVersion", "etn"),
+            excludedKeys = listOf("busAddress"),
+            serializer = DeviceInformation.serializer(),
+            wrapper = ::ListDeviceInformationValue,
+        ),
+        ArrayElementMatcher(
+            requiredKeys = listOf("busAddress", "busType", "deviceObjectProperty"),
+            serializer = BusType.serializer(),
+            wrapper = ::ListBusTypeValue,
+        ),
+        ArrayElementMatcher(
+            requiredKeys = listOf("timestamp", "errorCode", "accessLevel", "priority"),
+            excludedKeys = listOf("audiences", "busAddress", "busType"),
+            serializer = FuelCellError.serializer(),
+            wrapper = ::ListFuelCellErrorValue,
+        ),
+        // Generic fallback — PowerBalanceEntry has no unique keys
+        ArrayElementMatcher(
+            requiredKeys = listOf("value", "unit", "type"),
+            serializer = PowerBalanceEntry.serializer(),
+            wrapper = ::ListPowerBalanceEntryValue,
+        ),
+    )
+
+// Pre-computed index: uniqueKey → matcher (for O(1) fast path)
+private val UNIQUE_KEY_INDEX: Map<String, ArrayElementMatcher<*>> =
+    ARRAY_ELEMENT_MATCHERS
+        .filter { it.uniqueKey != null }
+        .associateBy { it.uniqueKey!! }
+
+private data class ObjectElementMatcher<T>(
+    val uniqueKey: String? = null,
+    val requiredKeys: List<String>,
+    val serializer: KSerializer<T>,
+    val wrapper: (T) -> PropertyValue<*>,
+)
+
+private val OBJECT_ELEMENT_MATCHERS: List<ObjectElementMatcher<*>> =
+    listOf(
+        ObjectElementMatcher(
+            uniqueKey = "hydraulicBalance",
+            requiredKeys = listOf("hydraulicBalance"),
+            serializer = OtherRoomConfiguration.serializer(),
+            wrapper = ::ObjectOtherRoomConfigurationValue,
+        ),
+        ObjectElementMatcher(
+            uniqueKey = "logs",
+            requiredKeys = listOf("logs", "default"),
+            serializer = Logs.serializer(),
+            wrapper = ::LogsValue,
+        ),
+        ObjectElementMatcher(
+            uniqueKey = "viessmannIdentificationNumber",
+            requiredKeys = listOf("busType", "busAddress", "viessmannIdentificationNumber", "productFamily"),
+            serializer = ProductInfo.serializer(),
+            wrapper = ::ProductInfoValue,
+        ),
+        ObjectElementMatcher(
+            uniqueKey = "day",
+            requiredKeys = listOf("day", "month", "year"),
+            serializer = FactoryResetInfo.serializer(),
+            wrapper = ::FactoryResetInfoValue,
+        ),
+    )
+
 @OptIn(ExperimentalSerializationApi::class)
 internal data object PropertySerializer : KSerializer<Property> {
     override val descriptor =
@@ -277,6 +432,24 @@ internal data object PropertySerializer : KSerializer<Property> {
                     )
                 }
 
+                is ListSolarlogDeviceValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(SolarlogDevice.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is TestResultValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        TestResult.serializer(),
+                        propertyValue.element,
+                    )
+                }
+
                 ListEmptyValue -> {
                     encodeSerializableElement(
                         descriptor,
@@ -316,34 +489,29 @@ internal data object PropertySerializer : KSerializer<Property> {
                     ARRAY -> {
                         val array = value as? JsonArray
 
-                        decoder.decodeOrNull(array, String.serializer(), ::ListStringValue)
-                            ?: decoder.decodeOrNull(array, Double.serializer(), ::ListDoubleValue)
-                            ?: decoder.decodeOrNull(array, DeviceError.serializer(), ::ListDeviceErrorValue)
-                            ?: decoder.decodeOrNull(array, ZigbeeDeviceStatus.serializer(), ::ListZigbeeDeviceStatusValue)
-                            ?: decoder.decodeOrNull(array, RoomActor.serializer(), ::ListRoomActorValue)
-                            ?: decoder.decodeOrNull(array, BusType.serializer(), ::ListBusTypeValue)
-                            ?: decoder.decodeOrNull(array, LogBookEntry.serializer(), ::ListLogBookEntryValue)
-                            ?: decoder.decodeOrNull(array, EebusDevice.serializer(), ::ListEebusDeviceValue)
-                            ?: decoder.decodeOrNull(array, EebusServicePartner.serializer(), ::ListEebusServicePartnerValue)
-                            ?: decoder.decodeOrNull(array, ElectricalEnergyMatrix.serializer(), ::ListElectricalEnergyMatrixValue)
-                            ?: decoder.decodeOrNull(array, OperatingDataCellsDetail.serializer(), ::ListOperatingDataCellsDetailValue)
-                            ?: decoder.decodeOrNull(array, EnergyChargedDevice.serializer(), ::ListEnergyChargedDeviceValue)
-                            ?: decoder.decodeOrNull(array, DeviceInformation.serializer(), ::ListDeviceInformationValue)
-                            ?: decoder.decodeOrNull(array, PowerBalanceEntry.serializer(), ::ListPowerBalanceEntryValue)
-                            ?: decoder.decodeOrNull(array, FuelCellError.serializer(), ::ListFuelCellErrorValue)
-                            ?: decoder.decodeOrNull(array, WifiNetwork.serializer(), ::ListWifiNetworkValue)
-                            ?: decoder.decodeOrNull(array, VentilationMessage.serializer(), ::ListVentilationMessageValue)
-                            ?: UnknownValue(value)
+                        if (array == null) {
+                            UnknownValue(value)
+                        } else if (array.isEmpty()) {
+                            ListEmptyValue
+                        } else {
+                            // Try primitives first (cheapest check)
+                            decoder.decodeOrNull(array, String.serializer(), ::ListStringValue)
+                                ?: decoder.decodeOrNull(array, Double.serializer(), ::ListDoubleValue)
+                                // Then key-based object dispatch
+                                ?: decodeArrayByKeyInspection(decoder, array)
+                                ?: UnknownValue(value)
+                        }
                     }
 
                     OBJECT -> {
                         val obj = value as? JsonObject
 
-                        decoder.decodeOrNull(obj, OtherRoomConfiguration.serializer(), ::ObjectOtherRoomConfigurationValue)
-                            ?: decoder.decodeOrNull(obj, Logs.serializer(), ::LogsValue)
-                            ?: decoder.decodeOrNull(obj, ProductInfo.serializer(), ::ProductInfoValue)
-                            ?: decoder.decodeOrNull(obj, FactoryResetInfo.serializer(), ::FactoryResetInfoValue)
-                            ?: UnknownValue(value)
+                        if (obj == null) {
+                            UnknownValue(value)
+                        } else {
+                            decodeObjectByKeyInspection(decoder, obj)
+                                ?: UnknownValue(value)
+                        }
                     }
 
                     DEVICE_LIST -> {
@@ -382,6 +550,39 @@ internal data object PropertySerializer : KSerializer<Property> {
                             array,
                             SensorValue.serializer(),
                             ::ListSensorValue,
+                        )
+                            ?: UnknownValue(value)
+                    }
+
+                    CONSOLIDATOR_VALUE_LIST -> {
+                        val array = value as? JsonArray
+
+                        decoder.decodeOrNull(
+                            array,
+                            EnergyChargedDevice.serializer(),
+                            ::ListEnergyChargedDeviceValue,
+                        )
+                            ?: UnknownValue(value)
+                    }
+
+                    ELECTRICAL_ENERGY_MATRIX -> {
+                        val array = value as? JsonArray
+
+                        decoder.decodeOrNull(
+                            array,
+                            ElectricalEnergyMatrix.serializer(),
+                            ::ListElectricalEnergyMatrixValue,
+                        )
+                            ?: UnknownValue(value)
+                    }
+
+                    TEST_RESULT -> {
+                        val obj = value as? JsonObject
+
+                        decoder.decodeOrNull(
+                            obj,
+                            TestResult.serializer(),
+                            ::TestResultValue,
                         )
                             ?: UnknownValue(value)
                     }
@@ -428,5 +629,72 @@ internal data object PropertySerializer : KSerializer<Property> {
         } catch (_: Exception) {
             return null
         }
+    }
+
+    private fun <T> matchAndDecode(
+        decoder: JsonDecoder,
+        array: JsonArray,
+        matcher: ArrayElementMatcher<T>,
+    ): PropertyValue<*>? =
+        try {
+            matcher.wrapper(decoder.json.decodeFromJsonElement(ListSerializer(matcher.serializer), array))
+        } catch (_: Exception) {
+            null
+        }
+
+    private fun decodeArrayByKeyInspection(
+        decoder: JsonDecoder,
+        array: JsonArray,
+    ): PropertyValue<*>? {
+        val firstElement = array.firstOrNull() ?: return ListEmptyValue
+
+        // Primitive arrays — no key inspection possible
+        if (firstElement !is JsonObject) return null
+
+        val keys = firstElement.keys
+
+        // Fast path: check if any unique key matches
+        for (key in keys) {
+            val matcher = UNIQUE_KEY_INDEX[key]
+            if (matcher != null && keys.containsAll(matcher.requiredKeys)) {
+                return matchAndDecode(decoder, array, matcher)
+            }
+        }
+
+        // Second pass: required + excluded key matching
+        for (matcher in ARRAY_ELEMENT_MATCHERS) {
+            if (matcher.uniqueKey != null) continue // already tried in fast path
+            if (keys.containsAll(matcher.requiredKeys) &&
+                (matcher.excludedKeys.isEmpty() || matcher.excludedKeys.none { it in keys })
+            ) {
+                return matchAndDecode(decoder, array, matcher)
+            }
+        }
+
+        return null
+    }
+
+    private fun <T> decodeObject(
+        decoder: JsonDecoder,
+        obj: JsonObject,
+        matcher: ObjectElementMatcher<T>,
+    ): PropertyValue<*>? =
+        try {
+            matcher.wrapper(decoder.json.decodeFromJsonElement(matcher.serializer, obj))
+        } catch (_: Exception) {
+            null
+        }
+
+    private fun decodeObjectByKeyInspection(
+        decoder: JsonDecoder,
+        obj: JsonObject,
+    ): PropertyValue<*>? {
+        val keys = obj.keys
+        for (matcher in OBJECT_ELEMENT_MATCHERS) {
+            if (keys.containsAll(matcher.requiredKeys)) {
+                return decodeObject(decoder, obj, matcher)
+            }
+        }
+        return null
     }
 }

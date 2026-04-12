@@ -523,6 +523,14 @@
             "1",
             "2"
           ]
+        },
+        "internal":{
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -6332,6 +6340,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -12147,6 +12163,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -17962,6 +17986,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -23777,6 +23809,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -29598,6 +29638,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -35407,6 +35455,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -41222,6 +41278,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -47037,6 +47101,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -52852,6 +52924,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -58667,6 +58747,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -64482,6 +64570,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -70297,6 +70393,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -76112,6 +76216,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -81933,6 +82045,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -87742,6 +87862,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -93557,6 +93685,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -99372,6 +99508,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -105187,6 +105331,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -111002,6 +111154,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -116817,6 +116977,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -122632,6 +122800,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -128447,6 +128623,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -134268,6 +134452,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -140077,6 +140269,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -145892,6 +146092,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -151707,6 +151915,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -157522,6 +157738,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -163337,6 +163561,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -169152,6 +169384,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -174967,6 +175207,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -180782,6 +181030,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -186603,6 +186859,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -192412,6 +192676,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -198227,6 +198499,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -204042,6 +204322,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -209857,6 +210145,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -215672,6 +215968,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -221487,6 +221791,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -227302,6 +227614,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -233117,6 +233437,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -238938,6 +239266,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -244747,6 +245083,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -250562,6 +250906,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -256377,6 +256729,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -262192,6 +262552,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -268007,6 +268375,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -273822,6 +274198,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -279637,6 +280021,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -285458,6 +285850,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -291267,6 +291667,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -297082,6 +297490,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -302897,6 +303313,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -308712,6 +309136,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -314527,6 +314959,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -320342,6 +320782,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -326157,6 +326605,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -331978,6 +332434,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -337787,6 +338251,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -343602,6 +344074,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -349417,6 +349897,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -355232,6 +355720,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -361047,6 +361543,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -366862,6 +367366,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -372683,6 +373195,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -378492,6 +379012,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -384307,6 +384835,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -390122,6 +390658,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -395937,6 +396481,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -401752,6 +402304,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -407567,6 +408127,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -413388,6 +413956,14 @@
             "1",
             "2"
           ]
+        },
+   "internal": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
         }
       },
       "commands": {}
@@ -419197,6 +419773,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -425012,6 +425596,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -430827,6 +431419,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -436642,6 +437242,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -442457,6 +443065,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",
@@ -448272,6 +448888,14 @@
       "uri": "https://example.com/iot/v2/features/installations/10000/gateways/0000000000000000/devices/device-0000000000000000/features/heating.circuits",
       "properties": {
         "enabled": {
+          "type": "array",
+          "value": [
+            "0",
+            "1",
+            "2"
+          ]
+        },
+   "internal": {
           "type": "array",
           "value": [
             "0",

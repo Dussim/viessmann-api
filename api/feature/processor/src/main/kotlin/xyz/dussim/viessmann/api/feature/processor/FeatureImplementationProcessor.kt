@@ -48,6 +48,8 @@ import xyz.dussim.viessmann.feature.api.Command3
 import xyz.dussim.viessmann.feature.api.Command4
 import xyz.dussim.viessmann.feature.api.Command5
 import xyz.dussim.viessmann.feature.api.Command6
+import xyz.dussim.viessmann.feature.api.Command7
+import xyz.dussim.viessmann.feature.api.Command8
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureDescriptor
 import xyz.dussim.viessmann.feature.api.FeatureEnumFactory
@@ -83,6 +85,8 @@ class FeatureImplementationProcessor(
                 Command4::class,
                 Command5::class,
                 Command6::class,
+                Command7::class,
+                Command8::class,
             )
 
         private val PROPERTY_TO_KS_CLASS_DECLARATION = { property: KSPropertyDeclaration ->

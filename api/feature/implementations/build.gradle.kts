@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+import java.time.LocalDate
 
 plugins {
     alias(conventions.plugins.xyz.dussim.kotlin.common)
@@ -33,11 +34,15 @@ generateFeatureInterfacesFromYaml {
     featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
     generatedSources = layout.buildDirectory.dir("generated/features")
     packageName = "xyz.dussim.viessmann.api.features.generated"
+
+    currentDate = LocalDate.of(2000, 1, 1)
 }
 
 generateFeatureJsonsFromYaml {
     featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
     generatedJsons = layout.buildDirectory.dir("generated/feature-jsons")
+
+    currentDate = LocalDate.of(2000, 1, 1)
 }
 
 generateFeatureJsonTests {

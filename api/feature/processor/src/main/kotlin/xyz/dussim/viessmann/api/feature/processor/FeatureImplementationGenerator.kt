@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -15,6 +16,16 @@ import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
+
+private val REQUIRE_COMMAND = MemberName("xyz.dussim.viessmann.feature.api", "requireCommand")
+private val REQUIRE_PROPERTY_VALUE = MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValue")
+private val REQUIRE_PROPERTY_VALUE_OR_NULL_IF_MISSING =
+    MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValueOrNullIfMissing")
+private val FIND_PROPERTY_VALUE_OR_NULL = MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrNull")
+private val REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
+    MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValueOrPromoteEmpty")
+private val FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
+    MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrPromoteEmpty")
 
 /**
  * Generates constructor accepting a delegate feature.
@@ -46,11 +57,11 @@ fun initBlock(
         .builder()
         .apply {
             beginControlFlow("try")
-            context.parameterProperties.forEachIndexed { index, property ->
-                addPropertyInitialization(context, property)
+            context.parameterProperties.forEach { property ->
+                addPropertyInitialization(property)
             }
-            context.commandProperties.forEachIndexed { index, property ->
-                addCommandInitialization(context, property)
+            context.commandProperties.forEach { property ->
+                addCommandInitialization(property)
             }
             nextControlFlow("catch (_: Exception)")
             addValidationException(context, implName)
@@ -61,49 +72,77 @@ fun initBlock(
 /**
  * Adds property initialization code with validation.
  */
-private fun CodeBlock.Builder.addPropertyInitialization(
-    context: SymbolContext,
-    property: ParameterProperty,
-) {
+internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
     val (name, type, _, isListProperty, isEnumProperty) = property
     val combined = propertyHash(name.hashCode(), name.length)
     val isNullable = property.isNullable
     when {
         isEnumProperty && isNullable -> {
             add(
-                "%N = properties[%S, %L]?.value?.let { it as %T }?.let { %T(it) }\n",
+                "%N = properties.%M<%T>(%S, %L)?.let { %T(it) }\n",
                 name,
+                REQUIRE_PROPERTY_VALUE_OR_NULL_IF_MISSING,
+                property.underlyingType,
                 name,
                 combined,
-                property.underlyingType,
                 type.copy(nullable = false),
             )
         }
 
         isEnumProperty -> {
-            add("%N = %T(properties[%S, %L]!!.value as %T)\n", name, type, name, combined, property.underlyingType)
+            add(
+                "%N = %T(properties.%M<%T>(%S, %L))\n",
+                name,
+                type,
+                REQUIRE_PROPERTY_VALUE,
+                property.underlyingType,
+                name,
+                combined,
+            )
         }
 
         isListProperty && isNullable -> {
             add(
-                "%1N = properties[%2S, %3L]?.value as? %4T ?: %4T.EMPTY\n",
+                "%1N = properties.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
                 name,
                 name,
                 combined,
                 type.copy(nullable = false),
+                FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT,
             )
         }
 
         isListProperty -> {
-            add("%1N = properties[%2S, %3L]!!.value as? %4T ?: %4T.EMPTY\n", name, name, combined, type)
+            add(
+                "%1N = properties.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
+                name,
+                name,
+                combined,
+                type,
+                REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT,
+            )
         }
 
         isNullable -> {
-            add("%N = properties[%S, %L]?.value as? %T\n", name, name, combined, type.copy(nullable = false))
+            add(
+                "%N = properties.%M<%T>(%S, %L)\n",
+                name,
+                FIND_PROPERTY_VALUE_OR_NULL,
+                type.copy(nullable = false),
+                name,
+                combined,
+            )
         }
 
         else -> {
-            add("%N = properties[%S, %L]!!.value as %T\n", name, name, combined, type)
+            add(
+                "%N = properties.%M<%T>(%S, %L)\n",
+                name,
+                REQUIRE_PROPERTY_VALUE,
+                type,
+                name,
+                combined,
+            )
         }
     }
 }
@@ -111,10 +150,7 @@ private fun CodeBlock.Builder.addPropertyInitialization(
 /**
  * Adds command initialization code with validation.
  */
-private fun CodeBlock.Builder.addCommandInitialization(
-    context: SymbolContext,
-    property: CommandProperty,
-) {
+internal fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty) {
     val name = property.name
     val propertyHash = propertyHash(name.hashCode(), name.length)
     if (property.isNullable) {
@@ -126,7 +162,7 @@ private fun CodeBlock.Builder.addCommandInitialization(
             property.implType.copy(nullable = false),
         )
     } else {
-        add("%N = %T(delegate.commands[%S, %L]!!)\n", name, property.implType, name, propertyHash)
+        add("%N = %T(delegate.commands.%M(%S, %L))\n", name, property.implType, REQUIRE_COMMAND, name, propertyHash)
     }
 }
 
@@ -138,7 +174,7 @@ private fun CodeBlock.Builder.addValidationException(
     implName: ClassName,
 ) {
     add(
-        "throw %T(%S, validate($DELEGATE), $DELEGATE.feature)\n",
+        "throw %T(%S, validate($DELEGATE), $DELEGATE)\n",
         FeatureValidationException::class.asTypeName(),
         implName.simpleName.replace("_", "").removeSuffix("Impl"),
     )

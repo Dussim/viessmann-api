@@ -178,7 +178,7 @@ class DeviceFeaturesTest :
                 feature.active shouldBeValue true
                 feature.name shouldBeValue "OR 2"
                 feature.heatingCircuit shouldBeValue 1.0
-//                feature.actors shouldBe emptyList()
+                feature.actors shouldBeValue emptyList()
                 feature.activate.shouldNotBeNull()
                 feature.deactivate.shouldNotBeNull()
                 feature.setActive.shouldNotBeNull()

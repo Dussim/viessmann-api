@@ -285,6 +285,7 @@ class YamlFeatureJsonGenerator(
                 return exampleToJson(resolvedExample, api, baseDir)
             } else {
                 logger.warn("Could not resolve example ref: $ref")
+                return JsonNull
             }
         }
         return when (example) {
@@ -434,6 +435,25 @@ class YamlFeatureJsonGenerator(
 
     private val yamlCache = mutableMapOf<String, Map<String, Any?>>()
 
+    private companion object {
+        private val SCHEMA_INDICATOR_KEYS =
+            setOf(
+                "type",
+                "properties",
+                "items",
+                "\$ref",
+                "allOf",
+                "oneOf",
+                "anyOf",
+                "enum",
+                "const",
+                "additionalProperties",
+                "format",
+                "default",
+                "required",
+            )
+    }
+
     private fun loadRawYaml(file: File): Map<String, Any?>? {
         val cacheKey = file.absolutePath
         yamlCache[cacheKey]?.let { return it }
@@ -475,9 +495,17 @@ class YamlFeatureJsonGenerator(
             schema["example"]?.let { return it }
             // Some schemas might have 'value' if it's a specific type of example
             schema["value"]?.let { return it }
+            // Some "schemas" under components/schemas are actually raw example payloads
+            // (no OpenAPI schema keywords). Recognize by the absence of schema-indicator keys
+            // and return the entry itself as the example value.
+            if (!schema.containsAnyKey(SCHEMA_INDICATOR_KEYS)) {
+                return schema
+            }
         }
         return null
     }
+
+    private fun Map<*, *>.containsAnyKey(keys: Set<String>): Boolean = keys.any { containsKey(it) }
 
     // region Schema composition resolution (reused logic from YamlFeatureInterfaceGenerator)
 

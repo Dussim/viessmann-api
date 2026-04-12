@@ -32,6 +32,10 @@ gradlePlugin {
             id = "xyz.dussim.kotlin.jvm.common"
             implementationClass = "xyz.dussim.buildlogic.KotlinJvmCommonPlugin"
         }
+        register("kotlinClient") {
+            id = "xyz.dussim.kotlin.client"
+            implementationClass = "xyz.dussim.buildlogic.KotlinClientPlugin"
+        }
         register("anonymizeJson") {
             id = "xyz.dussim.anonymize.json"
             implementationClass = "xyz.dussim.buildlogic.AnonymizeJsonPlugin"

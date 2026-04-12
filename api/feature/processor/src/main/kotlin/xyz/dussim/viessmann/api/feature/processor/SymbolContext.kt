@@ -4,25 +4,20 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.isAnnotationPresent
-import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.api.feature.annotations.FeatureEnum
 import xyz.dussim.viessmann.api.feature.annotations.GenerateFeatureImplementation
 import xyz.dussim.viessmann.feature.api.BooleanValue
-import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
-import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.ListBusTypeValue
@@ -41,6 +36,7 @@ import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListPropertyValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
+import xyz.dussim.viessmann.feature.api.ListSolarlogDeviceValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
 import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
@@ -49,10 +45,9 @@ import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
 import xyz.dussim.viessmann.feature.api.OfCommand
 import xyz.dussim.viessmann.feature.api.ProductInfoValue
-import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringValue
-import kotlin.time.Instant
+import xyz.dussim.viessmann.feature.api.TestResultValue
 
 val PROPERTY_VALIDATION_FUNCTIONS =
     mapOf(
@@ -84,6 +79,8 @@ val PROPERTY_VALIDATION_FUNCTIONS =
         typeNameOf<ListFuelCellErrorValue>() to validationRule("listFuelCellErrorPropertyRule"),
         typeNameOf<ListWifiNetworkValue>() to validationRule("listWifiNetworkPropertyRule"),
         typeNameOf<ListVentilationMessageValue>() to validationRule("listVentilationMessagePropertyRule"),
+        typeNameOf<ListSolarlogDeviceValue>() to validationRule("listSolarlogDevicePropertyRule"),
+        typeNameOf<TestResultValue>() to validationRule("testResultPropertyRule"),
     )
 
 /**

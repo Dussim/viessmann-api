@@ -24,6 +24,7 @@ import xyz.dussim.viessmann.feature.api.validation.LIST_OPERATING_DATA_CELLS_DET
 import xyz.dussim.viessmann.feature.api.validation.LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ROOM_ACTOR_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_SENSOR_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_SOLARLOG_DEVICE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_STRING_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_WIFI_NETWORK_VALUE_CLASS_INDEX
@@ -33,6 +34,7 @@ import xyz.dussim.viessmann.feature.api.validation.OBJECT_OTHER_ROOM_CONFIGURATI
 import xyz.dussim.viessmann.feature.api.validation.PRODUCT_INFO_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.SCHEDULE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.STRING_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.TEST_RESULT_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.UNKNOWN_VALUE_CLASS_INDEX
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmRecord
@@ -49,6 +51,8 @@ internal const val ENERGY_MATRIX = "EnergyMatrix"
 internal const val ELECTRICAL_ENERGY_MATRIX = "ElectricalEnergyMatrix"
 internal const val CO2_VALUES = "legendCo2Values"
 internal const val AIR_QUALITY_VALUES = "legendAqiValues"
+internal const val CONSOLIDATOR_VALUE_LIST = "ConsolidatorValueList"
+internal const val TEST_RESULT = "testResult"
 
 @JvmRecord
 @ConsistentCopyVisibility
@@ -358,6 +362,25 @@ data class ListWifiNetworkValue(
 }
 
 @JvmRecord
+data class ListSolarlogDeviceValue(
+    override val element: List<SolarlogDevice>,
+) : PropertyValue<List<SolarlogDevice>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_SOLARLOG_DEVICE_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListSolarlogDeviceValue(emptyList())
+    }
+}
+
+@JvmRecord
+data class TestResultValue(
+    override val element: TestResult,
+) : PropertyValue<TestResult> {
+    override val propertyValueClassIndex get() = TEST_RESULT_VALUE_CLASS_INDEX
+}
+
+@JvmRecord
 data class ListVentilationMessageValue(
     override val element: List<VentilationMessage>,
 ) : PropertyValue<List<VentilationMessage>>,
@@ -398,7 +421,7 @@ data class ZigbeeDeviceStatus(
 @Serializable
 data class RoomActor(
     val deviceId: String,
-    val heatingCircuit: Int, // this is not in documentation
+    val heatingCircuit: Int? = null, // this is not in documentation
 )
 
 @JvmRecord
@@ -623,6 +646,39 @@ data class WifiNetwork(
     val signalStrength: Double,
 )
 
+@JvmRecord
+@Serializable
+data class SolarlogDevice(
+    val index: String,
+    val type: String,
+    val manufacturer: String,
+    val model: String,
+    val serialNumber: String,
+)
+
+@JvmRecord
+@Serializable
+data class TestResult(
+    val measuredValue: Measurement,
+    val cutOffLimit: Measurement,
+    val cutOffValue: Measurement,
+    val cutOffTime: Measurement,
+    val status: Status,
+) {
+    @JvmRecord
+    @Serializable
+    data class Measurement(
+        val value: Double,
+        val unit: String,
+    )
+
+    @JvmRecord
+    @Serializable
+    data class Status(
+        val value: String,
+    )
+}
+
 @OptIn(kotlin.time.ExperimentalTime::class)
 @JvmRecord
 @Serializable
@@ -638,10 +694,7 @@ data class VentilationMessage(
 fun Property.Companion.ofBoolean(boolean: Boolean): Property = Property(BOOLEAN, BooleanValue(boolean))
 
 @JvmName("ofDouble")
-fun Property.Companion.ofDouble(
-    double: Double,
-    unit: String? = null,
-): Property = Property(NUMBER, DoubleValue(double))
+fun Property.Companion.ofDouble(double: Double): Property = Property(NUMBER, DoubleValue(double))
 
 @JvmName("ofString")
 fun Property.Companion.of(string: String): Property = Property(STRING, StringValue(string))
@@ -687,3 +740,12 @@ fun Property.Companion.of(scheduleMap: Map<String, List<Schedule>>): Property = 
 
 @JvmName("ofSchedules")
 fun Property.Companion.of(vararg schedule: Pair<String, List<Schedule>>): Property = Property(SCHEDULE, ScheduleValue(schedule.toMap()))
+
+@JvmName("ofSolarlogDevices")
+fun Property.Companion.of(list: List<SolarlogDevice>): Property = Property(ARRAY, ListSolarlogDeviceValue(list))
+
+@JvmName("ofSolarlogDevices")
+fun Property.Companion.of(vararg device: SolarlogDevice): Property = Property(ARRAY, ListSolarlogDeviceValue(device.toList()))
+
+@JvmName("ofTestResult")
+fun Property.Companion.of(testResult: TestResult): Property = Property(TEST_RESULT, TestResultValue(testResult))

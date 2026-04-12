@@ -62,5 +62,5 @@ fun Feature.equalsImpl(other: Any?): Boolean {
 
 private fun String.toWildcardFeature(): String =
     split(".").joinToString(".") { segment ->
-        if (segment.isNotEmpty() && segment.all { it.isDigit() }) "{}" else segment
+        if (segment.isNotEmpty() && segment.all { it.isDigit() }) "{N}" else segment
     }

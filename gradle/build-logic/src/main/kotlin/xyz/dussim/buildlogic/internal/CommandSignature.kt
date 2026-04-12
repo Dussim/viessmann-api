@@ -15,6 +15,11 @@ data class CommandSignature(
                         "string" -> "String"
                         "number" -> "Double"
                         "boolean" -> "Boolean"
+                        "array:number" -> "ArrayDouble"
+                        "array:string" -> "ArrayString"
+                        "array:boolean" -> "ArrayBoolean"
+                        "array:object" -> "ArrayObject"
+                        "object" -> "Object"
                         "Schedule" -> "Schedule"
                         else -> p.type.replaceFirstChar { it.uppercase() }
                     }
@@ -32,4 +37,38 @@ data class CommandSignature(
 data class ParameterSignature(
     val name: String,
     val type: String,
-)
+) {
+    companion object {
+        fun normalizeCommandParameterType(
+            type: String,
+            featureName: String = "",
+            commandName: String = "",
+            parameterName: String = "",
+        ): String =
+            when (type) {
+                "boolean" -> "boolean"
+                "number", "integer" -> "number"
+                "string" -> "string"
+                "array", "array:number", "array:string", "array:boolean", "array:object" -> type
+                "object" -> "object"
+                "Schedule" -> "Schedule"
+                "EnergyMatrix" -> "EnergyMatrix"
+                else -> unsupportedCommandParameterType(featureName, commandName, parameterName, type)
+            }
+
+        fun unsupportedCommandParameterType(
+            featureName: String,
+            commandName: String,
+            parameterName: String,
+            type: String,
+        ): Nothing =
+            error(
+                buildString {
+                    append("Unsupported command parameter type '$type'")
+                    if (featureName.isNotBlank()) append(" in feature '$featureName'")
+                    if (commandName.isNotBlank()) append(", command '$commandName'")
+                    if (parameterName.isNotBlank()) append(", parameter '$parameterName'")
+                },
+            )
+    }
+}

@@ -2,11 +2,19 @@
 
 package xyz.dussim.viessmann.feature.api.validation
 
+import xyz.dussim.viessmann.feature.api.ArrayBooleanConstraints
+import xyz.dussim.viessmann.feature.api.ArrayConstraints
+import xyz.dussim.viessmann.feature.api.ArrayEmptyConstraints
+import xyz.dussim.viessmann.feature.api.ArrayNumberConstraints
+import xyz.dussim.viessmann.feature.api.ArrayObjectConstraints
+import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
+import xyz.dussim.viessmann.feature.api.ArrayUnknownConstraints
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Constraints
 import xyz.dussim.viessmann.feature.api.DoubleValue
+import xyz.dussim.viessmann.feature.api.EnergyMatrixConstraints
 import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.Feature
@@ -26,12 +34,14 @@ import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
 import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
+import xyz.dussim.viessmann.feature.api.ListSolarlogDeviceValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
 import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.LogsValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
+import xyz.dussim.viessmann.feature.api.ObjectConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
 import xyz.dussim.viessmann.feature.api.ProductInfoValue
 import xyz.dussim.viessmann.feature.api.PropertyValue
@@ -39,9 +49,9 @@ import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
+import xyz.dussim.viessmann.feature.api.TestResultValue
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
 import xyz.dussim.viessmann.feature.api.validation.PropertyValidationErrors.getMismatchProperties
-import xyz.dussim.viessmann.feature.api.validation.ValidationError.ComponentTypeMismatch
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.MissingComponent
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch.Expected
@@ -276,6 +286,16 @@ fun listVentilationMessagePropertyRule(
     required: Boolean = true,
 ) = typedListPropertyRule<ListVentilationMessageValue>(propertyName, LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX, required)
 
+fun listSolarlogDevicePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListSolarlogDeviceValue>(propertyName, LIST_SOLARLOG_DEVICE_VALUE_CLASS_INDEX, required)
+
+fun testResultPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedPropertyRule<TestResultValue>(propertyName, TEST_RESULT_VALUE_CLASS_INDEX, required)
+
 fun numberOfParametersRule(
     expected: Int,
     name: String,
@@ -298,10 +318,64 @@ fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstr
 
 fun booleanConstraintsRule(parameterName: String) = typedCommandRule<BooleanConstraints>(parameterName, BOOLEAN_CONSTRAINTS_CLASS_INDEX)
 
+fun arrayNumberConstraintsRule(parameterName: String) = typedArrayCommandRule<ArrayNumberConstraints>(parameterName, ARRAY_NUMBER_CONSTRAINTS_CLASS_INDEX)
+
+fun arrayStringConstraintsRule(parameterName: String) = typedArrayCommandRule<ArrayStringConstraints>(parameterName, ARRAY_STRING_CONSTRAINTS_CLASS_INDEX)
+
+fun arrayBooleanConstraintsRule(parameterName: String) = typedArrayCommandRule<ArrayBooleanConstraints>(parameterName, ARRAY_BOOLEAN_CONSTRAINTS_CLASS_INDEX)
+
+fun arrayObjectConstraintsRule(parameterName: String) = typedArrayCommandRule<ArrayObjectConstraints>(parameterName, ARRAY_OBJECT_CONSTRAINTS_CLASS_INDEX)
+
+fun arrayUnknownConstraintsRule(parameterName: String) = typedArrayCommandRule<ArrayUnknownConstraints>(parameterName, ARRAY_UNKNOWN_CONSTRAINTS_CLASS_INDEX)
+
+fun arrayConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> {
+    val missingError = Invalid(MissingComponent(parameterName, ExpectedActualClass.of(ARRAY_CONSTRAINTS_CLASS_INDEX)))
+    val getMismatchProperties = getMismatchProperties(parameterName, ARRAY_CONSTRAINTS_CLASS_INDEX)
+    val precomputedHash = propertyHash(parameterName.hashCode(), parameterName.length)
+
+    return ValidationRule { target ->
+        val constraints = target.params[parameterName, precomputedHash]?.constraints ?: return@ValidationRule missingError
+        if (constraints is ArrayConstraints) {
+            ValidationResult.Valid
+        } else {
+            getMismatchProperties(constraints.constraintsClassIndex)
+        }
+    }
+}
+
+/**
+ * Accepts `ArrayEmptyConstraints` as valid for any typed array rule: schemas declaring `type: "array"` without an
+ * `enum` deserialize to `ArrayEmptyConstraints`, carry no element-type information, and must still match generated
+ * typed rules. Mirrors the `ArrayEmptyConstraints` fallback in `CommandImplementationGenerator`.
+ */
+@PublishedApi
+internal inline fun <reified T : ArrayConstraints> typedArrayCommandRule(
+    parameterName: String,
+    expectedIndex: Int,
+): ValidationRule<Command, ValidationError> {
+    val missingError = Invalid(MissingComponent(parameterName, ExpectedActualClass.of(expectedIndex)))
+    val getMismatchProperties = getMismatchProperties(parameterName, expectedIndex)
+    val precomputedHash = propertyHash(parameterName.hashCode(), parameterName.length)
+
+    return ValidationRule { target ->
+        val constraints = target.params[parameterName, precomputedHash]?.constraints ?: return@ValidationRule missingError
+        if (constraints is ArrayEmptyConstraints || constraints is T) {
+            ValidationResult.Valid
+        } else {
+            getMismatchProperties(constraints.constraintsClassIndex)
+        }
+    }
+}
+
+fun objectConstraintsRule(parameterName: String) = typedCommandRule<ObjectConstraints>(parameterName, OBJECT_CONSTRAINTS_CLASS_INDEX)
+
 fun unknownConstraintsRule(parameterName: String) = typedCommandRule<UnknownConstraints>(parameterName, UNKNOWN_CONSTRAINTS_CLASS_INDEX)
 
 fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> =
     typedCommandRule<ScheduleConstraints>(parameterName, SCHEDULE_CONSTRAINTS_CLASS_INDEX)
+
+fun energyMatrixConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> =
+    typedCommandRule<EnergyMatrixConstraints>(parameterName, ENERGY_MATRIX_CONSTRAINTS_CLASS_INDEX)
 
 fun commandRule(
     commandName: String,

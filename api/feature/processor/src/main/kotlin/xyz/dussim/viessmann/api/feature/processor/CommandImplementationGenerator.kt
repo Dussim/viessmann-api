@@ -5,27 +5,55 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
+import xyz.dussim.viessmann.feature.api.ArrayBooleanConstraints
+import xyz.dussim.viessmann.feature.api.ArrayNumberConstraints
+import xyz.dussim.viessmann.feature.api.ArrayObjectConstraints
+import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
+import xyz.dussim.viessmann.feature.api.ArrayUnknownConstraints
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.CommandValidationException
+import xyz.dussim.viessmann.feature.api.EnergyMatrixConstraints
 import xyz.dussim.viessmann.feature.api.NumberConstraints
+import xyz.dussim.viessmann.feature.api.ObjectConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.StringConstraints
+import xyz.dussim.viessmann.feature.api.UnknownConstraints
 import xyz.dussim.viessmann.feature.api.validation.CommandValidationRule
 
 private val NUMBER_OF_PARAMETERS_RULE = validationRule("numberOfParametersRule")
+private val REQUIRE_PARAM = MemberName("xyz.dussim.viessmann.feature.api", "requireParam")
+private val REQUIRE_CONSTRAINTS = MemberName("xyz.dussim.viessmann.feature.api", "requireConstraints")
+
+private val ARRAY_CONSTRAINT_CAST_FUNCTIONS: Map<TypeName, MemberName> =
+    mapOf(
+        typeNameOf<ArrayNumberConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayNumberConstraintsOrThrow"),
+        typeNameOf<ArrayStringConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayStringConstraintsOrThrow"),
+        typeNameOf<ArrayBooleanConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayBooleanConstraintsOrThrow"),
+        typeNameOf<ArrayObjectConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayObjectConstraintsOrThrow"),
+        typeNameOf<ArrayUnknownConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayUnknownConstraintsOrThrow"),
+    )
 
 private val CONSTRAINTS_VALIDATION_FUNCTIONS =
     mapOf(
         typeNameOf<StringConstraints>() to validationRule("stringConstraintsRule"),
         typeNameOf<NumberConstraints>() to validationRule("numberConstraintsRule"),
         typeNameOf<BooleanConstraints>() to validationRule("booleanConstraintsRule"),
+        typeNameOf<ArrayNumberConstraints>() to validationRule("arrayNumberConstraintsRule"),
+        typeNameOf<ArrayStringConstraints>() to validationRule("arrayStringConstraintsRule"),
+        typeNameOf<ArrayBooleanConstraints>() to validationRule("arrayBooleanConstraintsRule"),
+        typeNameOf<ArrayObjectConstraints>() to validationRule("arrayObjectConstraintsRule"),
+        typeNameOf<ArrayUnknownConstraints>() to validationRule("arrayUnknownConstraintsRule"),
+        typeNameOf<ObjectConstraints>() to validationRule("objectConstraintsRule"),
         typeNameOf<ScheduleConstraints>() to validationRule("scheduleConstraintsRule"),
+        typeNameOf<EnergyMatrixConstraints>() to validationRule("energyMatrixConstraintsRule"),
+        typeNameOf<UnknownConstraints>() to validationRule("unknownConstraintsRule"),
     )
 
 /**
@@ -49,21 +77,39 @@ fun constructorProperty(context: CommandSymbolContext) = overrideProperty(COMMAN
  * Generates init block that extracts and validates command constraints.
  * Throws CommandValidationException if constraints are invalid.
  */
-fun initBlock(context: CommandSymbolContext) =
+fun initBlock(context: CommandSymbolContext): CodeBlock = buildCommandInitBlock(context.name, context.constraintsProperties)
+
+internal fun buildCommandInitBlock(
+    commandName: String,
+    constraintsProperties: List<ConstraintProperty>,
+): CodeBlock =
     CodeBlock
         .builder()
         .beginControlFlow("try")
         .apply {
-            context.constraintsProperties
-                .forEach {
-                    val combined = propertyHash(it.name.hashCode(), it.name.length)
-                    add("${it.name} = command.params[%S, %L]!!.constraints as %T\n", it.name, combined, it.type)
+            constraintsProperties.forEach {
+                val combined = propertyHash(it.name.hashCode(), it.name.length)
+                val arrayTypeCastFunction = ARRAY_CONSTRAINT_CAST_FUNCTIONS[it.type]
+                if (arrayTypeCastFunction != null) {
+                    val rawVarName = "${it.name}Raw"
+                    add("val $rawVarName = command.params.%M(%S, %L).constraints\n", REQUIRE_PARAM, it.name, combined)
+                    add("${it.name} = $rawVarName.%M()\n", arrayTypeCastFunction)
+                } else {
+                    add(
+                        "${it.name} = command.params.%M(%S, %L).constraints.%M<%T>()\n",
+                        REQUIRE_PARAM,
+                        it.name,
+                        combined,
+                        REQUIRE_CONSTRAINTS,
+                        it.type,
+                    )
                 }
+            }
         }.nextControlFlow("catch (_: Exception)")
         .add(
             "throw %T(%S, validate(command))\n",
             CommandValidationException::class.asTypeName(),
-            context.name.replace("_", ""),
+            commandName.replace("_", ""),
         ).endControlFlow()
         .build()
 

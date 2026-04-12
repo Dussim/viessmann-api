@@ -3,11 +3,19 @@ package xyz.dussim.viessmann.feature.api.validation
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.serialization.json.JsonPrimitive
+import xyz.dussim.viessmann.feature.api.ArrayBooleanConstraints
+import xyz.dussim.viessmann.feature.api.ArrayEmptyConstraints
+import xyz.dussim.viessmann.feature.api.ArrayNumberConstraints
+import xyz.dussim.viessmann.feature.api.ArrayObjectConstraints
+import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
+import xyz.dussim.viessmann.feature.api.ArrayUnknownConstraints
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
+import xyz.dussim.viessmann.feature.api.EnergyMatrixConstraints
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
@@ -17,6 +25,7 @@ import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
+import xyz.dussim.viessmann.feature.api.ObjectConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
 import xyz.dussim.viessmann.feature.api.OtherRoomConfiguration
 import xyz.dussim.viessmann.feature.api.Parameter
@@ -313,6 +322,116 @@ class RulesTest :
                 val command = createCommand(mapOf("schedule" to Parameter.of(constraints)))
                 val rule = scheduleConstraintsRule("schedule")
                 rule.validate(command).isInvalid shouldBe false
+            }
+        }
+
+        context("energyMatrixConstraintsRule") {
+            test("returns Valid when parameter has EnergyMatrixConstraints") {
+                val command = createCommand(mapOf("value" to Parameter.of(EnergyMatrixConstraints)))
+                val rule = energyMatrixConstraintsRule("value")
+                rule.validate(command).isInvalid shouldBe false
+            }
+        }
+
+        context("arrayNumberConstraintsRule") {
+            test("returns Valid when parameter has ArrayNumberConstraints") {
+                val command = createCommand(mapOf("value" to Parameter.of(ArrayNumberConstraints(minLength = 0, maxLength = 576))))
+                val rule = arrayNumberConstraintsRule("value")
+                rule.validate(command).isInvalid shouldBe false
+            }
+
+            test("returns Valid when parameter has ArrayEmptyConstraints") {
+                val command = createCommand(mapOf("value" to Parameter.of(ArrayEmptyConstraints(minLength = 0, maxLength = 10))))
+                val rule = arrayNumberConstraintsRule("value")
+                rule.validate(command).isInvalid shouldBe false
+            }
+        }
+
+        context("arrayStringConstraintsRule") {
+            test("returns Valid when parameter has ArrayStringConstraints") {
+                val command =
+                    createCommand(
+                        mapOf(
+                            "value" to Parameter.of(ArrayStringConstraints(enum = listOf("a"))),
+                        ),
+                    )
+                val rule = arrayStringConstraintsRule("value")
+                rule.validate(command).isInvalid shouldBe false
+            }
+        }
+
+        context("arrayBooleanConstraintsRule") {
+            test("returns Valid when parameter has ArrayBooleanConstraints") {
+                val command = createCommand(mapOf("value" to Parameter.of(ArrayBooleanConstraints(enum = listOf(true, false)))))
+                val rule = arrayBooleanConstraintsRule("value")
+                rule.validate(command).isInvalid shouldBe false
+            }
+        }
+
+        context("arrayObjectConstraintsRule") {
+            test("returns Valid when parameter has ArrayObjectConstraints") {
+                val command = createCommand(mapOf("value" to Parameter.of(ArrayObjectConstraints())))
+                val rule = arrayObjectConstraintsRule("value")
+                rule.validate(command).isInvalid shouldBe false
+            }
+        }
+
+        context("arrayUnknownConstraintsRule") {
+            test("returns Valid when parameter has ArrayUnknownConstraints") {
+                val command = createCommand(mapOf("value" to Parameter.of(ArrayUnknownConstraints())))
+                val rule = arrayUnknownConstraintsRule("value")
+                rule.validate(command).isInvalid shouldBe false
+            }
+
+            test("returns ComponentTypeMismatch when parameter has wrong constraints") {
+                val command =
+                    createCommand(
+                        mapOf(
+                            "value" to Parameter.of(StringConstraints(enum = listOf("a"))),
+                        ),
+                    )
+                val rule = arrayUnknownConstraintsRule("value")
+                val result = rule.validate(command)
+                result.isInvalid shouldBe true
+                result.asIterable().first().shouldBeInstanceOf<ValidationError.ComponentTypeMismatch>()
+            }
+        }
+
+        context("objectConstraintsRule") {
+            test("returns Valid when parameter has ObjectConstraints") {
+                val command =
+                    createCommand(
+                        mapOf(
+                            "configuration" to
+                                Parameter.of(
+                                    ObjectConstraints(
+                                        minProperties = 0,
+                                        maxProperties = 3,
+                                        required = listOf("foo"),
+                                    ),
+                                ),
+                        ),
+                    )
+                val rule = objectConstraintsRule("configuration")
+                rule.validate(command).isInvalid shouldBe false
+            }
+
+            test("returns ComponentTypeMismatch when parameter has wrong constraints") {
+                val command =
+                    createCommand(
+                        mapOf(
+                            "configuration" to
+                                Parameter.of(
+                                    ArrayUnknownConstraints(
+                                        enum = listOf(JsonPrimitive("x")),
+                                    ),
+                                ),
+                        ),
+                    )
+                val rule = objectConstraintsRule("configuration")
+                val result = rule.validate(command)
+                result.isInvalid shouldBe true
+                result.asIterable().first().shouldBeInstanceOf<ValidationError.ComponentTypeMismatch>()
             }
         }
 

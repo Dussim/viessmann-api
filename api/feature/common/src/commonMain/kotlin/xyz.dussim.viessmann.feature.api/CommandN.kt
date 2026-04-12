@@ -90,3 +90,52 @@ interface Command6<T1, T2, T3, T4, T5, T6> : OfCommand {
     @CommandIndexedConstraintUsage
     val constraint6: Constraints<T6>
 }
+
+interface Command7<T1, T2, T3, T4, T5, T6, T7> : OfCommand {
+    @CommandIndexedConstraintUsage
+    val constraint1: Constraints<T1>
+
+    @CommandIndexedConstraintUsage
+    val constraint2: Constraints<T2>
+
+    @CommandIndexedConstraintUsage
+    val constraint3: Constraints<T3>
+
+    @CommandIndexedConstraintUsage
+    val constraint4: Constraints<T4>
+
+    @CommandIndexedConstraintUsage
+    val constraint5: Constraints<T5>
+
+    @CommandIndexedConstraintUsage
+    val constraint6: Constraints<T6>
+
+    @CommandIndexedConstraintUsage
+    val constraint7: Constraints<T7>
+}
+
+interface Command8<T1, T2, T3, T4, T5, T6, T7, T8> : OfCommand {
+    @CommandIndexedConstraintUsage
+    val constraint1: Constraints<T1>
+
+    @CommandIndexedConstraintUsage
+    val constraint2: Constraints<T2>
+
+    @CommandIndexedConstraintUsage
+    val constraint3: Constraints<T3>
+
+    @CommandIndexedConstraintUsage
+    val constraint4: Constraints<T4>
+
+    @CommandIndexedConstraintUsage
+    val constraint5: Constraints<T5>
+
+    @CommandIndexedConstraintUsage
+    val constraint6: Constraints<T6>
+
+    @CommandIndexedConstraintUsage
+    val constraint7: Constraints<T7>
+
+    @CommandIndexedConstraintUsage
+    val constraint8: Constraints<T8>
+}

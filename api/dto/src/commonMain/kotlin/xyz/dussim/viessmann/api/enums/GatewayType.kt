@@ -122,6 +122,36 @@ sealed interface GatewayType : ViessmannEnum {
 
     data object VitocontrolAPro : Strict("Vitocontrol_A_PRO")
 
+    data object Tcu10xVitodensSeS1 : Strict("TCU10x_Vitodens_SE_S1")
+
+    data object Tcu10xViAirVitoconnectV : Strict("TCU10x_ViAir_VitoconnectV")
+
+    data object Tcu10xVitopureEu : Strict("TCU10x_Vitopure_EU")
+
+    data object Tcu10xVitocal262060 : Strict("TCU10x_Vitocal_262_060")
+
+    data object Tcu10xVitoset : Strict("TCU10x_Vitoset")
+
+    data object Scu1000 : Strict("SCU_1000")
+
+    data object Tcu301Vitocal : Strict("TCU301_Vitocal")
+
+    data object Tcu301Vitocharge : Strict("TCU301_Vitocharge")
+
+    data object Tcu301Vitodens : Strict("TCU301_Vitodens")
+
+    data object Tcu301Vitocrossal : Strict("TCU301_Vitocrossal")
+
+    data object Tcu10xDevBoards : Strict("TCU10x_DevBoards")
+
+    data object Tcu301DevBoards : Strict("TCU301_DevBoards")
+
+    data object Infinity : Strict("Infinity")
+
+    data object Tcu10xVitodensSeNa : Strict("TCU10x_Vitodens_SE_NA")
+
+    data object Tcu10xRac : Strict("TCU10x_RAC")
+
     /**
      * Represents an unknown [GatewayType].
      *

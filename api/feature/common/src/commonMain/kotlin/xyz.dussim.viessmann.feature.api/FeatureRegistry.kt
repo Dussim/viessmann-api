@@ -156,6 +156,8 @@ private inline fun <F : Feature> cachedFirstOfHelper(
             val feature = convert(features[i])
             cache[featureClass] = feature
             return feature
+        } else {
+            cache[featureClass] = CACHE_MISS_MARKER
         }
     }
     throw NoSuchElementException("No feature matching $matcher")
