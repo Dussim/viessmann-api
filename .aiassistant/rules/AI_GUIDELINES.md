@@ -9,6 +9,9 @@ apply: always
 3. NEVER TRY TO LIST FILES IN BUILD DIR IF NOT ASKED TO
 4. NEVER ANALYZE BUILD DIR IF NOT ASKED TO
 5. NEVER BUILD TARGETS OTHER THAN JVM IF NOT ASKED TO
+6. NEVER PUSH CHANGES TO REMOTE (no `git push`)
+7. NEVER CREATE PULL REQUESTS (no `gh pr create` or equivalent)
+8. Git work is LOCAL ONLY — commit only, never push or open PRs
 
 ### Build & Configuration
 

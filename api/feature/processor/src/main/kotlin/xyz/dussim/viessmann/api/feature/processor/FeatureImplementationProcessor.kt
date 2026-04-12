@@ -19,7 +19,15 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import xyz.dussim.viessmann.api.feature.annotations.FeatureEnum
@@ -33,7 +41,6 @@ import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.MissingF
 import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.MissingPublicCompanionObject
 import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.NotImplementingCorrectInterface
 import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.NotInterface
-import xyz.dussim.viessmann.feature.api.BooleanValue
 import xyz.dussim.viessmann.feature.api.Command0
 import xyz.dussim.viessmann.feature.api.Command1
 import xyz.dussim.viessmann.feature.api.Command2
@@ -41,36 +48,9 @@ import xyz.dussim.viessmann.feature.api.Command3
 import xyz.dussim.viessmann.feature.api.Command4
 import xyz.dussim.viessmann.feature.api.Command5
 import xyz.dussim.viessmann.feature.api.Command6
-import xyz.dussim.viessmann.feature.api.DoubleValue
-import xyz.dussim.viessmann.feature.api.EnergyMatrixValue
-import xyz.dussim.viessmann.feature.api.FactoryResetInfoValue
 import xyz.dussim.viessmann.feature.api.Feature
+import xyz.dussim.viessmann.feature.api.FeatureDescriptor
 import xyz.dussim.viessmann.feature.api.FeatureEnumFactory
-import xyz.dussim.viessmann.feature.api.ListBusTypeValue
-import xyz.dussim.viessmann.feature.api.ListDeviceErrorValue
-import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
-import xyz.dussim.viessmann.feature.api.ListDeviceValue
-import xyz.dussim.viessmann.feature.api.ListDoubleValue
-import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
-import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
-import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
-import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
-import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
-import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
-import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
-import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
-import xyz.dussim.viessmann.feature.api.ListRoomActorValue
-import xyz.dussim.viessmann.feature.api.ListSensorValue
-import xyz.dussim.viessmann.feature.api.ListStringValue
-import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
-import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
-import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
-import xyz.dussim.viessmann.feature.api.LogsValue
-import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
-import xyz.dussim.viessmann.feature.api.ProductInfoValue
-import xyz.dussim.viessmann.feature.api.ScheduleValue
-import xyz.dussim.viessmann.feature.api.StringValue
-import xyz.dussim.viessmann.feature.api.UnknownValue
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
@@ -197,7 +177,9 @@ class FeatureImplementationProcessor(
                         val symbols = ksSymbols.map { SymbolContext(it, ruleRegistry) }
 
                         val allDescriptorProperties =
-                            mutableListOf<com.squareup.kotlinpoet.PropertySpec>()
+                            mutableListOf<PropertySpec>()
+                        val allDescriptorNames =
+                            mutableListOf<String>()
                         var descriptorPackage = ""
 
                         // Group features by signature for deduplication
@@ -222,7 +204,10 @@ class FeatureImplementationProcessor(
                                 if (descriptorPackage.isEmpty()) {
                                     descriptorPackage = context.implName.packageName
                                 }
-                                allDescriptorProperties += generateFeatureDescriptorAndExtensions(context, implName)
+                                val generatedProps = generateFeatureDescriptorAndExtensions(context, implName)
+                                allDescriptorProperties += generatedProps
+                                // First property is always the descriptor, rest are extensions
+                                allDescriptorNames += generatedProps.first().name
                             }
                         }
 
@@ -248,6 +233,71 @@ class FeatureImplementationProcessor(
                                     .build()
                                     .writeTo(codeGenerator, allDependencies)
                             }
+
+                            // Generate Descriptors object
+                            val descriptorNameChunks =
+                                if (descriptorsChunkSize > 0) {
+                                    allDescriptorNames.chunked(descriptorsChunkSize)
+                                } else {
+                                    listOf(allDescriptorNames)
+                                }
+                            val descriptorsObject =
+                                TypeSpec
+                                    .objectBuilder("Descriptors")
+                                    .addProperty(
+                                        PropertySpec
+                                            .builder(
+                                                "all",
+                                                FeatureDescriptor::class
+                                                    .asTypeName()
+                                                    .parameterizedBy(STAR)
+                                                    .let {
+                                                        Set::class.asTypeName().parameterizedBy(it)
+                                                    },
+                                            ).initializer(
+                                                CodeBlock
+                                                    .builder()
+                                                    .beginControlFlow("buildSet")
+                                                    .apply {
+                                                        descriptorNameChunks.forEachIndexed { index, _ ->
+                                                            addStatement("addAll(chunk%L())", index + 1)
+                                                        }
+                                                    }.endControlFlow()
+                                                    .build(),
+                                            ).build(),
+                                    ).apply {
+                                        descriptorNameChunks.forEachIndexed { index, nameChunk ->
+                                            addFunction(
+                                                com.squareup.kotlinpoet.FunSpec
+                                                    .builder("chunk${index + 1}")
+                                                    .addModifiers(KModifier.PRIVATE)
+                                                    .returns(
+                                                        FeatureDescriptor::class
+                                                            .asTypeName()
+                                                            .parameterizedBy(STAR)
+                                                            .let {
+                                                                List::class.asTypeName().parameterizedBy(it)
+                                                            },
+                                                    ).addCode(
+                                                        CodeBlock
+                                                            .builder()
+                                                            .add("return listOf(\n")
+                                                            .apply {
+                                                                nameChunk.forEach { name ->
+                                                                    add("%L,\n", name)
+                                                                }
+                                                            }.add(")\n")
+                                                            .build(),
+                                                    ).build(),
+                                            )
+                                        }
+                                    }.build()
+
+                            FileSpec
+                                .builder(descriptorPackage, "Descriptors")
+                                .addType(descriptorsObject)
+                                .build()
+                                .writeTo(codeGenerator, allDependencies)
                         }
 
                         symbols

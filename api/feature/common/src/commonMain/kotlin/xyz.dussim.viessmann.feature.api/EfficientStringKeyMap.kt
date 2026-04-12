@@ -177,7 +177,7 @@ private data class NElements<T>(
     private val arrayHashes: LongArray,
     private val startIndexJumpTable: IntArray,
     private val endIndexJumpTable: IntArray,
-    private val lengthBitset: Int,
+    private val lengthBitset: Long,
     override val size: Int,
 ) : EfficientStringKeyMap<T>(originalMap) {
     override fun get(
@@ -185,7 +185,7 @@ private data class NElements<T>(
         precomputedHash: Long,
     ): T? {
         val length = extractLow(precomputedHash)
-        if (lengthBitset and (1 shl length) == 0) return null
+        if (lengthBitset and (1L shl length) == 0L) return null
         var current = startIndexJumpTable[length]
         val end = endIndexJumpTable[length]
         do {
@@ -278,6 +278,6 @@ private fun <T> NElements(originalMap: Map<String, T>): NElements<T> {
                 if (index == -1) arrayKeys.size else index
             }
         }
-    val lengthBitset = arrayKeys.fold(0) { acc, key -> acc or (1 shl key.length) }
+    val lengthBitset = arrayKeys.fold(0L) { acc, key -> acc or (1L shl key.length) }
     return NElements(originalMap, arrayKeys, arrayValues, arrayHashes, startIndexJumpTable, endIndexJumpTable, lengthBitset, originalMap.size)
 }

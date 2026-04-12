@@ -12,8 +12,8 @@ import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
-import xyz.dussim.feature.benchmark.DeviceZigbeeCoordinatorFeature
-import xyz.dussim.feature.benchmark.descriptor
+import xyz.dussim.viessmann.api.features.generated.DeviceZigbeeCoordinatorFeature
+import xyz.dussim.viessmann.api.features.generated.descriptor
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.ViessmannFeature

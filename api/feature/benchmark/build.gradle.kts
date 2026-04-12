@@ -1,16 +1,14 @@
 plugins {
     alias(conventions.plugins.xyz.dussim.kotlin.jvm.common)
-    alias(libs.plugins.ksp)
     id("me.champeau.jmh") version "0.7.3"
     id("xyz.dussim.jmhreport") version "0.10.1"
 }
 
 dependencies {
+    implementation(projects.api.dto)
     implementation(projects.api.feature.annotations)
-
     implementation(projects.api.feature.common)
-
-    ksp(projects.api.feature.processor)
+    implementation(projects.api.feature.implementations)
 }
 
 jmh {
@@ -33,7 +31,7 @@ jmh {
 
     // Verbose output
     verbosity.set("NORMAL")
-    includes.addAll("xyz.dussim.feature.benchmark.featurevalidation.*")
+    includes.addAll("xyz.dussim.feature.benchmark.featurevalidation.average.*")
 
     // exclude map benchmark as I already established performance
 //    excludes.addAll(".*MapBenchmark.*")
