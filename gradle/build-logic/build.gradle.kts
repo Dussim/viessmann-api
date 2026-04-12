@@ -52,6 +52,10 @@ gradlePlugin {
             id = "xyz.dussim.generate.features.json.tests"
             implementationClass = "xyz.dussim.buildlogic.GenerateFeatureJsonTestsPlugin"
         }
+        register("generateValidationResultOf") {
+            id = "xyz.dussim.generate.validation.result.of"
+            implementationClass = "xyz.dussim.buildlogic.GenerateValidationResultOfPlugin"
+        }
     }
 }
 

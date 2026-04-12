@@ -71,6 +71,7 @@ value class ValidationResult<out T>
 
             fun <E> of(result1: ValidationResult<E>): ValidationResult<E> = result1
 
+            // region generated-validation-result-of
             fun <E> of(
                 result1: ValidationResult<E>,
                 result2: ValidationResult<E>,
@@ -89,7 +90,11 @@ value class ValidationResult<out T>
                 }
 
                 var current = 0
-                val array = arrayOfNulls<Any>(result1.size + result2.size)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 return Invalid(array as Array<E>)
@@ -116,7 +121,12 @@ value class ValidationResult<out T>
                 }
 
                 var current = 0
-                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -147,7 +157,13 @@ value class ValidationResult<out T>
                 }
 
                 var current = 0
-                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size + result4.size)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -182,7 +198,14 @@ value class ValidationResult<out T>
                 }
 
                 var current = 0
-                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size + result4.size + result5.size)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -221,7 +244,15 @@ value class ValidationResult<out T>
                 }
 
                 var current = 0
-                val array = arrayOfNulls<Any>(result1.size + result2.size + result3.size + result4.size + result5.size + result6.size)
+                val array =
+                    arrayOfNulls<Any>(
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size,
+                    )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
                 result3.forEach { array[current++] = it }
@@ -266,7 +297,13 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size + result7.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -316,8 +353,14 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -371,8 +414,15 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -430,8 +480,16 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size + result10.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -493,8 +551,17 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size + result10.size + result11.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -560,8 +627,18 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -631,8 +708,18 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
                             result13.size,
                     )
                 result1.forEach { array[current++] = it }
@@ -707,9 +794,20 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
-                            result13.size + result14.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -787,9 +885,21 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
-                            result13.size + result14.size + result15.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -871,9 +981,22 @@ value class ValidationResult<out T>
                 var current = 0
                 val array =
                     arrayOfNulls<Any>(
-                        result1.size + result2.size + result3.size + result4.size + result5.size + result6.size +
-                            result7.size + result8.size + result9.size + result10.size + result11.size + result12.size +
-                            result13.size + result14.size + result15.size + result16.size,
+                        result1.size +
+                            result2.size +
+                            result3.size +
+                            result4.size +
+                            result5.size +
+                            result6.size +
+                            result7.size +
+                            result8.size +
+                            result9.size +
+                            result10.size +
+                            result11.size +
+                            result12.size +
+                            result13.size +
+                            result14.size +
+                            result15.size +
+                            result16.size,
                     )
                 result1.forEach { array[current++] = it }
                 result2.forEach { array[current++] = it }
@@ -893,6 +1016,7 @@ value class ValidationResult<out T>
                 result16.forEach { array[current++] = it }
                 return Invalid(array as Array<E>)
             }
+            // endregion generated-validation-result-of
         }
     }
 
