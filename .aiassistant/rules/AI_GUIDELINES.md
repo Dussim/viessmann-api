@@ -4,14 +4,19 @@ apply: always
 
 ## MOST IMPORTANT INFO
 
-1. BE SUPER SAFE: When running commands against the modules, NEVER analyze build folders or temporary artifacts.
-2. NEVER RUN TESTS IF NOT ASKED TO
-3. NEVER TRY TO LIST FILES IN BUILD DIR IF NOT ASKED TO
-4. NEVER ANALYZE BUILD DIR IF NOT ASKED TO
-5. NEVER BUILD TARGETS OTHER THAN JVM IF NOT ASKED TO
-6. NEVER PUSH CHANGES TO REMOTE (no `git push`)
-7. NEVER CREATE PULL REQUESTS (no `gh pr create` or equivalent)
-8. Git work is LOCAL ONLY — commit only, never push or open PRs
+1. **BE SUPER SAFE:** When running commands, NEVER analyze or modify build folders or temporary artifacts.
+2. **OPERATE LOCALLY:** All Git work is LOCAL ONLY — commit only, never push or open PRs. No `git push`, `gh pr create`, or equivalent.
+3. **JVM FIRST:** Prioritize JVM builds and tests. Only build or test other targets (JS/Native) if explicitly requested, as they are slower and may require specific environmental setups.
+4. **TESTING:** Never run tests unless explicitly asked to do so by the task or to verify your own changes. Always run ALL relevant tests related to your changes.
+5. **BUILD:** Never build targets other than JVM if not specifically asked.
+
+### Agent Workflow Best Practices
+
+- **Communication:** Use `update_status` to keep the user informed about progress. Always provide a clear, concise plan before taking multi-step actions.
+- **Verification:** Always verify your changes. If you write code, add tests. If you fix a bug, add a reproduction test.
+- **Read-Only Context:** Use `[ADVANCED_CHAT]` mode for exploring the codebase. Switch to `[CODE]` mode only when changes are necessary.
+- **Naming:** Follow existing naming conventions strictly.
+- **Cleanliness:** Do not create temporary files/folders unless necessary. Clean up after yourself if you created temporary artifacts.
 
 ### Build & Configuration
 
@@ -20,7 +25,7 @@ apply: always
 **Build commands:**
 
 ```powershell
-./gradlew.bat build                    # Build all modules
+./gradlew.bat build                    # Build all modules (use cautiously)
 ./gradlew.bat :api:dto:build           # Build specific module
 ./gradlew.bat clean build              # Clean build
 ```
@@ -39,11 +44,11 @@ is only needed if you want to generate code directly into `commonMain`. All comp
 **Test commands:**
 
 ```powershell
-./gradlew.bat test                         # All tests (all modules/targets)
+./gradlew.bat test                         # Run all tests (all modules/targets - use cautiously)
 ./gradlew.bat :api:dto:jvmTest             # JVM tests for api:dto
 ./gradlew.bat :api:feature:common:jvmTest  # JVM tests for feature:common
-./gradlew.bat :api:dto:jsNodeTest          # JS Node tests
-./gradlew.bat :api:dto:jsBrowserTest       # JS Browser tests
+./gradlew.bat :api:dto:jsNodeTest          # JS Node tests (if requested)
+./gradlew.bat :api:dto:jsBrowserTest       # JS Browser tests (if requested)
 
 # Run specific test class
 ./gradlew.bat :api:dto:jvmTest --tests "xyz.dussim.viessmann.api.enums.AccessLevelTest"
@@ -126,6 +131,12 @@ class ExampleTest :
 - **Property Access:** Always use the provided type-safe property accessors in generated features instead of manually querying the `properties` map.
 
 ---
+
+### Project Conventions & Tooling
+
+- **Convention Plugins:** The project uses custom convention plugins (e.g., `xyz.dussim.kotlin.common`, `xyz.dussim.generate.*`). When working on `build.gradle.kts` files, prefer applying these plugins rather than manually configuring dependencies, KSP, or serialization. Assume they handle essential boilerplate.
+- **Version Catalog:** Always use `gradle/libs.versions.toml` to reference plugin and library versions. Do not hardcode versions in `build.gradle.kts`.
+- **Anonymization:** For any generated or test-related JSON processing, check if the `xyz.dussim.anonymize.json` plugin or related utilities are applicable.
 
 ### Module Structure
 
