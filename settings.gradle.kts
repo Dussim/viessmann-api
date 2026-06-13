@@ -28,7 +28,7 @@ dependencyResolutionManagement {
             from(files("gradle/conventions.versions.toml"))
         }
         create("ktorLibs") {
-            from("io.ktor:ktor-version-catalog:3.3.1")
+            from("io.ktor:ktor-version-catalog:3.5.0")
         }
     }
 }
@@ -62,3 +62,11 @@ project(":client:equipment").name = "client-equipment"
 project(":client:features").name = "client-features"
 project(":client:users").name = "client-users"
 project(":client:facade").name = "client-facade"
+
+if (System.getenv("VIESSMANN_API_DEV") == "true") {
+    include(
+        ":client:auth-secret",
+        ":client:integration-test",
+    )
+    project(":client:integration-test").name = "client-integration-test"
+}

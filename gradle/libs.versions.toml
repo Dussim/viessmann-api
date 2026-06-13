@@ -1,7 +1,7 @@
 [versions]
-ksp = "2.3.6"
-kotest = "6.1.10"
-jetbrains-kotlin = "2.3.10"
+ksp = "2.3.9"
+kotest = "6.1.11"
+kotlin = "2.4.0"
 
 [libraries]
 # KSP and code generation
@@ -16,18 +16,19 @@ kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", versio
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 
 # Kotlin
-kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "jetbrains-kotlin" }
-kotlin-test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "jetbrains-kotlin" }
-kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0"
+kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "kotlin" }
+kotlin-test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlin" }
+kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
+kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.8.0"
 swagger-parser = "io.swagger.parser.v3:swagger-parser:2.1.37"
 
 [plugins]
-ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }
+ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.54.0" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotest = { id = "io.kotest", version.ref = "kotest" }
 dokka = { id = "org.jetbrains.dokka", version = "2.2.0" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrains-kotlin" }
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "jetbrains-kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "jetbrains-kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlinter = { id = "org.jmailen.kotlinter", version = "5.3.0" }
 

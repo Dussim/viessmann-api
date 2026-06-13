@@ -38,5 +38,6 @@ bin/
 ### ANything else that should be ignored ###
 .output.txt
 .ignored
+/client/integration-test/
 /client/auth-secret/
 /client/authintegrationtest/
