@@ -26,22 +26,29 @@ import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
 import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
+import xyz.dussim.viessmann.feature.api.ListEebusDevicesPairedValue
 import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
 import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
 import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
 import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
+import xyz.dussim.viessmann.feature.api.ListOnboardUpdaterLastErrorCodeValue
 import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
 import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListPropertyValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListSolarlogDeviceValue
+import xyz.dussim.viessmann.feature.api.ListSolarlogDevicesPairedValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListSystemMessageEntryValue
 import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
 import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.LogsValue
+import xyz.dussim.viessmann.feature.api.NullableBooleanValue
+import xyz.dussim.viessmann.feature.api.NullableDoubleValue
+import xyz.dussim.viessmann.feature.api.NullableStringValue
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
 import xyz.dussim.viessmann.feature.api.OfCommand
 import xyz.dussim.viessmann.feature.api.ProductInfoValue
@@ -54,6 +61,9 @@ val PROPERTY_VALIDATION_FUNCTIONS =
         typeNameOf<StringValue>() to validationRule("stringPropertyRule"),
         typeNameOf<BooleanValue>() to validationRule("booleanPropertyRule"),
         typeNameOf<DoubleValue>() to validationRule("doublePropertyRule"),
+        typeNameOf<NullableStringValue>() to validationRule("nullableStringPropertyRule"),
+        typeNameOf<NullableBooleanValue>() to validationRule("nullableBooleanPropertyRule"),
+        typeNameOf<NullableDoubleValue>() to validationRule("nullableDoublePropertyRule"),
         typeNameOf<ListDoubleValue>() to validationRule("listDoublePropertyRule"),
         typeNameOf<ListStringValue>() to validationRule("listStringPropertyRule"),
         typeNameOf<ListDeviceErrorValue>() to validationRule("listDeviceErrorPropertyRule"),
@@ -66,9 +76,11 @@ val PROPERTY_VALIDATION_FUNCTIONS =
         typeNameOf<EnergyMatrixValue>() to validationRule("energyMatrixPropertyRule"),
         typeNameOf<LogsValue>() to validationRule("logsPropertyRule"),
         typeNameOf<ListLogBookEntryValue>() to validationRule("listLogBookEntryPropertyRule"),
+        typeNameOf<ListOnboardUpdaterLastErrorCodeValue>() to validationRule("listOnboardUpdaterLastErrorCodePropertyRule"),
         typeNameOf<ProductInfoValue>() to validationRule("productInfoPropertyRule"),
         typeNameOf<FactoryResetInfoValue>() to validationRule("factoryResetInfoPropertyRule"),
         typeNameOf<ListEebusDeviceValue>() to validationRule("listEebusDevicePropertyRule"),
+        typeNameOf<ListEebusDevicesPairedValue>() to validationRule("listEebusDevicesPairedPropertyRule"),
         typeNameOf<ListEebusServicePartnerValue>() to validationRule("listEebusServicePartnerPropertyRule"),
         typeNameOf<ListElectricalEnergyMatrixValue>() to validationRule("listElectricalEnergyMatrixPropertyRule"),
         typeNameOf<ListOperatingDataCellsDetailValue>() to validationRule("listOperatingDataCellsDetailPropertyRule"),
@@ -79,7 +91,9 @@ val PROPERTY_VALIDATION_FUNCTIONS =
         typeNameOf<ListFuelCellErrorValue>() to validationRule("listFuelCellErrorPropertyRule"),
         typeNameOf<ListWifiNetworkValue>() to validationRule("listWifiNetworkPropertyRule"),
         typeNameOf<ListVentilationMessageValue>() to validationRule("listVentilationMessagePropertyRule"),
+        typeNameOf<ListSystemMessageEntryValue>() to validationRule("listSystemMessageEntryPropertyRule"),
         typeNameOf<ListSolarlogDeviceValue>() to validationRule("listSolarlogDevicePropertyRule"),
+        typeNameOf<ListSolarlogDevicesPairedValue>() to validationRule("listSolarlogDevicesPairedPropertyRule"),
         typeNameOf<TestResultValue>() to validationRule("testResultPropertyRule"),
     )
 

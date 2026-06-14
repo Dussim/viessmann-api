@@ -13,6 +13,15 @@ import kotlin.reflect.KClass
  * feature type [F]. It includes both throwing and non-throwing conversion methods, as well as
  * an operator function for convenient usage.
  *
+ * ## Implementation Details
+ *
+ * All factories for the same feature type [F] must return compatible implementations. This ensures
+ * that consumers can rely on consistent behavior regardless of which factory instance they use.
+ *
+ * If a [Feature] instance already implements the target interface [F], the factory should return
+ * it without any modifications. This pass-through behavior prevents unnecessary wrapping or conversion
+ * when the feature is already of the correct type.
+ *
  * @param F The specific feature type that extends [Feature] into which the conversion will be performed
  */
 interface FeatureFactory<F : Feature> {

@@ -7,7 +7,7 @@ class IndexedRegistryValidationsTest :
     FunSpec({
         val features = loadFeatures(FeatureRegistry::indexed)
 
-        singleThreadedValidationTest("Indexed registry validations test", features)
+        singleThreadedValidationTest("!Indexed registry validations test", features)
         parallelValidationTest("Parallel indexed registry validations test", features)
         singleThreadedFailFastValidationTest("!Indexed registry validations fail fast test", features)
         parallelFailFastValidationTest("!Parallel indexed registry validations fail fast test", features)

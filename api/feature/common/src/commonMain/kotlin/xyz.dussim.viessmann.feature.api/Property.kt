@@ -13,6 +13,7 @@ import xyz.dussim.viessmann.feature.api.validation.LIST_DEVICE_ERROR_VALUE_CLASS
 import xyz.dussim.viessmann.feature.api.validation.LIST_DEVICE_INFORMATION_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_DEVICE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_DOUBLE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_EEBUS_DEVICES_PAIRED_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_EEBUS_DEVICE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_EEBUS_SERVICE_PARTNER_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ELECTRICAL_ENERGY_MATRIX_VALUE_CLASS_INDEX
@@ -20,16 +21,22 @@ import xyz.dussim.viessmann.feature.api.validation.LIST_EMPTY_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ENERGY_CHARGED_DEVICE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_FUEL_CELL_ERROR_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_ONBOARD_UPDATER_LAST_ERROR_CODE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_OPERATING_DATA_CELLS_DETAIL_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_POWER_BALANCE_ENTRY_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ROOM_ACTOR_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_SENSOR_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_SOLARLOG_DEVICES_PAIRED_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_SOLARLOG_DEVICE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_STRING_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.LIST_SYSTEM_MESSAGE_ENTRY_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_WIFI_NETWORK_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LIST_ZIGBEE_DEVICE_STATUS_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.LOGS_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.NULLABLE_BOOLEAN_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.NULLABLE_DOUBLE_VALUE_CLASS_INDEX
+import xyz.dussim.viessmann.feature.api.validation.NULLABLE_STRING_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.OBJECT_OTHER_ROOM_CONFIGURATION_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.PRODUCT_INFO_VALUE_CLASS_INDEX
 import xyz.dussim.viessmann.feature.api.validation.SCHEDULE_VALUE_CLASS_INDEX
@@ -101,6 +108,27 @@ data class StringValue(
     override val element: String,
 ) : PropertyValue<String> {
     override val propertyValueClassIndex get() = STRING_VALUE_CLASS_INDEX
+}
+
+@JvmRecord
+data class NullableBooleanValue(
+    override val element: Boolean?,
+) : PropertyValue<Boolean?> {
+    override val propertyValueClassIndex get() = NULLABLE_BOOLEAN_VALUE_CLASS_INDEX
+}
+
+@JvmRecord
+data class NullableDoubleValue(
+    override val element: Double?,
+) : PropertyValue<Double?> {
+    override val propertyValueClassIndex get() = NULLABLE_DOUBLE_VALUE_CLASS_INDEX
+}
+
+@JvmRecord
+data class NullableStringValue(
+    override val element: String?,
+) : PropertyValue<String?> {
+    override val propertyValueClassIndex get() = NULLABLE_STRING_VALUE_CLASS_INDEX
 }
 
 @JvmRecord
@@ -228,6 +256,18 @@ data class ListLogBookEntryValue(
 }
 
 @JvmRecord
+data class ListOnboardUpdaterLastErrorCodeValue(
+    override val element: List<OnboardUpdaterLastErrorCode>,
+) : PropertyValue<List<OnboardUpdaterLastErrorCode>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_ONBOARD_UPDATER_LAST_ERROR_CODE_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListOnboardUpdaterLastErrorCodeValue(emptyList())
+    }
+}
+
+@JvmRecord
 data class ProductInfoValue(
     override val element: ProductInfo,
 ) : PropertyValue<ProductInfo> {
@@ -250,6 +290,18 @@ data class ListEebusDeviceValue(
 
     companion object {
         val EMPTY = ListEebusDeviceValue(emptyList())
+    }
+}
+
+@JvmRecord
+data class ListEebusDevicesPairedValue(
+    override val element: List<EebusDevicesPaired>,
+) : PropertyValue<List<EebusDevicesPaired>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_EEBUS_DEVICES_PAIRED_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListEebusDevicesPairedValue(emptyList())
     }
 }
 
@@ -374,6 +426,18 @@ data class ListSolarlogDeviceValue(
 }
 
 @JvmRecord
+data class ListSolarlogDevicesPairedValue(
+    override val element: List<SolarlogDevicesPaired>,
+) : PropertyValue<List<SolarlogDevicesPaired>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_SOLARLOG_DEVICES_PAIRED_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListSolarlogDevicesPairedValue(emptyList())
+    }
+}
+
+@JvmRecord
 data class TestResultValue(
     override val element: TestResult,
 ) : PropertyValue<TestResult> {
@@ -392,12 +456,23 @@ data class ListVentilationMessageValue(
     }
 }
 
+@JvmRecord
+data class ListSystemMessageEntryValue(
+    override val element: List<SystemMessageEntry>,
+) : PropertyValue<List<SystemMessageEntry>>,
+    ListPropertyValue {
+    override val propertyValueClassIndex get() = LIST_SYSTEM_MESSAGE_ENTRY_VALUE_CLASS_INDEX
+
+    companion object {
+        val EMPTY = ListSystemMessageEntryValue(emptyList())
+    }
+}
+
 data object ListEmptyValue : PropertyValue<List<Nothing>>, ListPropertyValue {
     override val element = emptyList<Nothing>()
     override val propertyValueClassIndex get() = LIST_EMPTY_VALUE_CLASS_INDEX
 }
 
-@OptIn(kotlin.time.ExperimentalTime::class)
 @JvmRecord
 @Serializable
 data class DeviceError(
@@ -460,16 +535,22 @@ data class Schedule(
     val active: Boolean = true,
 )
 
+/**
+ * Shared bus/product entry shape. Bus topology entries provide device metadata, while product matrix entries provide
+ * Viessmann product metadata. Fields present in only one variant are nullable.
+ */
 @JvmRecord
 @Serializable
 data class BusType(
     val busAddress: Int,
     val busType: String, // should be enum
-    val deviceObjectProperty: String, // should be enum
-    val deviceFunction: String, // should be enum
-    val softwareVersion: String,
-    val hardwareVersion: String,
-    val etn: String,
+    val deviceObjectProperty: String? = null, // should be enum
+    val deviceFunction: String? = null, // should be enum
+    val softwareVersion: String? = null,
+    val hardwareVersion: String? = null,
+    val etn: String? = null,
+    val viessmannIdentificationNumber: String? = null,
+    val productFamily: String? = null, // should be enum
 )
 
 @JvmRecord
@@ -518,6 +599,14 @@ data class LogBookEntry(
 
 @JvmRecord
 @Serializable
+data class OnboardUpdaterLastErrorCode(
+    val deviceFamily: Int,
+    val error: String,
+    val subCode: String,
+)
+
+@JvmRecord
+@Serializable
 data class ProductInfo(
     val busType: String, // should be enum
     val busAddress: Int,
@@ -545,6 +634,13 @@ data class EebusDevice(
 
 @JvmRecord
 @Serializable
+data class EebusDevicesPaired(
+    val type: String,
+    val busAddress: String,
+)
+
+@JvmRecord
+@Serializable
 data class EebusServicePartner(
     val type: String,
     val id: String,
@@ -553,14 +649,22 @@ data class EebusServicePartner(
 
 @JvmRecord
 @Serializable
+/**
+ * Canonical electrical energy matrix entries use tariff fields, but the backend currently also returns an alternate
+ * shape with a plain `value`, `busType`, and `busAddress`. That alternate shape is probably a backend/API contract
+ * error, but it is accepted here so `ems.power.instantaneous` can still be decoded.
+ */
 data class ElectricalEnergyMatrix(
     val ident: Int,
     val parent: Int,
     val type: String, // should be enum,
     val `class`: String, // should be enum,
-    val tariff1: Tariff,
-    val tariff2: Tariff,
+    val tariff1: Tariff? = null,
+    val tariff2: Tariff? = null,
+    val value: Double? = null,
     val unit: String,
+    val busType: String? = null,
+    val busAddress: String? = null,
     val children: List<Child> = emptyList(),
 ) {
     @JvmRecord
@@ -577,8 +681,11 @@ data class ElectricalEnergyMatrix(
         val parent: Int,
         val type: String, // should be enum,
         val `class`: String, // should be enum,
-        val total: Tariff,
+        val total: Tariff? = null,
+        val value: Double? = null,
         val unit: String,
+        val busType: String? = null,
+        val busAddress: String? = null,
         val children: List<Child> = emptyList(),
     )
 }
@@ -629,10 +736,10 @@ data class PowerBalanceEntry(
     val type: String,
 )
 
-@OptIn(kotlin.time.ExperimentalTime::class)
 @JvmRecord
 @Serializable
 data class FuelCellError(
+    @Serializable(with = LenientInstantSerializer::class)
     val timestamp: Instant,
     val errorCode: String,
     val accessLevel: String,
@@ -658,6 +765,13 @@ data class SolarlogDevice(
 
 @JvmRecord
 @Serializable
+data class SolarlogDevicesPaired(
+    val type: String,
+    val index: String,
+)
+
+@JvmRecord
+@Serializable
 data class TestResult(
     val measuredValue: Measurement,
     val cutOffLimit: Measurement,
@@ -679,15 +793,37 @@ data class TestResult(
     )
 }
 
-@OptIn(kotlin.time.ExperimentalTime::class)
 @JvmRecord
 @Serializable
+/**
+ * Unified message shape for legacy and E3 cooling/ventilation messages. `status` and `count` are present only in the
+ * legacy variant; `busType` and `busAddress` are present only in the E3 variant.
+ */
 data class VentilationMessage(
     val timestamp: Instant,
     val errorCode: String,
-    val status: String,
-    val count: Double,
     val priority: String,
+    val status: String? = null,
+    val count: Double? = null,
+    val busType: String? = null,
+    val busAddress: Int? = null,
+)
+
+@JvmRecord
+@Serializable
+data class SystemMessageEntry(
+    val code: String,
+    val firstAppearanceTime: Instant,
+    val firstGoneTime: Instant,
+    val lastAppearanceTime: Instant,
+    val lastGoneTime: Instant,
+    val counter: Double,
+    val busAddress: String,
+    val busType: String,
+    val controller: String,
+    val active: Boolean,
+    val dataTracing: String,
+    val audiences: List<String>,
 )
 
 @JvmName("ofBoolean")
@@ -747,5 +883,23 @@ fun Property.Companion.of(list: List<SolarlogDevice>): Property = Property(ARRAY
 @JvmName("ofSolarlogDevices")
 fun Property.Companion.of(vararg device: SolarlogDevice): Property = Property(ARRAY, ListSolarlogDeviceValue(device.toList()))
 
+@JvmName("ofSolarlogDevicesPaired")
+fun Property.Companion.of(list: List<SolarlogDevicesPaired>): Property = Property(ARRAY, ListSolarlogDevicesPairedValue(list))
+
+@JvmName("ofSolarlogDevicesPaired")
+fun Property.Companion.of(vararg device: SolarlogDevicesPaired): Property = Property(ARRAY, ListSolarlogDevicesPairedValue(device.toList()))
+
+@JvmName("ofOnboardUpdaterLastErrorCodes")
+fun Property.Companion.of(list: List<OnboardUpdaterLastErrorCode>): Property = Property(ARRAY, ListOnboardUpdaterLastErrorCodeValue(list))
+
+@JvmName("ofOnboardUpdaterLastErrorCodes")
+fun Property.Companion.of(vararg lastErrorCode: OnboardUpdaterLastErrorCode): Property = Property(ARRAY, ListOnboardUpdaterLastErrorCodeValue(lastErrorCode.toList()))
+
 @JvmName("ofTestResult")
 fun Property.Companion.of(testResult: TestResult): Property = Property(TEST_RESULT, TestResultValue(testResult))
+
+@JvmName("ofEebusDevicesPaired")
+fun Property.Companion.of(list: List<EebusDevicesPaired>): Property = Property(ARRAY, ListEebusDevicesPairedValue(list))
+
+@JvmName("ofEebusDevicesPaired")
+fun Property.Companion.of(vararg device: EebusDevicesPaired): Property = Property(ARRAY, ListEebusDevicesPairedValue(device.toList()))

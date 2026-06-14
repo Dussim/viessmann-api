@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeName
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -94,15 +95,27 @@ class FeatureInterfaceGenerator(
         val value = property["value"]
         return when (type) {
             "string" -> {
-                ClassName("xyz.dussim.viessmann.feature.api", "StringValue")
+                if (value is JsonNull) {
+                    ClassName("xyz.dussim.viessmann.feature.api", "NullableStringValue")
+                } else {
+                    ClassName("xyz.dussim.viessmann.feature.api", "StringValue")
+                }
             }
 
             "number" -> {
-                ClassName("xyz.dussim.viessmann.feature.api", "DoubleValue")
+                if (value is JsonNull) {
+                    ClassName("xyz.dussim.viessmann.feature.api", "NullableDoubleValue")
+                } else {
+                    ClassName("xyz.dussim.viessmann.feature.api", "DoubleValue")
+                }
             }
 
             "boolean" -> {
-                ClassName("xyz.dussim.viessmann.feature.api", "BooleanValue")
+                if (value is JsonNull) {
+                    ClassName("xyz.dussim.viessmann.feature.api", "NullableBooleanValue")
+                } else {
+                    ClassName("xyz.dussim.viessmann.feature.api", "BooleanValue")
+                }
             }
 
             "array" -> {

@@ -14,6 +14,7 @@ import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.double
@@ -74,10 +75,30 @@ private val ARRAY_ELEMENT_MATCHERS: List<ArrayElementMatcher<*>> =
             wrapper = ::ListWifiNetworkValue,
         ),
         ArrayElementMatcher(
-            uniqueKey = "count",
-            requiredKeys = listOf("timestamp", "errorCode", "status", "count", "priority"),
+            requiredKeys = listOf("timestamp", "errorCode", "priority"),
+            excludedKeys = listOf("accessLevel", "audiences"),
             serializer = VentilationMessage.serializer(),
             wrapper = ::ListVentilationMessageValue,
+        ),
+        ArrayElementMatcher(
+            uniqueKey = "code",
+            requiredKeys =
+                listOf(
+                    "code",
+                    "firstAppearanceTime",
+                    "firstGoneTime",
+                    "lastAppearanceTime",
+                    "lastGoneTime",
+                    "counter",
+                    "busAddress",
+                    "busType",
+                    "controller",
+                    "active",
+                    "dataTracing",
+                    "audiences",
+                ),
+            serializer = SystemMessageEntry.serializer(),
+            wrapper = ::ListSystemMessageEntryValue,
         ),
         ArrayElementMatcher(
             uniqueKey = "serialNumber",
@@ -97,6 +118,12 @@ private val ARRAY_ELEMENT_MATCHERS: List<ArrayElementMatcher<*>> =
             serializer = LogBookEntry.serializer(),
             wrapper = ::ListLogBookEntryValue,
         ),
+        ArrayElementMatcher(
+            uniqueKey = "subCode",
+            requiredKeys = listOf("deviceFamily", "error", "subCode"),
+            serializer = OnboardUpdaterLastErrorCode.serializer(),
+            wrapper = ::ListOnboardUpdaterLastErrorCodeValue,
+        ),
         // Non-unique key matchers (need excludedKeys to disambiguate)
         ArrayElementMatcher(
             requiredKeys = listOf("type", "brand", "model", "id", "ski"),
@@ -110,13 +137,33 @@ private val ARRAY_ELEMENT_MATCHERS: List<ArrayElementMatcher<*>> =
             wrapper = ::ListEebusServicePartnerValue,
         ),
         ArrayElementMatcher(
-            requiredKeys = listOf("deviceObjectProperty", "deviceFunction", "softwareVersion", "hardwareVersion", "etn"),
-            excludedKeys = listOf("busAddress"),
+            requiredKeys = listOf("type", "busAddress"),
+            excludedKeys = listOf("brand", "model", "id", "ski", "busType", "value", "unit"),
+            serializer = EebusDevicesPaired.serializer(),
+            wrapper = ::ListEebusDevicesPairedValue,
+        ),
+        ArrayElementMatcher(
+            requiredKeys = listOf("type", "index"),
+            excludedKeys = listOf("manufacturer", "model", "serialNumber", "value", "unit"),
+            serializer = SolarlogDevicesPaired.serializer(),
+            wrapper = ::ListSolarlogDevicesPairedValue,
+        ),
+        ArrayElementMatcher(
+            requiredKeys =
+                listOf(
+                    "deviceObjectProperty",
+                    "deviceFunction",
+                    "softwareVersion",
+                    "hardwareVersion",
+                    "etn",
+                ),
+            excludedKeys = listOf("busAddress", "busType"),
             serializer = DeviceInformation.serializer(),
             wrapper = ::ListDeviceInformationValue,
         ),
         ArrayElementMatcher(
-            requiredKeys = listOf("busAddress", "busType", "deviceObjectProperty"),
+            requiredKeys = listOf("busAddress", "busType"),
+            excludedKeys = listOf("value", "unit", "type"),
             serializer = BusType.serializer(),
             wrapper = ::ListBusTypeValue,
         ),
@@ -201,6 +248,18 @@ internal data object PropertySerializer : KSerializer<Property> {
 
                 is StringValue -> {
                     encodeStringElement(descriptor, 1, propertyValue.element)
+                }
+
+                is NullableBooleanValue -> {
+                    encodeNullableSerializableElement(descriptor, 1, Boolean.serializer(), propertyValue.element)
+                }
+
+                is NullableDoubleValue -> {
+                    encodeNullableSerializableElement(descriptor, 1, Double.serializer(), propertyValue.element)
+                }
+
+                is NullableStringValue -> {
+                    encodeNullableSerializableElement(descriptor, 1, String.serializer(), propertyValue.element)
                 }
 
                 is ListDoubleValue -> {
@@ -315,6 +374,15 @@ internal data object PropertySerializer : KSerializer<Property> {
                     )
                 }
 
+                is ListOnboardUpdaterLastErrorCodeValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(OnboardUpdaterLastErrorCode.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
                 is ProductInfoValue -> {
                     encodeSerializableElement(
                         descriptor,
@@ -347,6 +415,15 @@ internal data object PropertySerializer : KSerializer<Property> {
                         descriptor,
                         1,
                         ListSerializer(EebusServicePartner.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListEebusDevicesPairedValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(EebusDevicesPaired.serializer()),
                         propertyValue.element,
                     )
                 }
@@ -432,11 +509,29 @@ internal data object PropertySerializer : KSerializer<Property> {
                     )
                 }
 
+                is ListSystemMessageEntryValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(SystemMessageEntry.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
                 is ListSolarlogDeviceValue -> {
                     encodeSerializableElement(
                         descriptor,
                         1,
                         ListSerializer(SolarlogDevice.serializer()),
+                        propertyValue.element,
+                    )
+                }
+
+                is ListSolarlogDevicesPairedValue -> {
+                    encodeSerializableElement(
+                        descriptor,
+                        1,
+                        ListSerializer(SolarlogDevicesPaired.serializer()),
                         propertyValue.element,
                     )
                 }
@@ -475,15 +570,27 @@ internal data object PropertySerializer : KSerializer<Property> {
             value =
                 when (type) {
                     BOOLEAN -> {
-                        BooleanValue(value.jsonPrimitive.boolean)
+                        if (value is JsonNull) {
+                            NullableBooleanValue(null)
+                        } else {
+                            BooleanValue(value.jsonPrimitive.boolean)
+                        }
                     }
 
                     NUMBER -> {
-                        DoubleValue(value.jsonPrimitive.double)
+                        if (value is JsonNull) {
+                            NullableDoubleValue(null)
+                        } else {
+                            DoubleValue(value.jsonPrimitive.double)
+                        }
                     }
 
                     STRING -> {
-                        StringValue(value.jsonPrimitive.content)
+                        if (value is JsonNull) {
+                            NullableStringValue(null)
+                        } else {
+                            StringValue(value.jsonPrimitive.content)
+                        }
                     }
 
                     ARRAY -> {

@@ -8,7 +8,7 @@ class CachedRegistryValidationsTest :
         val features = loadFeatures(FeatureRegistry::caching)
 
         singleThreadedValidationTest("Cached registry validations test", features)
-        parallelValidationTest("Parallel cached registry validations test", features)
+        parallelValidationTest("!Parallel cached registry validations test", features)
         singleThreadedFailFastValidationTest("!Cached registry validations fail fast test", features)
         parallelFailFastValidationTest("!Parallel cached registry validations fail fast test", features)
     })

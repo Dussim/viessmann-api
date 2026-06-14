@@ -10,7 +10,6 @@ import xyz.dussim.viessmann.api.utils.factories.AccessLevelInstanceFactory
 import xyz.dussim.viessmann.api.utils.instanceFactorySerializer
 import xyz.dussim.viessmann.api.utils.strictInstanceFactorySerializer
 
-@Serializable(with = Serializer::class)
 /**
  * Represents the access level of a user.
  *
@@ -28,6 +27,7 @@ import xyz.dussim.viessmann.api.utils.strictInstanceFactorySerializer
  * * [Consumer]
  * * [Unknown]
  * */
+@Serializable(with = Serializer::class)
 sealed interface AccessLevel : ViessmannEnum {
     /**
      * Represents the strictly defined access levels.

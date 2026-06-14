@@ -22,10 +22,25 @@ private val REQUIRE_PROPERTY_VALUE = MemberName("xyz.dussim.viessmann.feature.ap
 private val REQUIRE_PROPERTY_VALUE_OR_NULL_IF_MISSING =
     MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValueOrNullIfMissing")
 private val FIND_PROPERTY_VALUE_OR_NULL = MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrNull")
+private val REQUIRE_NULLABLE_BOOLEAN_PROPERTY_VALUE =
+    MemberName("xyz.dussim.viessmann.feature.api", "requireNullableBooleanPropertyValue")
+private val REQUIRE_NULLABLE_DOUBLE_PROPERTY_VALUE =
+    MemberName("xyz.dussim.viessmann.feature.api", "requireNullableDoublePropertyValue")
+private val REQUIRE_NULLABLE_STRING_PROPERTY_VALUE =
+    MemberName("xyz.dussim.viessmann.feature.api", "requireNullableStringPropertyValue")
+private val FIND_NULLABLE_BOOLEAN_PROPERTY_VALUE_OR_NULL =
+    MemberName("xyz.dussim.viessmann.feature.api", "findNullableBooleanPropertyValueOrNull")
+private val FIND_NULLABLE_DOUBLE_PROPERTY_VALUE_OR_NULL =
+    MemberName("xyz.dussim.viessmann.feature.api", "findNullableDoublePropertyValueOrNull")
+private val FIND_NULLABLE_STRING_PROPERTY_VALUE_OR_NULL =
+    MemberName("xyz.dussim.viessmann.feature.api", "findNullableStringPropertyValueOrNull")
 private val REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
     MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValueOrPromoteEmpty")
 private val FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
     MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrPromoteEmpty")
+private val NULLABLE_BOOLEAN_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableBooleanValue")
+private val NULLABLE_DOUBLE_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableDoubleValue")
+private val NULLABLE_STRING_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableStringValue")
 
 /**
  * Generates constructor accepting a delegate feature.
@@ -76,7 +91,32 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
     val (name, type, _, isListProperty, isEnumProperty) = property
     val combined = propertyHash(name.hashCode(), name.length)
     val isNullable = property.isNullable
+    val nonNullType = type.copy(nullable = false)
     when {
+        nonNullType == NULLABLE_BOOLEAN_VALUE && isNullable -> {
+            add("%N = properties.%M(%S, %L)\n", name, FIND_NULLABLE_BOOLEAN_PROPERTY_VALUE_OR_NULL, name, combined)
+        }
+
+        nonNullType == NULLABLE_BOOLEAN_VALUE -> {
+            add("%N = properties.%M(%S, %L)\n", name, REQUIRE_NULLABLE_BOOLEAN_PROPERTY_VALUE, name, combined)
+        }
+
+        nonNullType == NULLABLE_DOUBLE_VALUE && isNullable -> {
+            add("%N = properties.%M(%S, %L)\n", name, FIND_NULLABLE_DOUBLE_PROPERTY_VALUE_OR_NULL, name, combined)
+        }
+
+        nonNullType == NULLABLE_DOUBLE_VALUE -> {
+            add("%N = properties.%M(%S, %L)\n", name, REQUIRE_NULLABLE_DOUBLE_PROPERTY_VALUE, name, combined)
+        }
+
+        nonNullType == NULLABLE_STRING_VALUE && isNullable -> {
+            add("%N = properties.%M(%S, %L)\n", name, FIND_NULLABLE_STRING_PROPERTY_VALUE_OR_NULL, name, combined)
+        }
+
+        nonNullType == NULLABLE_STRING_VALUE -> {
+            add("%N = properties.%M(%S, %L)\n", name, REQUIRE_NULLABLE_STRING_PROPERTY_VALUE, name, combined)
+        }
+
         isEnumProperty && isNullable -> {
             add(
                 "%N = properties.%M<%T>(%S, %L)?.let { %T(it) }\n",
@@ -174,7 +214,7 @@ private fun CodeBlock.Builder.addValidationException(
     implName: ClassName,
 ) {
     add(
-        "throw %T(%S, validate($DELEGATE), $DELEGATE)\n",
+        "throw %T(%S, validate($DELEGATE), $DELEGATE.feature)\n",
         FeatureValidationException::class.asTypeName(),
         implName.simpleName.replace("_", "").removeSuffix("Impl"),
     )

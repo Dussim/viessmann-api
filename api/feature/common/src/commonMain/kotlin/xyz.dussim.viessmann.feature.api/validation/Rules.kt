@@ -24,22 +24,29 @@ import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
 import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
+import xyz.dussim.viessmann.feature.api.ListEebusDevicesPairedValue
 import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
 import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.ListEmptyValue
 import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
 import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
 import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
+import xyz.dussim.viessmann.feature.api.ListOnboardUpdaterLastErrorCodeValue
 import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
 import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListSolarlogDeviceValue
+import xyz.dussim.viessmann.feature.api.ListSolarlogDevicesPairedValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListSystemMessageEntryValue
 import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
 import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.LogsValue
+import xyz.dussim.viessmann.feature.api.NullableBooleanValue
+import xyz.dussim.viessmann.feature.api.NullableDoubleValue
+import xyz.dussim.viessmann.feature.api.NullableStringValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import xyz.dussim.viessmann.feature.api.ObjectConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
@@ -83,6 +90,31 @@ internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
     return ValidationRule { target ->
         val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingResult
         if (property.value is T) {
+            ValidationResult.Valid
+        } else {
+            getMismatchProperties(property.value.propertyValueClassIndex)
+        }
+    }
+}
+
+@PublishedApi
+internal inline fun <reified T : PropertyValue<*>, reified NonNullT : PropertyValue<*>> typedNullablePropertyRule(
+    propertyName: String,
+    expectedIndex: Int,
+    required: Boolean = true,
+): ValidationRule<Feature, ValidationError> {
+    val missingResult =
+        if (required) {
+            Invalid(MissingComponent(propertyName, ExpectedActualClass.of(expectedIndex)))
+        } else {
+            ValidationResult.Valid
+        }
+    val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
+    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
+
+    return ValidationRule { target ->
+        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingResult
+        if (property.value is T || property.value is NonNullT) {
             ValidationResult.Valid
         } else {
             getMismatchProperties(property.value.propertyValueClassIndex)
@@ -149,6 +181,21 @@ fun doublePropertyRule(
     required: Boolean = true,
 ) = typedPropertyRule<DoubleValue>(propertyName, DOUBLE_VALUE_CLASS_INDEX, required)
 
+fun nullableStringPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedNullablePropertyRule<NullableStringValue, StringValue>(propertyName, NULLABLE_STRING_VALUE_CLASS_INDEX, required)
+
+fun nullableBooleanPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedNullablePropertyRule<NullableBooleanValue, BooleanValue>(propertyName, NULLABLE_BOOLEAN_VALUE_CLASS_INDEX, required)
+
+fun nullableDoublePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedNullablePropertyRule<NullableDoubleValue, DoubleValue>(propertyName, NULLABLE_DOUBLE_VALUE_CLASS_INDEX, required)
+
 fun listDoublePropertyRule(
     propertyName: String,
     required: Boolean = true,
@@ -213,6 +260,15 @@ fun listLogBookEntryPropertyRule(
     required: Boolean = true,
 ) = typedListPropertyRule<ListLogBookEntryValue>(propertyName, LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX, required)
 
+fun listOnboardUpdaterLastErrorCodePropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListOnboardUpdaterLastErrorCodeValue>(
+    propertyName,
+    LIST_ONBOARD_UPDATER_LAST_ERROR_CODE_VALUE_CLASS_INDEX,
+    required,
+)
+
 fun productInfoPropertyRule(
     propertyName: String,
     required: Boolean = true,
@@ -227,6 +283,15 @@ fun listEebusDevicePropertyRule(
     propertyName: String,
     required: Boolean = true,
 ) = typedListPropertyRule<ListEebusDeviceValue>(propertyName, LIST_EEBUS_DEVICE_VALUE_CLASS_INDEX, required)
+
+fun listEebusDevicesPairedPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListEebusDevicesPairedValue>(
+    propertyName,
+    LIST_EEBUS_DEVICES_PAIRED_VALUE_CLASS_INDEX,
+    required,
+)
 
 fun listEebusServicePartnerPropertyRule(
     propertyName: String,
@@ -286,10 +351,24 @@ fun listVentilationMessagePropertyRule(
     required: Boolean = true,
 ) = typedListPropertyRule<ListVentilationMessageValue>(propertyName, LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX, required)
 
+fun listSystemMessageEntryPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListSystemMessageEntryValue>(propertyName, LIST_SYSTEM_MESSAGE_ENTRY_VALUE_CLASS_INDEX, required)
+
 fun listSolarlogDevicePropertyRule(
     propertyName: String,
     required: Boolean = true,
 ) = typedListPropertyRule<ListSolarlogDeviceValue>(propertyName, LIST_SOLARLOG_DEVICE_VALUE_CLASS_INDEX, required)
+
+fun listSolarlogDevicesPairedPropertyRule(
+    propertyName: String,
+    required: Boolean = true,
+) = typedListPropertyRule<ListSolarlogDevicesPairedValue>(
+    propertyName,
+    LIST_SOLARLOG_DEVICES_PAIRED_VALUE_CLASS_INDEX,
+    required,
+)
 
 fun testResultPropertyRule(
     propertyName: String,

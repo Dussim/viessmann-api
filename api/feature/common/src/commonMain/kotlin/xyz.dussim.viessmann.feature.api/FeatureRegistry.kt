@@ -122,15 +122,18 @@ private inline fun <F : Feature> cachedFindOfHelper(
     convert: (Feature) -> F?,
 ): F? {
     for (i in range) {
+        val feature = features[i]
+        if (!matches(feature)) continue
+
         val cache = implementations[i]
         val cached = cache[featureClass]
         if (cached != null && cached !== CACHE_MISS_MARKER) {
             return cached as F
         }
-        if (cached == null && matches(features[i])) {
-            val feature = convert(features[i]) ?: return null
-            cache[featureClass] = feature
-            return feature
+        if (cached == null) {
+            val converted = convert(feature) ?: return null
+            cache[featureClass] = converted
+            return converted
         }
     }
     return null
@@ -147,17 +150,21 @@ private inline fun <F : Feature> cachedFirstOfHelper(
     matcher: FeatureMatcher,
 ): F {
     for (i in range) {
+        val feature = features[i]
+        if (!matches(feature)) continue
+
         val cache = implementations[i]
         val cached = cache[featureClass]
-        if (cached != null && cached !== CACHE_MISS_MARKER) {
-            return cached as F
-        }
-        if (cached == null && matches(features[i])) {
-            val feature = convert(features[i])
-            cache[featureClass] = feature
-            return feature
-        } else {
-            cache[featureClass] = CACHE_MISS_MARKER
+        when {
+            cached == null -> {
+                val converted = convert(feature)
+                cache[featureClass] = converted
+                return converted
+            }
+
+            cached !== CACHE_MISS_MARKER -> {
+                return cached as F
+            }
         }
     }
     throw NoSuchElementException("No feature matching $matcher")
@@ -174,18 +181,17 @@ private inline fun <F : Feature> cachedAllOfHelper(
 ): List<F> =
     buildList {
         for (i in range) {
+            val feature = features[i]
+            if (!matches(feature)) continue
+
             val cache = implementations[i]
             val cached = cache[featureClass]
             if (cached != null && cached !== CACHE_MISS_MARKER) {
                 add(cached as F)
             } else if (cached == null) {
-                if (matches(features[i])) {
-                    val feature = convert(features[i])
-                    cache[featureClass] = feature
-                    add(feature)
-                } else {
-                    cache[featureClass] = CACHE_MISS_MARKER
-                }
+                val converted = convert(feature)
+                cache[featureClass] = converted
+                add(converted)
             }
         }
     }

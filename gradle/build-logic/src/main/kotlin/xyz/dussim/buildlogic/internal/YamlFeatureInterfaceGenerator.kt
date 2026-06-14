@@ -309,18 +309,19 @@ class YamlFeatureInterfaceGenerator(
         schema: Schema<*>,
         propertyName: String,
         featureName: String,
-    ): String =
-        when (type) {
+    ): String {
+        val isValueNullable = schema.properties?.get("value")?.nullable == true
+        return when (type) {
             "boolean" -> {
-                "BooleanValue"
+                if (isValueNullable) "NullableBooleanValue" else "BooleanValue"
             }
 
             "number" -> {
-                "DoubleValue"
+                if (isValueNullable) "NullableDoubleValue" else "DoubleValue"
             }
 
             "string" -> {
-                "StringValue"
+                if (isValueNullable) "NullableStringValue" else "StringValue"
             }
 
             "array" -> {
@@ -376,6 +377,7 @@ class YamlFeatureInterfaceGenerator(
                 )
             }
         }
+    }
 
     // endregion
 
@@ -405,6 +407,10 @@ class YamlFeatureInterfaceGenerator(
         }
         schema.example?.let {
             result.example = it
+            hasContent = true
+        }
+        schema.nullable?.let {
+            result.nullable = it
             hasContent = true
         }
 
@@ -461,6 +467,7 @@ class YamlFeatureInterfaceGenerator(
         val merged = Schema<Any>()
 
         merged.type = mergeTypes(left.type, right.type)
+        mergeNullable(left.nullable, right.nullable)?.let { merged.nullable = it }
         mergeProperties(left, right, featureName)?.let { merged.properties = it }
         mergeEnums(left, right)?.let { merged.enum = it }
         merged.example = mergeExample(left.example, right.example)
@@ -490,6 +497,15 @@ class YamlFeatureInterfaceGenerator(
             leftType == "object" || rightType == "object" -> "object"
             leftType != null -> leftType
             else -> rightType
+        }
+
+    private fun mergeNullable(
+        leftNullable: Boolean?,
+        rightNullable: Boolean?,
+    ): Boolean? =
+        when {
+            leftNullable == null && rightNullable == null -> null
+            else -> leftNullable == true || rightNullable == true
         }
 
     private fun mergeProperties(
@@ -810,12 +826,26 @@ class YamlFeatureInterfaceGenerator(
                     typeName = "ListLogBookEntryValue",
                 ),
                 ObjectArrayMatcher(
+                    requiredKeys = listOf("deviceFamily", "error", "subCode"),
+                    typeName = "ListOnboardUpdaterLastErrorCodeValue",
+                ),
+                ObjectArrayMatcher(
                     requiredKeys = listOf("type", "brand", "model", "id", "ski"),
                     typeName = "ListEebusDeviceValue",
                 ),
                 ObjectArrayMatcher(
                     requiredKeys = listOf("type", "id", "ski"),
                     typeName = "ListEebusServicePartnerValue",
+                ),
+                ObjectArrayMatcher(
+                    requiredKeys = listOf("type", "busAddress"),
+                    excludedKeys = listOf("brand", "model", "id", "ski", "busType", "value", "unit"),
+                    typeName = "ListEebusDevicesPairedValue",
+                ),
+                ObjectArrayMatcher(
+                    requiredKeys = listOf("type", "index"),
+                    excludedKeys = listOf("manufacturer", "model", "serialNumber", "value", "unit"),
+                    typeName = "ListSolarlogDevicesPairedValue",
                 ),
                 ObjectArrayMatcher(
                     requiredKeys = listOf("voltageValue", "cellBalance", "functionStatus", "safetyStatus"),
@@ -834,6 +864,7 @@ class YamlFeatureInterfaceGenerator(
                             "hardwareVersion",
                             "etn",
                         ),
+                    excludedKeys = listOf("busAddress", "busType"),
                     typeName = "ListDeviceInformationValue",
                 ),
                 ObjectArrayMatcher(
@@ -850,7 +881,26 @@ class YamlFeatureInterfaceGenerator(
                     typeName = "ListVentilationMessageValue",
                 ),
                 ObjectArrayMatcher(
-                    requiredKeys = listOf("busType"),
+                    requiredKeys =
+                        listOf(
+                            "code",
+                            "firstAppearanceTime",
+                            "firstGoneTime",
+                            "lastAppearanceTime",
+                            "lastGoneTime",
+                            "counter",
+                            "busAddress",
+                            "busType",
+                            "controller",
+                            "active",
+                            "dataTracing",
+                            "audiences",
+                        ),
+                    typeName = "ListSystemMessageEntryValue",
+                ),
+                ObjectArrayMatcher(
+                    requiredKeys = listOf("busAddress", "busType"),
+                    excludedKeys = listOf("value", "unit", "type"),
                     typeName = "ListBusTypeValue",
                 ),
                 // "type" omitted from requiredKeys: it conflicts with the generic

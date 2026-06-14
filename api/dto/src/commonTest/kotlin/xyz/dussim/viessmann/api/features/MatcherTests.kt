@@ -85,8 +85,8 @@ class MatcherTests :
                     RoomsFeature.descriptor to 0,
                     RoomsOthersNFeature.descriptor to 0,
                     DeviceTimezoneFeature.descriptor to 0,
-                    TcuModeFeature.descriptor to 78,
-                    HeatingCircuitsNHeatingScheduleFeature.descriptor to 390,
+                    TcuModeFeature.descriptor to 0,
+                    HeatingCircuitsNHeatingScheduleFeature.descriptor to 234,
                     DeviceConfigurationFeature.descriptor to 78,
                 ).forEach { (descriptor, expected) ->
                     val result = features.allOf(descriptor, descriptor.byWildcardName)
@@ -143,8 +143,8 @@ class MatcherTests :
                     RoomsFeature.descriptor to 0,
                     RoomsOthersNFeature.descriptor to 0,
                     DeviceTimezoneFeature.descriptor to 0,
-                    TcuModeFeature.descriptor to 78,
-                    HeatingCircuitsNHeatingScheduleFeature.descriptor to 390,
+                    TcuModeFeature.descriptor to 0,
+                    HeatingCircuitsNHeatingScheduleFeature.descriptor to 234,
                     DeviceConfigurationFeature.descriptor to 78,
                 ).forEach { (descriptor, expected) ->
                     val result = features.allOf(descriptor, descriptor.byWildcardNameThenFailFastStructure)

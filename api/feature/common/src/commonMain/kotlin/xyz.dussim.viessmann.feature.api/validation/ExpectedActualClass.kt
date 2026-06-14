@@ -20,22 +20,29 @@ import xyz.dussim.viessmann.feature.api.ListDeviceInformationValue
 import xyz.dussim.viessmann.feature.api.ListDeviceValue
 import xyz.dussim.viessmann.feature.api.ListDoubleValue
 import xyz.dussim.viessmann.feature.api.ListEebusDeviceValue
+import xyz.dussim.viessmann.feature.api.ListEebusDevicesPairedValue
 import xyz.dussim.viessmann.feature.api.ListEebusServicePartnerValue
 import xyz.dussim.viessmann.feature.api.ListElectricalEnergyMatrixValue
 import xyz.dussim.viessmann.feature.api.ListEmptyValue
 import xyz.dussim.viessmann.feature.api.ListEnergyChargedDeviceValue
 import xyz.dussim.viessmann.feature.api.ListFuelCellErrorValue
 import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
+import xyz.dussim.viessmann.feature.api.ListOnboardUpdaterLastErrorCodeValue
 import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
 import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListSolarlogDeviceValue
+import xyz.dussim.viessmann.feature.api.ListSolarlogDevicesPairedValue
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.ListSystemMessageEntryValue
 import xyz.dussim.viessmann.feature.api.ListVentilationMessageValue
 import xyz.dussim.viessmann.feature.api.ListWifiNetworkValue
 import xyz.dussim.viessmann.feature.api.ListZigbeeDeviceStatusValue
 import xyz.dussim.viessmann.feature.api.LogsValue
+import xyz.dussim.viessmann.feature.api.NullableBooleanValue
+import xyz.dussim.viessmann.feature.api.NullableDoubleValue
+import xyz.dussim.viessmann.feature.api.NullableStringValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import xyz.dussim.viessmann.feature.api.ObjectConstraints
 import xyz.dussim.viessmann.feature.api.ObjectOtherRoomConfigurationValue
@@ -58,6 +65,9 @@ private val CLASS_REGISTRY: List<KClass<*>> =
         StringValue::class,
         BooleanValue::class,
         DoubleValue::class,
+        NullableStringValue::class,
+        NullableBooleanValue::class,
+        NullableDoubleValue::class,
         ListDoubleValue::class,
         ListStringValue::class,
         ListDeviceErrorValue::class,
@@ -88,9 +98,11 @@ private val CLASS_REGISTRY: List<KClass<*>> =
         EnergyMatrixValue::class,
         LogsValue::class,
         ListLogBookEntryValue::class,
+        ListOnboardUpdaterLastErrorCodeValue::class,
         ProductInfoValue::class,
         FactoryResetInfoValue::class,
         ListEebusDeviceValue::class,
+        ListEebusDevicesPairedValue::class,
         ListEebusServicePartnerValue::class,
         ListElectricalEnergyMatrixValue::class,
         ListOperatingDataCellsDetailValue::class,
@@ -101,8 +113,10 @@ private val CLASS_REGISTRY: List<KClass<*>> =
         ListFuelCellErrorValue::class,
         ListWifiNetworkValue::class,
         ListVentilationMessageValue::class,
+        ListSystemMessageEntryValue::class,
         TestResultValue::class,
         ListSolarlogDeviceValue::class,
+        ListSolarlogDevicesPairedValue::class,
     )
 
 @PublishedApi
@@ -113,6 +127,15 @@ internal val BOOLEAN_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(BooleanValue::cl
 
 @PublishedApi
 internal val DOUBLE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(DoubleValue::class)
+
+@PublishedApi
+internal val NULLABLE_STRING_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(NullableStringValue::class)
+
+@PublishedApi
+internal val NULLABLE_BOOLEAN_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(NullableBooleanValue::class)
+
+@PublishedApi
+internal val NULLABLE_DOUBLE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(NullableDoubleValue::class)
 
 @PublishedApi
 internal val LIST_DOUBLE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListDoubleValue::class)
@@ -205,6 +228,10 @@ internal val LOGS_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(LogsValue::class)
 internal val LIST_LOG_BOOK_ENTRY_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListLogBookEntryValue::class)
 
 @PublishedApi
+internal val LIST_ONBOARD_UPDATER_LAST_ERROR_CODE_VALUE_CLASS_INDEX =
+    CLASS_REGISTRY.indexOf(ListOnboardUpdaterLastErrorCodeValue::class)
+
+@PublishedApi
 internal val PRODUCT_INFO_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ProductInfoValue::class)
 
 @PublishedApi
@@ -212,6 +239,9 @@ internal val FACTORY_RESET_INFO_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(Facto
 
 @PublishedApi
 internal val LIST_EEBUS_DEVICE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListEebusDeviceValue::class)
+
+@PublishedApi
+internal val LIST_EEBUS_DEVICES_PAIRED_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListEebusDevicesPairedValue::class)
 
 @PublishedApi
 internal val LIST_EEBUS_SERVICE_PARTNER_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListEebusServicePartnerValue::class)
@@ -244,10 +274,17 @@ internal val LIST_WIFI_NETWORK_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListWi
 internal val LIST_VENTILATION_MESSAGE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListVentilationMessageValue::class)
 
 @PublishedApi
+internal val LIST_SYSTEM_MESSAGE_ENTRY_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListSystemMessageEntryValue::class)
+
+@PublishedApi
 internal val TEST_RESULT_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(TestResultValue::class)
 
 @PublishedApi
 internal val LIST_SOLARLOG_DEVICE_VALUE_CLASS_INDEX = CLASS_REGISTRY.indexOf(ListSolarlogDeviceValue::class)
+
+@PublishedApi
+internal val LIST_SOLARLOG_DEVICES_PAIRED_VALUE_CLASS_INDEX =
+    CLASS_REGISTRY.indexOf(ListSolarlogDevicesPairedValue::class)
 
 private val SIZE = CLASS_REGISTRY.size
 internal val CLASS_REGISTRY_SIZE = SIZE

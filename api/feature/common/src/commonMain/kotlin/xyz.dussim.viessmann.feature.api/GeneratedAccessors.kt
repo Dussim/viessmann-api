@@ -58,6 +58,66 @@ inline fun <reified T : PropertyValue<*>> EfficientStringKeyMap<Property>.findPr
     return value as? T
 }
 
+fun EfficientStringKeyMap<Property>.requireNullableBooleanPropertyValue(
+    name: String,
+    hash: Long,
+): NullableBooleanValue =
+    when (val value = requireProperty(name, hash).value) {
+        is NullableBooleanValue -> value
+        is BooleanValue -> NullableBooleanValue(value.element)
+        else -> throw GeneratedAccessException
+    }
+
+fun EfficientStringKeyMap<Property>.requireNullableDoublePropertyValue(
+    name: String,
+    hash: Long,
+): NullableDoubleValue =
+    when (val value = requireProperty(name, hash).value) {
+        is NullableDoubleValue -> value
+        is DoubleValue -> NullableDoubleValue(value.element)
+        else -> throw GeneratedAccessException
+    }
+
+fun EfficientStringKeyMap<Property>.requireNullableStringPropertyValue(
+    name: String,
+    hash: Long,
+): NullableStringValue =
+    when (val value = requireProperty(name, hash).value) {
+        is NullableStringValue -> value
+        is StringValue -> NullableStringValue(value.element)
+        else -> throw GeneratedAccessException
+    }
+
+fun EfficientStringKeyMap<Property>.findNullableBooleanPropertyValueOrNull(
+    name: String,
+    hash: Long,
+): NullableBooleanValue? =
+    when (val value = this[name, hash]?.value ?: return null) {
+        is NullableBooleanValue -> value
+        is BooleanValue -> NullableBooleanValue(value.element)
+        else -> null
+    }
+
+fun EfficientStringKeyMap<Property>.findNullableDoublePropertyValueOrNull(
+    name: String,
+    hash: Long,
+): NullableDoubleValue? =
+    when (val value = this[name, hash]?.value ?: return null) {
+        is NullableDoubleValue -> value
+        is DoubleValue -> NullableDoubleValue(value.element)
+        else -> null
+    }
+
+fun EfficientStringKeyMap<Property>.findNullableStringPropertyValueOrNull(
+    name: String,
+    hash: Long,
+): NullableStringValue? =
+    when (val value = this[name, hash]?.value ?: return null) {
+        is NullableStringValue -> value
+        is StringValue -> NullableStringValue(value.element)
+        else -> null
+    }
+
 /**
  * Missing key throws. Type mismatch and `ListEmptyValue` return `defaultValue`.
  */

@@ -187,6 +187,10 @@ class YamlFeatureJsonGenerator(
             return exampleToJson(enumVal, api, baseDir)
         }
 
+        if (schema.nullable == true) {
+            return JsonNull
+        }
+
         return when (schema.type) {
             "object" -> {
                 objectSchemaToJson(schema, featureName, api, baseDir)
@@ -535,6 +539,10 @@ class YamlFeatureJsonGenerator(
             result.example = it
             hasContent = true
         }
+        schema.nullable?.let {
+            result.nullable = it
+            hasContent = true
+        }
 
         @Suppress("UNCHECKED_CAST")
         (schema.enum as? MutableList<Any>)?.let {
@@ -589,6 +597,7 @@ class YamlFeatureJsonGenerator(
         val merged = Schema<Any>()
 
         merged.type = mergeTypes(left.type, right.type)
+        mergeNullable(left.nullable, right.nullable)?.let { merged.nullable = it }
         mergeProperties(left, right, featureName)?.let { merged.properties = it }
         mergeEnums(left, right)?.let { merged.enum = it }
         merged.example = mergeExample(left.example, right.example)
@@ -618,6 +627,15 @@ class YamlFeatureJsonGenerator(
             leftType == "object" || rightType == "object" -> "object"
             leftType != null -> leftType
             else -> rightType
+        }
+
+    private fun mergeNullable(
+        leftNullable: Boolean?,
+        rightNullable: Boolean?,
+    ): Boolean? =
+        when {
+            leftNullable == null && rightNullable == null -> null
+            else -> leftNullable == true || rightNullable == true
         }
 
     private fun mergeProperties(

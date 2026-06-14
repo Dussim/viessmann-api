@@ -36,20 +36,21 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
     companion object {
         private val pattern = "(?<!_)0(?=[A-Za-z])".toRegex()
         private val temporarilyDisabledTests =
-            setOf(
-                "device.busTopology",
-                "device.product.matrix",
-                "ems.power.balance",
-                "ems.power.instantaneous",
-                "fuel.cell.errors.raw",
-                "heating.cooling.circuits.n.messages",
-                "solarlog.devices.detected",
-                "tcu.wifi.detected",
-                "tcu.wifi.environment",
-                "ventilation.messages",
-                "fuelCell.errors.raw",
-                "heating.coolingCircuits.0.messages",
-                "device.productMatrix",
+            setOf<String>(
+//                "device.busTopology",
+//                "device.product.matrix",
+//                "ems.power.balance",
+//                "ems.power.instantaneous",
+//                "fuel.cell.errors.raw",
+//                "heating.cooling.circuits.n.messages",
+//                "solarlog.devices.detected",
+//                "tcu.wifi.detected",
+//                "tcu.wifi.environment",
+//                "ventilation.messages",
+//                "fuelCell.errors.raw",
+//                "heating.coolingCircuits.0.messages",
+//                "device.productMatrix",
+//                "heating.fuelCell.errors.raw",
             )
     }
 

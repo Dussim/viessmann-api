@@ -58,6 +58,29 @@ class GeneratedAccessorsTest :
             presentWrongType.findPropertyValueOrNull<DoubleValue>("temperature", hash("temperature")).shouldBeNull()
         }
 
+        test("nullable primitive accessors wrap scalar primitive values") {
+            val properties =
+                EfficientStringKeyMap(
+                    mapOf(
+                        "enabled" to Property.ofBoolean(true),
+                        "temperature" to Property.ofDouble(21.5),
+                        "mode" to Property.of("auto"),
+                    ),
+                )
+
+            properties.requireNullableBooleanPropertyValue("enabled", hash("enabled")) shouldBe NullableBooleanValue(true)
+            properties.requireNullableDoublePropertyValue("temperature", hash("temperature")) shouldBe NullableDoubleValue(21.5)
+            properties.requireNullableStringPropertyValue("mode", hash("mode")) shouldBe NullableStringValue("auto")
+        }
+
+        test("nullable primitive find accessors return null for missing and mismatch") {
+            val missing = EfficientStringKeyMap<Property>(emptyMap())
+            missing.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
+
+            val presentWrongType = EfficientStringKeyMap(mapOf("mode" to Property.ofDouble(1.0)))
+            presentWrongType.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
+        }
+
         test("requirePropertyValueOrPromoteEmpty promotes ListEmptyValue and throws on mismatch or missing") {
             val default = ListStringValue.EMPTY
 
