@@ -43,6 +43,39 @@ class FeatureRegistryTest :
                 .findOf(RoomTemperatureFeatureDescriptor, RoomTemperatureFeatureDescriptor.byNameThenStructure(2))
                 ?.feature shouldBe "rooms.2.sensors.temperature"
         }
+
+        test("descriptor structure matchers use fail-fast validation") {
+            var structureCalls = 0
+            var failFastCalls = 0
+            val structure =
+                ValidationRule<Feature, ValidationError> {
+                    structureCalls++
+                    Valid()
+                }
+            val failFast =
+                ValidationRule<Feature, ValidationError> {
+                    failFastCalls++
+                    Valid()
+                }
+            val descriptor =
+                indexedFeatureDescriptor(
+                    wildcardName = "rooms.{N}.sensors.temperature",
+                    rule = structure,
+                    failFast = failFast,
+                    factory = ::RoomTemperatureFeature,
+                )
+            val feature = testFeature("rooms.1.sensors.temperature")
+
+            descriptor.byStructure.matches(feature) shouldBe true
+            descriptor.byWildcardNameThenStructure.matches(feature) shouldBe true
+            descriptor.byNameThenStructure(1).matches(feature) shouldBe true
+
+            structureCalls shouldBe 0
+            failFastCalls shouldBe 6
+
+            descriptor.validate(feature).isInvalid shouldBe false
+            structureCalls shouldBe 1
+        }
     })
 
 private class RoomTemperatureFeature(

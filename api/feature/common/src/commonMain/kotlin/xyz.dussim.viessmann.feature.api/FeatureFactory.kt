@@ -194,10 +194,20 @@ sealed interface FeatureMatcherProvider {
     val failFastStructureValidator: ValidationRule<Feature, ValidationError>
 
     val byWildcardName: FeatureMatcher
+
+    /**
+     * Matches by structure using [failFastStructureValidator].
+     *
+     * A [FeatureMatcher] only returns a boolean and discards the validation result, so collecting
+     * every structure validation error would do unnecessary work. Use [structureValidator] directly
+     * when the accumulated validation result is needed.
+     */
     val byStructure: FeatureMatcher
-    val byFailFastStructure: FeatureMatcher
+
+    /**
+     * Matches by wildcard name and structure using [failFastStructureValidator].
+     */
     val byWildcardNameThenStructure: FeatureMatcher
-    val byWildcardNameThenFailFastStructure: FeatureMatcher
 }
 
 sealed interface FeatureMatchers : FeatureMatcherProvider {
@@ -206,9 +216,10 @@ sealed interface FeatureMatchers : FeatureMatcherProvider {
     interface Indexed : FeatureMatchers {
         fun byName(index: Int): FeatureMatcher
 
+        /**
+         * Matches by indexed name and structure using [failFastStructureValidator].
+         */
         fun byNameThenStructure(index: Int): FeatureMatcher
-
-        fun byNameThenFailFastStructure(index: Int): FeatureMatcher
     }
 }
 

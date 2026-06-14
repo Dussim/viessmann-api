@@ -125,15 +125,6 @@ class DescriptorExpectation<F : Feature>(
             }
         }
     }
-
-    fun validateFailFast(features: FeatureRegistry) {
-        val result = features.allOf(descriptor, descriptor.byFailFastStructure)
-        try {
-            result shouldHaveSize expected
-        } catch (e: AssertionError) {
-            throw AssertionError("Failed for $descriptor", e)
-        }
-    }
 }
 
 private infix fun <F : Feature> FeatureDescriptor<F>.expecting(expected: Int) = DescriptorExpectation(this, expected)
@@ -274,46 +265,6 @@ fun FunSpec.parallelValidationTest(
             validationDescriptors
                 .map { expectation ->
                     async(dispatcher) { expectation.validateStructure(features) }
-                }.awaitAll()
-            if (repeatIndex % step == 0) {
-                println("[$testName] Finished $repeatIndex/$size")
-            }
-        }
-        println("[$testName] Finished in ${Clock.System.now() - startTime}")
-    }
-}
-
-fun FunSpec.singleThreadedFailFastValidationTest(
-    testName: String,
-    features: FeatureRegistry,
-    size: Int = 930,
-) {
-    context(testName) {
-        val step = size / 10
-        val startTime = Clock.System.now()
-        repeat(size) { repeatIndex ->
-            validationDescriptors.forEach { it.validateFailFast(features) }
-            if (repeatIndex % step == 0) {
-                println("[$testName] Finished $repeatIndex/$size")
-            }
-        }
-        println("[$testName] Finished in ${Clock.System.now() - startTime}")
-    }
-}
-
-fun FunSpec.parallelFailFastValidationTest(
-    testName: String,
-    features: FeatureRegistry,
-    size: Int = 930,
-) {
-    context(testName) {
-        val step = size / 10
-        val startTime = Clock.System.now()
-        val dispatcher = Dispatchers.Default
-        repeat(size) { repeatIndex ->
-            validationDescriptors
-                .map { expectation ->
-                    async(dispatcher) { expectation.validateFailFast(features) }
                 }.awaitAll()
             if (repeatIndex % step == 0) {
                 println("[$testName] Finished $repeatIndex/$size")

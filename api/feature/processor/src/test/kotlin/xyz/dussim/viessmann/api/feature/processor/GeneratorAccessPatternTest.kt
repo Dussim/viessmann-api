@@ -17,6 +17,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
 import xyz.dussim.viessmann.feature.api.DoubleValue
+import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import java.lang.reflect.InvocationHandler
@@ -151,6 +152,20 @@ class GeneratorAccessPatternTest :
             code shouldContain "equipment = equipmentRaw."
             code shouldContain "toArrayStringConstraintsOrThrow()"
             code shouldNotContain "!!.constraints"
+        }
+
+        test("fail-fast generator directly returns single rule result") {
+            val code =
+                generateValidateFunction(
+                    targetType = typeNameOf<Feature>(),
+                    ruleExpressions = listOf(CodeBlock.of("singleRule")),
+                    isFailFast = true,
+                ).toString()
+
+            code shouldContain "= singleRule.validate(value)"
+            code shouldNotContain "val result0"
+            code shouldNotContain "isInvalid"
+            code shouldNotContain "Valid()"
         }
     })
 
