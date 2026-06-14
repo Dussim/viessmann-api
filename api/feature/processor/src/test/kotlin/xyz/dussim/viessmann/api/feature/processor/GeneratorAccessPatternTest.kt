@@ -168,6 +168,21 @@ class GeneratorAccessPatternTest :
             code shouldNotContain "Valid()"
         }
 
+        test("fail-fast generator directly returns last rule result") {
+            val code =
+                generateValidateFunction(
+                    targetType = typeNameOf<Feature>(),
+                    ruleExpressions = listOf(CodeBlock.of("firstRule"), CodeBlock.of("secondRule")),
+                    isFailFast = true,
+                ).toString()
+
+            code shouldContain "val result0 = firstRule.validate(value)"
+            code shouldContain "if (result0.isInvalid) return result0"
+            code shouldContain "return secondRule.validate(value)"
+            code shouldNotContain "val result1"
+            code shouldNotContain "Valid()"
+        }
+
         test("regular generator directly returns single rule result") {
             val code =
                 generateValidateFunction(

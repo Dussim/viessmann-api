@@ -109,6 +109,17 @@ expect class IdentityHashMap<K, V>() : MutableMap<K, V> {
     override val size: Int
 }
 
+internal enum class FeatureMatcherNameIndexKind {
+    EXACT,
+    WILDCARD,
+}
+
+internal interface NameIndexedFeatureMatcher : FeatureMatcher {
+    val indexKind: FeatureMatcherNameIndexKind
+    val indexedName: String
+    val indexedCandidateMatcher: FeatureMatcher?
+}
+
 fun interface FeatureMatcher {
     companion object {
         internal class ByStructureImpl(
@@ -119,41 +130,43 @@ fun interface FeatureMatcher {
 
         internal class ByNameImpl(
             internal val name: String,
-        ) : FeatureMatcher {
+        ) : NameIndexedFeatureMatcher {
+            override val indexKind: FeatureMatcherNameIndexKind = FeatureMatcherNameIndexKind.EXACT
+            override val indexedName: String = name
+            override val indexedCandidateMatcher: FeatureMatcher? = null
+
             override fun matches(feature: Feature): Boolean = feature.feature == name
         }
 
         internal class ByWildcardNameImpl(
             internal val name: String,
-        ) : FeatureMatcher {
+        ) : NameIndexedFeatureMatcher {
+            override val indexKind: FeatureMatcherNameIndexKind = FeatureMatcherNameIndexKind.WILDCARD
+            override val indexedName: String = name
+            override val indexedCandidateMatcher: FeatureMatcher? = null
+
             override fun matches(feature: Feature): Boolean = feature.wildcardFeature == name
         }
 
         internal class ByWildcardNameThenStructureImpl(
             internal val wildcardName: ByWildcardNameImpl,
             internal val structure: ByStructureImpl,
-        ) : FeatureMatcher {
-            override fun matches(feature: Feature): Boolean = wildcardName.matches(feature) && structure.matches(feature)
-        }
+        ) : NameIndexedFeatureMatcher {
+            override val indexKind: FeatureMatcherNameIndexKind = FeatureMatcherNameIndexKind.WILDCARD
+            override val indexedName: String = wildcardName.indexedName
+            override val indexedCandidateMatcher: FeatureMatcher = structure
 
-        internal class ByWildcardNameThenFailFastStructureImpl(
-            internal val wildcardName: ByWildcardNameImpl,
-            internal val structure: ByStructureImpl,
-        ) : FeatureMatcher {
             override fun matches(feature: Feature): Boolean = wildcardName.matches(feature) && structure.matches(feature)
         }
 
         internal class ByNameThenStructureImpl(
             internal val name: ByNameImpl,
             internal val structure: ByStructureImpl,
-        ) : FeatureMatcher {
-            override fun matches(feature: Feature): Boolean = name.matches(feature) && structure.matches(feature)
-        }
+        ) : NameIndexedFeatureMatcher {
+            override val indexKind: FeatureMatcherNameIndexKind = FeatureMatcherNameIndexKind.EXACT
+            override val indexedName: String = name.indexedName
+            override val indexedCandidateMatcher: FeatureMatcher = structure
 
-        internal class ByNameThenFailFastStructureImpl(
-            internal val name: ByNameImpl,
-            internal val structure: ByStructureImpl,
-        ) : FeatureMatcher {
             override fun matches(feature: Feature): Boolean = name.matches(feature) && structure.matches(feature)
         }
 
@@ -168,20 +181,10 @@ fun interface FeatureMatcher {
             rule: ValidationRule<Feature, ValidationError>,
         ): FeatureMatcher = ByWildcardNameThenStructureImpl(ByWildcardNameImpl(name), ByStructureImpl(rule))
 
-        fun byWildcardNameThenFailFastStructure(
-            name: String,
-            rule: ValidationRule<Feature, ValidationError>,
-        ): FeatureMatcher = ByWildcardNameThenFailFastStructureImpl(ByWildcardNameImpl(name), ByStructureImpl(rule))
-
         fun byNameThenStructure(
             name: String,
             rule: ValidationRule<Feature, ValidationError>,
         ): FeatureMatcher = ByNameThenStructureImpl(ByNameImpl(name), ByStructureImpl(rule))
-
-        fun byNameThenFailFastStructure(
-            name: String,
-            rule: ValidationRule<Feature, ValidationError>,
-        ): FeatureMatcher = ByNameThenFailFastStructureImpl(ByNameImpl(name), ByStructureImpl(rule))
     }
 
     fun matches(feature: Feature): Boolean
