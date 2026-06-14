@@ -167,6 +167,17 @@ class GeneratorAccessPatternTest :
             code shouldNotContain "isInvalid"
             code shouldNotContain "Valid()"
         }
+
+        test("regular generator directly returns single rule result") {
+            val code =
+                generateValidateFunction(
+                    targetType = typeNameOf<Feature>(),
+                    ruleExpressions = listOf(CodeBlock.of("singleRule")),
+                ).toString()
+
+            code shouldContain "= singleRule.validate(value)"
+            code shouldNotContain "of("
+        }
     })
 
 private fun buildPropertyInitCode(property: ParameterProperty): String {

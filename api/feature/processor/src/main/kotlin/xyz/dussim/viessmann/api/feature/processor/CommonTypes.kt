@@ -187,17 +187,15 @@ fun generateValidateFunction(
             CodeBlock
                 .builder()
                 .apply {
-                    if (isFailFast) {
-                        if (ruleExpressions.size == 1) {
-                            add("return %L.validate(value)\n", ruleExpressions.single())
-                        } else {
-                            ruleExpressions.forEachIndexed { index, expr ->
-                                val resultVar = "result$index"
-                                add("val %L = %L.validate(value)\n", resultVar, expr)
-                                add("if (%L.isInvalid) return %L\n", resultVar, resultVar)
-                            }
-                            add("return %M()\n", MemberName(VALIDATION_PACKAGE, "Valid"))
+                    if (ruleExpressions.size == 1) {
+                        add("return %L.validate(value)\n", ruleExpressions.single())
+                    } else if (isFailFast) {
+                        ruleExpressions.forEachIndexed { index, expr ->
+                            val resultVar = "result$index"
+                            add("val %L = %L.validate(value)\n", resultVar, expr)
+                            add("if (%L.isInvalid) return %L\n", resultVar, resultVar)
                         }
+                        add("return %M()\n", MemberName(VALIDATION_PACKAGE, "Valid"))
                     } else {
                         add("return ")
                         add(
