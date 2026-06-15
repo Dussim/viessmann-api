@@ -3,7 +3,7 @@ package xyz.dussim.viessmann.api.features
 import io.kotest.core.spec.style.FunSpec
 import xyz.dussim.viessmann.feature.api.FeatureRegistry
 
-class OneBillionValidationsTest :
+class BasicRegistryValidationsTest :
     FunSpec({
         val features = loadFeatures(FeatureRegistry::of)
 

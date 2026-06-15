@@ -110,7 +110,6 @@ interface FeatureRegistry : Iterable<Feature> {
     }
 }
 
-private val CACHE_MISS_MARKER = Any()
 private val EMPTY_CANDIDATE_RANGE = IntRange.EMPTY
 
 private fun findMatching(
@@ -148,14 +147,12 @@ private fun <F : Feature> cachedFindOfHelper(
 
         val cache = implementations[i]
         val cached = cache[featureClass]
-        if (cached != null && cached !== CACHE_MISS_MARKER) {
+        if (cached != null) {
             return cached as F
         }
-        if (cached == null) {
-            val converted = factory.getOrNull(feature) ?: return null
-            cache[featureClass] = converted
-            return converted
-        }
+        val converted = factory.getOrNull(feature) ?: return null
+        cache[featureClass] = converted
+        return converted
     }
     return null
 }
@@ -176,17 +173,12 @@ private fun <F : Feature> cachedFirstOfHelper(
 
         val cache = implementations[i]
         val cached = cache[featureClass]
-        when {
-            cached == null -> {
-                val converted = factory.getOrThrow(feature)
-                cache[featureClass] = converted
-                return converted
-            }
-
-            cached !== CACHE_MISS_MARKER -> {
-                return cached as F
-            }
+        if (cached != null) {
+            return cached as F
         }
+        val converted = factory.getOrThrow(feature)
+        cache[featureClass] = converted
+        return converted
     }
     throw NoSuchElementException("No feature matching $failureMatcher")
 }
@@ -207,9 +199,9 @@ private fun <F : Feature> cachedAllOfHelper(
 
             val cache = implementations[i]
             val cached = cache[featureClass]
-            if (cached != null && cached !== CACHE_MISS_MARKER) {
+            if (cached != null) {
                 add(cached as F)
-            } else if (cached == null) {
+            } else {
                 val converted = factory.getOrThrow(feature)
                 cache[featureClass] = converted
                 add(converted)
