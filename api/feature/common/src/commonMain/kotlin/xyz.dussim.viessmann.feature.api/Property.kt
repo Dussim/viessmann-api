@@ -647,13 +647,13 @@ data class EebusServicePartner(
     val ski: String,
 )
 
-@JvmRecord
-@Serializable
 /**
  * Canonical electrical energy matrix entries use tariff fields, but the backend currently also returns an alternate
  * shape with a plain `value`, `busType`, and `busAddress`. That alternate shape is probably a backend/API contract
  * error, but it is accepted here so `ems.power.instantaneous` can still be decoded.
  */
+@JvmRecord
+@Serializable
 data class ElectricalEnergyMatrix(
     val ident: Int,
     val parent: Int,
@@ -793,12 +793,12 @@ data class TestResult(
     )
 }
 
-@JvmRecord
-@Serializable
 /**
  * Unified message shape for legacy and E3 cooling/ventilation messages. `status` and `count` are present only in the
  * legacy variant; `busType` and `busAddress` are present only in the E3 variant.
  */
+@JvmRecord
+@Serializable
 data class VentilationMessage(
     val timestamp: Instant,
     val errorCode: String,
