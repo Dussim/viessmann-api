@@ -201,6 +201,7 @@ data class CommandProperty(
     val type: TypeName,
     val implType: TypeName,
     val signature: CommandSignature,
+    val validationName: String,
     val command: KSClassDeclaration,
     val isNullable: Boolean,
 ) : ConvertibleToPropertySpec {
@@ -223,6 +224,7 @@ data class CommandProperty(
                 type = type,
                 implType = if (isNullable) implType.copy(nullable = true) else implType,
                 signature = signature,
+                validationName = commandContext.lowerCaseName.replace("_", ""),
                 command = property.parentDeclaration as KSClassDeclaration,
                 isNullable = isNullable,
             )

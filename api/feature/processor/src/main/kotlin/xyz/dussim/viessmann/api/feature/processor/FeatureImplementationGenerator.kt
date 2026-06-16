@@ -41,6 +41,7 @@ private val REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
     MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValueOrPromoteEmpty")
 private val FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
     MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrPromoteEmpty")
+private val ZERO_PARAMETER_COMMAND_RULE = validationRule("zeroParameterCommandRule")
 private val NULLABLE_BOOLEAN_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableBooleanValue")
 private val NULLABLE_DOUBLE_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableDoubleValue")
 private val NULLABLE_STRING_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableStringValue")
@@ -243,7 +244,18 @@ private fun ruleExpressions(context: SymbolContext): List<CodeBlock> =
             .commandProperties
             .filter { !it.isNullable }
             .map {
-                CodeBlock.of("%T.rule", it.implType.copy(nullable = false))
+                if (it.signature.parameters.isEmpty()) {
+                    CodeBlock.of(
+                        "%M",
+                        context.ruleRegistry.register(
+                            ZERO_PARAMETER_COMMAND_RULE,
+                            listOf(it.validationName),
+                            FEATURE_VALIDATION_RULE_TYPE,
+                        ),
+                    )
+                } else {
+                    CodeBlock.of("%T.rule", it.implType.copy(nullable = false))
+                }
             }
 
 /**

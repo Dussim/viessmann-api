@@ -456,6 +456,21 @@ fun scheduleConstraintsRule(parameterName: String): ValidationRule<Command, Vali
 fun energyMatrixConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> =
     typedCommandRule<EnergyMatrixConstraints>(parameterName, ENERGY_MATRIX_CONSTRAINTS_CLASS_INDEX)
 
+fun zeroParameterCommandRule(commandName: String): ValidationRule<Feature, ValidationError> {
+    val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
+    val expectedData = Expected(commandName, 0)
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        val command = feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError
+        if (command.params.size == 0) {
+            ValidationResult.Valid
+        } else {
+            Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+        }
+    }
+}
+
 fun commandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,
