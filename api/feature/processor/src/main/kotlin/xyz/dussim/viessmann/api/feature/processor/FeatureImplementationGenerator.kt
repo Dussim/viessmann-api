@@ -227,7 +227,10 @@ private fun CodeBlock.Builder.addValidationException(
 /**
  * Generates rule expressions for the feature.
  */
-private fun ruleExpressions(context: SymbolContext): List<CodeBlock> =
+private fun ruleExpressions(
+    context: SymbolContext,
+    isFailFast: Boolean = false,
+): List<CodeBlock> =
     context
         .parameterProperties
         .map {
@@ -254,9 +257,19 @@ private fun ruleExpressions(context: SymbolContext): List<CodeBlock> =
                         ),
                     )
                 } else {
-                    CodeBlock.of("%T.rule", it.implType.copy(nullable = false))
+                    commandRuleExpression(it, isFailFast)
                 }
             }
+
+internal fun commandRuleExpression(
+    property: CommandProperty,
+    isFailFast: Boolean = false,
+): CodeBlock =
+    if (isFailFast) {
+        CodeBlock.of("%T.FailFast.rule", property.implType.copy(nullable = false))
+    } else {
+        CodeBlock.of("%T.rule", property.implType.copy(nullable = false))
+    }
 
 /**
  * Generates companion object that implements validation rules for the feature.
@@ -291,7 +304,7 @@ private fun failFastObject(
     TypeSpec
         .objectBuilder("FailFast")
         .addSuperinterface(validationRuleType(targetType))
-        .addFunction(generateValidateFunction(targetType, ruleExpressions(context), isFailFast = true))
+        .addFunction(generateValidateFunction(targetType, ruleExpressions(context, isFailFast = true), isFailFast = true))
         .build()
 
 /**

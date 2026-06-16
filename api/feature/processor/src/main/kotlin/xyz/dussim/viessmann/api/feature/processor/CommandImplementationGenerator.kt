@@ -141,19 +141,12 @@ private fun ruleExpressions(context: CommandSymbolContext): List<CodeBlock> =
 /**
  * Generates companion object with validation rules for command constraints.
  */
-fun companionObject(context: CommandSymbolContext): TypeSpec {
-    val commandRuleProperty =
-        overrideProperty(
-            "rule",
-            FEATURE_VALIDATION_RULE_TYPE,
-            CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.lowerCaseName.replace("_", "")),
-        )
-
-    return TypeSpec
+fun companionObject(context: CommandSymbolContext): TypeSpec =
+    TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(typeNameOf<CommandValidationRule>())
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
-        .addProperty(commandRuleProperty)
+        .addProperty(commandRuleProperty(context))
         .addFunction(
             generateValidateFunction(
                 typeNameOf<Command>(),
@@ -161,7 +154,13 @@ fun companionObject(context: CommandSymbolContext): TypeSpec {
                 useSingleErrorResultAggregation = true,
             ),
         ).build()
-}
+
+private fun commandRuleProperty(context: CommandSymbolContext): PropertySpec =
+    overrideProperty(
+        "rule",
+        FEATURE_VALIDATION_RULE_TYPE,
+        CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.lowerCaseName.replace("_", "")),
+    )
 
 /**
  * Generates fail-fast validation object.
@@ -172,7 +171,8 @@ fun failFastObject(
 ): TypeSpec =
     TypeSpec
         .objectBuilder("FailFast")
-        .addSuperinterface(validationRuleType(targetType))
+        .addSuperinterface(typeNameOf<CommandValidationRule>())
+        .addProperty(commandRuleProperty(context))
         .addFunction(generateValidateFunction(targetType, ruleExpressions(context), isFailFast = true))
         .build()
 

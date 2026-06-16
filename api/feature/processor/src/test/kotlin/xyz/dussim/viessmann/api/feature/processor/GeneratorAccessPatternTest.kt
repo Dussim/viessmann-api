@@ -116,6 +116,26 @@ class GeneratorAccessPatternTest :
             code shouldNotContain "!!"
         }
 
+        test("feature fail-fast generator emits command fail-fast rule for parameterized command") {
+            val property =
+                CommandProperty(
+                    name = "setValue",
+                    type = ClassName("test.commands", "SetValue"),
+                    implType = ClassName("test.commands", "SetValueImpl"),
+                    signature =
+                        CommandSignature(
+                            name = "SetValue",
+                            parameters = listOf("value" to typeNameOf<NumberConstraints>()),
+                        ),
+                    validationName = "setValue",
+                    command = dummyClassDeclaration(),
+                    isNullable = false,
+                )
+
+            commandRuleExpression(property).toString() shouldContain "test.commands.SetValueImpl.rule"
+            commandRuleExpression(property, isFailFast = true).toString() shouldContain "test.commands.SetValueImpl.FailFast.rule"
+        }
+
         test("command generator emits requireParam + requireConstraints for non-array constraints") {
             val code =
                 constraintPropertyInitializer(
