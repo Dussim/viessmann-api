@@ -13,4 +13,4 @@ This module is the primary source of truth for the generated feature interfaces 
 #### AI Context
 When working with this module, avoid manually editing the files in `build/generated/features`. If you need to change the structure of a feature, modify the YAML source or the `YamlFeatureInterfaceGenerator` plugin in `gradle/build-logic`.
 
-**Caution**: This module is a "leaf" in terms of feature definitions but is used by `:api:feature:implementations` to generate concrete implementations.
+**Caution**: This module generates both the feature interface definitions and the KSP-backed implementation artifacts. Keep interface-only and implementation source sets separated.

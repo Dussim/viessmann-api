@@ -6,7 +6,7 @@ This document explains how the `:api:feature:processor` module generates feature
 
 The feature processor is a Kotlin annotation processor that automatically generates concrete implementations of feature interfaces. It processes Kotlin interface definitions annotated with `@GenerateFeatureImplementation` to create type-safe, validated feature implementations.
 
-These interface definitions can be either written manually or generated from YAML API specifications using the `xyz.dussim.generate.features.yaml` Gradle plugin (configured in modules like `:api:feature:definitions` and `:api:feature:implementations`).
+These interface definitions can be either written manually or generated from YAML API specifications using the `xyz.dussim.generate.features.yaml` Gradle plugin (configured in modules like `:api:feature:definitions`).
 
 ## Supported Features
 

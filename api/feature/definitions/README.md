@@ -8,7 +8,7 @@ This module contains the generated feature interface definitions. These interfac
 - **API Modeling**: Serves as the source of truth for feature structures, properties, and commands as defined in the official API.
 
 ## Integration
-This module is primarily a dependency for `:api:feature:implementations`, where the concrete logic for these features is generated using KSP.
+This module publishes the interface definitions and also owns the generated implementation artifacts produced by KSP.
 
 ## Gradle Configuration
 The module uses the following configuration to point to the YAML sources:

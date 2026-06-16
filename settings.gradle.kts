@@ -53,7 +53,6 @@ include(
     ":api:feature:common",
     ":api:feature:benchmark",
     ":api:feature:definitions",
-    ":api:feature:implementations",
 )
 
 project(":client:core").name = "client-core"

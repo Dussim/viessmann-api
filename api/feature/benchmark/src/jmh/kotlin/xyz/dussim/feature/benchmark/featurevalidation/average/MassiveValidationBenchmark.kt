@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
  * aggressive — the goal is a fast, stable baseline to iterate against.
  *
  * To run just this benchmark:
- *   ./gradlew :api:feature:implementations:jvmBenchmarksBenchmark
+ *   ./gradlew :api:feature:benchmark:jmh
  *
  * Resource loading expects `all_features.json` on the benchmark runtime classpath.
  * That file is produced by `generateFeatureJsonsFromYaml` into

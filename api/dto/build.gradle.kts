@@ -13,9 +13,14 @@ kotlin {
     sourceSets.commonMain {
         dependencies {
             api(projects.api.feature.annotations)
-            api(projects.api.feature.implementations)
+            api(projects.api.feature.definitions)
             api(libs.kotlinx.serialization.json)
             api(projects.api.feature.common)
+        }
+    }
+    sourceSets.named("jvmTest") {
+        dependencies {
+            implementation(project(mapOf("path" to ":api:feature:definitions", "configuration" to "jvmImplementationsElements")))
         }
     }
 }
