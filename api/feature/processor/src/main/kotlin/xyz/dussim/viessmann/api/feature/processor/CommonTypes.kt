@@ -19,6 +19,7 @@ import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.Property
+import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
@@ -89,6 +90,12 @@ fun featureDescriptorType(
 val PUBLISHED_API_ANNOTATION: AnnotationSpec =
     AnnotationSpec
         .builder(PublishedApi::class)
+        .build()
+
+val VIESSMANN_API_INTERNAL_EXCEPTION_USAGE_OPT_IN: AnnotationSpec =
+    AnnotationSpec
+        .builder(ClassName("kotlin", "OptIn"))
+        .addMember("%T::class", ViessmannApiInternalExceptionUsage::class.asTypeName())
         .build()
 
 val DEFAULT_CONSTRAINTS =

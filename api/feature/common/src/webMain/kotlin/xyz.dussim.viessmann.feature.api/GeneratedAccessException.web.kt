@@ -5,5 +5,4 @@ package xyz.dussim.viessmann.feature.api
  * stackless perf win is JVM-only. See the common `expect` for the sentinel contract.
  */
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "ObjectInheritsException")
-@PublishedApi
-internal actual object GeneratedAccessException : RuntimeException()
+actual object GeneratedAccessException : RuntimeException()

@@ -111,21 +111,18 @@ class GeneratorAccessPatternTest :
                 )
 
             code shouldContain """requireCommand("setValue""""
+            code shouldContain "SetValueImpl(delegate.commands."
             code shouldNotContain "!!"
         }
 
         test("command generator emits requireParam + requireConstraints for non-array constraints") {
             val code =
-                buildCommandInitBlock(
-                    commandName = "SetValue",
-                    constraintsProperties =
-                        listOf(
-                            ConstraintProperty(
-                                name = "value",
-                                type = typeNameOf<NumberConstraints>(),
-                                property = dummyClassDeclaration(),
-                            ),
-                        ),
+                constraintPropertyInitializer(
+                    ConstraintProperty(
+                        name = "value",
+                        type = typeNameOf<NumberConstraints>(),
+                        property = dummyClassDeclaration(),
+                    ),
                 ).toString()
 
             code shouldContain """requireParam("value""""
@@ -135,21 +132,16 @@ class GeneratorAccessPatternTest :
 
         test("command generator emits toArray*ConstraintsOrThrow for array constraints") {
             val code =
-                buildCommandInitBlock(
-                    commandName = "SetEquipment",
-                    constraintsProperties =
-                        listOf(
-                            ConstraintProperty(
-                                name = "equipment",
-                                type = typeNameOf<ArrayStringConstraints>(),
-                                property = dummyClassDeclaration(),
-                            ),
-                        ),
+                constraintPropertyInitializer(
+                    ConstraintProperty(
+                        name = "equipment",
+                        type = typeNameOf<ArrayStringConstraints>(),
+                        property = dummyClassDeclaration(),
+                    ),
                 ).toString()
 
-            code shouldContain "val equipmentRaw = command.params."
+            code shouldContain "command.params."
             code shouldContain """requireParam("equipment""""
-            code shouldContain "equipment = equipmentRaw."
             code shouldContain "toArrayStringConstraintsOrThrow()"
             code shouldNotContain "!!.constraints"
         }

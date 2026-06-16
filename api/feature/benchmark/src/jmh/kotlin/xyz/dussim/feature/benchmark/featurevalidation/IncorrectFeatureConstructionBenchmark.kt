@@ -210,6 +210,18 @@ open class IncorrectFeatureConstructionBenchmark {
     }
 
     @Benchmark
+    fun constructFeatureMissingCommandNoMessage(blackHole: Blackhole) {
+        val exception = constructFeatureCatching(missingCommandFeature)
+        blackHole.consume(exception)
+    }
+
+    @Benchmark
+    fun constructFeatureMissingCommandMessage(blackHole: Blackhole) {
+        val exception = constructFeatureCatching(missingCommandFeature)
+        blackHole.consume(exception?.message)
+    }
+
+    @Benchmark
     fun constructFeatureWrongConstraint(blackHole: Blackhole) {
         blackHole.consume(constructFeatureCatching(wrongConstraintFeature))
     }

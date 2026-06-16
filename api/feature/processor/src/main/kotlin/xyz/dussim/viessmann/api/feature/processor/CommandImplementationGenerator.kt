@@ -1,3 +1,5 @@
+@file:OptIn(ViessmannApiInternalExceptionUsage::class)
+
 package xyz.dussim.viessmann.api.feature.processor
 
 import com.squareup.kotlinpoet.ClassName
@@ -7,9 +9,9 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.ArrayBooleanConstraints
 import xyz.dussim.viessmann.feature.api.ArrayNumberConstraints
@@ -18,13 +20,13 @@ import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
 import xyz.dussim.viessmann.feature.api.ArrayUnknownConstraints
 import xyz.dussim.viessmann.feature.api.BooleanConstraints
 import xyz.dussim.viessmann.feature.api.Command
-import xyz.dussim.viessmann.feature.api.CommandValidationException
 import xyz.dussim.viessmann.feature.api.EnergyMatrixConstraints
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 import xyz.dussim.viessmann.feature.api.ObjectConstraints
 import xyz.dussim.viessmann.feature.api.ScheduleConstraints
 import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
+import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.CommandValidationRule
 
 private val NUMBER_OF_PARAMETERS_RULE = validationRule("numberOfParametersRule")
@@ -74,44 +76,41 @@ fun constructor(context: CommandSymbolContext) =
 fun constructorProperty(context: CommandSymbolContext) = overrideProperty(COMMAND, typeNameOf<Command>(), COMMAND)
 
 /**
- * Generates init block that extracts and validates command constraints.
- * Throws CommandValidationException if constraints are invalid.
+ * Generates property initializer that extracts command constraints.
+ * Throws GeneratedAccessException if constraints are invalid.
  */
-fun initBlock(context: CommandSymbolContext): CodeBlock = buildCommandInitBlock(context.name, context.constraintsProperties)
+internal fun constraintPropertyInitializer(property: ConstraintProperty): CodeBlock {
+    val combined = propertyHash(property.name.hashCode(), property.name.length)
+    val arrayTypeCastFunction = ARRAY_CONSTRAINT_CAST_FUNCTIONS[property.type]
 
-internal fun buildCommandInitBlock(
-    commandName: String,
-    constraintsProperties: List<ConstraintProperty>,
-): CodeBlock =
-    CodeBlock
-        .builder()
-        .beginControlFlow("try")
-        .apply {
-            constraintsProperties.forEach {
-                val combined = propertyHash(it.name.hashCode(), it.name.length)
-                val arrayTypeCastFunction = ARRAY_CONSTRAINT_CAST_FUNCTIONS[it.type]
-                if (arrayTypeCastFunction != null) {
-                    val rawVarName = "${it.name}Raw"
-                    add("val $rawVarName = command.params.%M(%S, %L).constraints\n", REQUIRE_PARAM, it.name, combined)
-                    add("${it.name} = $rawVarName.%M()\n", arrayTypeCastFunction)
-                } else {
-                    add(
-                        "${it.name} = command.params.%M(%S, %L).constraints.%M<%T>()\n",
-                        REQUIRE_PARAM,
-                        it.name,
-                        combined,
-                        REQUIRE_CONSTRAINTS,
-                        it.type,
-                    )
-                }
-            }
-        }.nextControlFlow("catch (_: Exception)")
-        .add(
-            "throw %T(%S, validate(command))\n",
-            CommandValidationException::class.asTypeName(),
-            commandName.replace("_", ""),
-        ).endControlFlow()
-        .build()
+    return if (arrayTypeCastFunction != null) {
+        CodeBlock.of(
+            "command.params.%M(%S, %L).constraints.%M()",
+            REQUIRE_PARAM,
+            property.name,
+            combined,
+            arrayTypeCastFunction,
+        )
+    } else {
+        CodeBlock.of(
+            "command.params.%M(%S, %L).constraints.%M<%T>()",
+            REQUIRE_PARAM,
+            property.name,
+            combined,
+            REQUIRE_CONSTRAINTS,
+            property.type,
+        )
+    }
+}
+
+private fun constraintPropertiesImpl(context: CommandSymbolContext): List<PropertySpec> =
+    context.constraintsProperties.map { property ->
+        PropertySpec
+            .builder(property.name, property.type)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer(constraintPropertyInitializer(property))
+            .build()
+    }
 
 /**
  * Generates rule expressions for the command.
@@ -190,16 +189,14 @@ fun generateCommandImplementation(
         TypeSpec
             .classBuilder(implName)
             .addAnnotation(PUBLISHED_API_ANNOTATION)
+            .addAnnotation(VIESSMANN_API_INTERNAL_EXCEPTION_USAGE_OPT_IN)
             .addModifiers(KModifier.INTERNAL)
             .addSuperinterfaces(superInterfaces)
             .primaryConstructor(constructor(context))
             .addProperty(constructorProperty(context))
-            .addProperties(context.allPropertiesImpl)
-            .apply {
-                if (context.constraintsProperties.isNotEmpty()) {
-                    addInitializerBlock(initBlock(context))
-                }
-            }.addType(companionObject(context))
+            .addProperties(context.inheritedConstraintsProperties)
+            .addProperties(constraintPropertiesImpl(context))
+            .addType(companionObject(context))
             .addType(failFastObject(context, typeNameOf<Command>()))
             .build()
 

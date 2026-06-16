@@ -1,3 +1,5 @@
+@file:OptIn(ViessmannApiInternalExceptionUsage::class)
+
 package xyz.dussim.viessmann.api.feature.processor
 
 import com.squareup.kotlinpoet.ClassName
@@ -10,12 +12,13 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
+import xyz.dussim.viessmann.feature.api.GeneratedAccessException
+import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 
 private val REQUIRE_COMMAND = MemberName("xyz.dussim.viessmann.feature.api", "requireCommand")
 private val REQUIRE_PROPERTY_VALUE = MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValue")
@@ -78,7 +81,7 @@ fun initBlock(
             context.commandProperties.forEach { property ->
                 addCommandInitialization(property)
             }
-            nextControlFlow("catch (_: Exception)")
+            nextControlFlow("catch (_: %T)", GeneratedAccessException::class.asTypeName())
             addValidationException(context, implName)
             endControlFlow()
         }.build()
@@ -214,7 +217,7 @@ private fun CodeBlock.Builder.addValidationException(
     implName: ClassName,
 ) {
     add(
-        "throw %T(%S, validate($DELEGATE), $DELEGATE.feature)\n",
+        "throw %T(%S, $DELEGATE, Companion)\n",
         FeatureValidationException::class.asTypeName(),
         implName.simpleName.replace("_", "").removeSuffix("Impl"),
     )
@@ -312,9 +315,10 @@ fun generateSharedFeatureImplementation(
             .classBuilder(implName)
             .addModifiers(KModifier.INTERNAL)
             .addAnnotation(PUBLISHED_API_ANNOTATION)
+            .addAnnotation(VIESSMANN_API_INTERNAL_EXCEPTION_USAGE_OPT_IN)
             .primaryConstructor(constructor)
             .superclass(context.baseFeature.abstractClass)
-            .addSuperclassConstructorParameter("$DELEGATE")
+            .addSuperclassConstructorParameter(DELEGATE)
             .addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
             .addType(companionObject(context, implName))
             .addType(failFastObject(context, typeNameOf<Feature>()))

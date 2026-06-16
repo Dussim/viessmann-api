@@ -1,3 +1,5 @@
+@file:OptIn(ViessmannApiInternalExceptionUsage::class)
+
 package xyz.dussim.viessmann.feature.api
 
 // @Suppress("NOTHING_TO_INLINE") is required on all three below: inlining is necessary so the call site can
