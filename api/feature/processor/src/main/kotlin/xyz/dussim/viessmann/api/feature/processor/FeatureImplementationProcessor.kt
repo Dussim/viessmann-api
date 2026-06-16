@@ -29,7 +29,6 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.ksp.toClassName
-import com.squareup.kotlinpoet.ksp.writeTo
 import xyz.dussim.viessmann.api.feature.annotations.FeatureEnum
 import xyz.dussim.viessmann.api.feature.annotations.GenerateFeatureImplementation
 import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.CompanionNotImplementingFeatureEnumFactory
@@ -198,7 +197,7 @@ class FeatureImplementationProcessor(
 
                             // Generate shared implementation
                             generateSharedFeatureImplementation(implName, superInterfaces, firstContext)
-                                .writeTo(
+                                .writeFormattedTo(
                                     codeGenerator,
                                     Dependencies(true, *group.map { it.symbol.containingFile!! }.toTypedArray()),
                                 )
@@ -235,7 +234,7 @@ class FeatureImplementationProcessor(
                                     .builder(descriptorPackage, fileName)
                                     .addProperties(chunk)
                                     .build()
-                                    .writeTo(codeGenerator, allDependencies)
+                                    .writeFormattedTo(codeGenerator, allDependencies)
                             }
 
                             // Generate Descriptors object
@@ -301,7 +300,7 @@ class FeatureImplementationProcessor(
                                 .builder(descriptorPackage, "Descriptors")
                                 .addType(descriptorsObject)
                                 .build()
-                                .writeTo(codeGenerator, allDependencies)
+                                .writeFormattedTo(codeGenerator, allDependencies)
                         }
 
                         symbols
@@ -313,14 +312,14 @@ class FeatureImplementationProcessor(
                                 val superInterfaces = group.map { it.superInterface }.distinct()
 
                                 generateCommandImplementation(implName, superInterfaces, firstCommand)
-                                    .writeTo(
+                                    .writeFormattedTo(
                                         codeGenerator,
                                         Dependencies(true, *group.map { it.command.containingFile!! }.toTypedArray()),
                                     )
                             }
 
                         generateValidationRules(ruleRegistry)
-                            .writeTo(
+                            .writeFormattedTo(
                                 codeGenerator,
                                 Dependencies(true, *ksSymbols.map { it.containingFile!! }.toTypedArray()),
                             )

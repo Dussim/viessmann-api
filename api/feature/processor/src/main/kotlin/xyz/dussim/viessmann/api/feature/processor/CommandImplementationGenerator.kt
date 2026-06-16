@@ -160,8 +160,7 @@ fun companionObject(context: CommandSymbolContext): TypeSpec {
                 ruleExpressions(context),
                 useSingleErrorResultAggregation = true,
             ),
-        )
-        .build()
+        ).build()
 }
 
 /**

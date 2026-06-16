@@ -274,8 +274,7 @@ fun companionObject(
                 ruleExpressions(context),
                 useSingleErrorResultAggregation = context.hasOnlySingleErrorRules(),
             ),
-        )
-        .build()
+        ).build()
 
 private fun SymbolContext.hasOnlySingleErrorRules(): Boolean =
     commandProperties.none { command ->
