@@ -13,6 +13,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.typeNameOf
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
@@ -205,6 +206,20 @@ class GeneratorAccessPatternTest :
 
             code shouldContain "= singleRule.validate(value)"
             code shouldNotContain "of("
+        }
+
+        test("feature generator reuses companion validation when fail-fast body would be identical") {
+            requiresDedicatedFailFastRule(emptyList()) shouldBe false
+            requiresDedicatedFailFastRule(listOf(CodeBlock.of("singleRule"))) shouldBe false
+        }
+
+        test("feature generator keeps dedicated fail-fast validation for aggregated rules") {
+            requiresDedicatedFailFastRule(
+                listOf(
+                    CodeBlock.of("firstRule"),
+                    CodeBlock.of("secondRule"),
+                ),
+            ) shouldBe true
         }
     })
 

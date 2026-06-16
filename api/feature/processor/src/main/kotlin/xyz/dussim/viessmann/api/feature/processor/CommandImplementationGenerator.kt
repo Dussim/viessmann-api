@@ -190,6 +190,7 @@ fun generateCommandImplementation(
     superInterfaces: List<TypeName>,
     context: CommandSymbolContext,
 ): FileSpec {
+    val ruleExpressions = ruleExpressions(context)
     val typeSpec =
         TypeSpec
             .classBuilder(implName)
@@ -202,8 +203,11 @@ fun generateCommandImplementation(
             .addProperties(context.inheritedConstraintsProperties)
             .addProperties(constraintPropertiesImpl(context))
             .addType(companionObject(context))
-            .addType(failFastObject(context, typeNameOf<Command>()))
-            .build()
+            .apply {
+                if (requiresDedicatedFailFastRule(ruleExpressions)) {
+                    addType(failFastObject(context, typeNameOf<Command>()))
+                }
+            }.build()
 
     return FileSpec
         .builder(implName.packageName, implName.simpleName)

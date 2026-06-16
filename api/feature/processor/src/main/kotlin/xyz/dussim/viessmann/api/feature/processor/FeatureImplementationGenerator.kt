@@ -294,6 +294,8 @@ private fun SymbolContext.hasOnlySingleErrorRules(): Boolean =
         !command.isNullable && command.signature.parameters.isNotEmpty()
     }
 
+internal fun requiresDedicatedFailFastRule(ruleExpressions: List<CodeBlock>): Boolean = ruleExpressions.size > 1
+
 /**
  * Generates fail-fast validation object.
  */
@@ -345,6 +347,7 @@ fun generateSharedFeatureImplementation(
     val constructor = constructor(context)
     val properties = context.parameterPropertiesImpl + context.commandPropertiesImpl
     val initBlock = initBlock(context, implName)
+    val ruleExpressions = ruleExpressions(context)
     val classImpl =
         TypeSpec
             .classBuilder(implName)
@@ -356,9 +359,11 @@ fun generateSharedFeatureImplementation(
             .addSuperclassConstructorParameter(DELEGATE)
             .addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
             .addType(companionObject(context, implName))
-            .addType(failFastObject(context, typeNameOf<Feature>()))
             .addProperties(properties)
             .apply {
+                if (requiresDedicatedFailFastRule(ruleExpressions)) {
+                    addType(failFastObject(context, typeNameOf<Feature>()))
+                }
                 if (initBlock.isNotEmpty()) {
                     addInitializerBlock(initBlock)
                 }
@@ -384,6 +389,7 @@ fun generateFeatureDescriptorAndExtensions(
     val descriptorName = generateDescriptorName(context.superInterface)
     val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
     val descriptorFactory = if (context.isIndexed) INDEXED_FEATURE_DESCRIPTOR_FACTORY else STATIC_FEATURE_DESCRIPTOR_FACTORY
+    val requiresDedicatedFailFastRule = requiresDedicatedFailFastRule(ruleExpressions(context))
 
     val descriptorProperty =
         PropertySpec
@@ -396,7 +402,9 @@ fun generateFeatureDescriptorAndExtensions(
                     indent()
                     add("wildcardName = %S,\n", context.featureName)
                     add("rule = %T,\n", implName)
-                    add("failFast = %T.FailFast,\n", implName)
+                    if (requiresDedicatedFailFastRule) {
+                        add("failFast = %T.FailFast,\n", implName)
+                    }
                     unindent()
                     add(") { feature ->\n")
                     indent()
