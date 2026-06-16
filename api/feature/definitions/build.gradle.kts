@@ -3,7 +3,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
-import org.jmailen.gradle.kotlinter.tasks.FormatTask
 import java.time.LocalDate
 
 plugins {
@@ -101,53 +100,11 @@ val kspImplementationsJvmMain =
 val kspImplementationsJsMain =
     tasks.matching { it.name == "kspImplementationsJsMainKotlinJs" }
 
-fun registerGeneratedKspFormatTask(
-    taskName: String,
-    generatedSources: Provider<Directory>,
-    kspTaskName: String,
-) = tasks.register<FormatTask>(taskName) {
-    group = "formatting"
-    description = "Formats generated KSP Kotlin sources."
-
-    dependsOn(kspTaskName)
-    source(fileTree(generatedSources.get().asFile) { include("**/*.kt") })
-    ignoreFormatFailures.set(true)
-    ignoreLintFailures.set(true)
-    report.set(layout.buildDirectory.file("reports/ktlint/$taskName.txt"))
-    outputs.upToDateWhen { false }
-    onlyIf {
-        val sourceDir = generatedSources.get().asFile
-        sourceDir.exists() && sourceDir.walkTopDown().any { it.isFile && it.extension == "kt" }
-    }
-}
-
-val formatJvmGeneratedKspImplementations =
-    registerGeneratedKspFormatTask(
-        "formatGeneratedKspJvmImplementations",
-        jvmImplementationsKspSources,
-        "kspImplementationsJvmMainKotlinJvm",
-    )
-
-val formatJsGeneratedKspImplementations =
-    registerGeneratedKspFormatTask(
-        "formatGeneratedKspJsImplementations",
-        jsImplementationsKspSources,
-        "kspImplementationsJsMainKotlinJs",
-    )
-
-val formatGeneratedKspImplementations =
-    tasks.register("formatGeneratedKspImplementations") {
-        group = "formatting"
-        description = "Formats generated KSP implementation sources."
-        dependsOn(formatJvmGeneratedKspImplementations, formatJsGeneratedKspImplementations)
-    }
-
 kspImplementationsJvmMain.configureEach {
     dependsOn("generateFeatureInterfacesFromYaml")
     inputs.files(featureProcessorInputs)
         .withPropertyName("featureImplementationProcessorInputs")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    finalizedBy(formatJvmGeneratedKspImplementations)
 }
 
 kspImplementationsJsMain.configureEach {
@@ -155,7 +112,6 @@ kspImplementationsJsMain.configureEach {
     inputs.files(featureProcessorInputs)
         .withPropertyName("featureImplementationProcessorInputs")
         .withPathSensitivity(PathSensitivity.RELATIVE)
-    finalizedBy(formatJsGeneratedKspImplementations)
 }
 
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
@@ -165,14 +121,6 @@ tasks.withType<KotlinCompilationTask<*>>().configureEach {
 
 tasks.matching { it.name in setOf("sourcesJar", "jvmSourcesJar", "jsSourcesJar") }.configureEach {
     dependsOn("generateFeatureInterfacesFromYaml")
-}
-
-tasks.matching { it.name == "compileImplementationsJvmMainKotlinJvm" }.configureEach {
-    dependsOn(formatJvmGeneratedKspImplementations)
-}
-
-tasks.matching { it.name == "compileImplementationsJsMainKotlinJs" }.configureEach {
-    dependsOn(formatJsGeneratedKspImplementations)
 }
 
 dokka {
@@ -226,7 +174,7 @@ val implementationsSourcesJar =
         archiveBaseName = "${project.name}-implementations"
         archiveClassifier = "sources"
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn("generateFeatureInterfacesFromYaml", formatGeneratedKspImplementations)
+        dependsOn("generateFeatureInterfacesFromYaml", kspImplementationsJvmMain, kspImplementationsJsMain)
         from(kotlin.sourceSets.named("commonMain").map { it.kotlin.sourceDirectories })
         from(kotlin.sourceSets.named("implementationsCommonMain").map { it.kotlin.sourceDirectories })
         from(jvmImplementationsKspSources)

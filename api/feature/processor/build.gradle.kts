@@ -11,6 +11,10 @@ dependencies {
     implementation(libs.ksp.symbol.processing.api)
     implementation(libs.auto.service.annotations)
     implementation(libs.kotlinpoet.ksp)
+    implementation(libs.ktlint.rule.engine)
+    implementation(libs.ktlint.ruleset.standard)
+    implementation(libs.slf4j.api)
+    implementation(libs.slf4j.nop)
 
     ksp(libs.auto.service.ksp)
 }

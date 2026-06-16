@@ -2,6 +2,8 @@
 ksp = "2.3.9"
 kotest = "6.1.11"
 kotlin = "2.4.0"
+ktlint = "1.8.0"
+slf4j = "2.0.18"
 
 [libraries]
 # KSP and code generation
@@ -9,6 +11,10 @@ ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processin
 auto-service-annotations = "com.google.auto.service:auto-service-annotations:1.1.1"
 kotlinpoet-ksp = "com.squareup:kotlinpoet-ksp:2.3.0"
 auto-service-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.2.0"
+ktlint-rule-engine = { module = "com.pinterest.ktlint:ktlint-rule-engine", version.ref = "ktlint" }
+ktlint-ruleset-standard = { module = "com.pinterest.ktlint:ktlint-ruleset-standard", version.ref = "ktlint" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 
 # Kotest
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }

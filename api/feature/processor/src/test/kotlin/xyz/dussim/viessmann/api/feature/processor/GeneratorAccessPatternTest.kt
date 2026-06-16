@@ -105,6 +105,7 @@ class GeneratorAccessPatternTest :
                         type = ClassName("test.commands", "SetValue"),
                         implType = ClassName("test.commands", "SetValueImpl"),
                         signature = CommandSignature(name = "SetValue", parameters = emptyList()),
+                        validationName = "setValue",
                         command = dummyClassDeclaration(),
                         isNullable = false,
                     ),
