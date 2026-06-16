@@ -1,6 +1,6 @@
 [versions]
 ksp = "2.3.9"
-kotest = "6.1.11"
+kotest = "6.2.0"
 kotlin = "2.4.0"
 ktlint = "1.8.0"
 slf4j = "2.0.18"
