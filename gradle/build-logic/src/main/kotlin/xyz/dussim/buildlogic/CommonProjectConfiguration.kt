@@ -40,8 +40,12 @@ fun Project.configureKotlinter() {
     }
 
     tasks.withType<FormatTask> {
-        exclude { it.file.startsWith(buildDir) }
-        mustRunAfter(kspTasks)
+        if (name.startsWith("formatGeneratedKsp")) {
+            return@withType
+        } else {
+            exclude { it.file.startsWith(buildDir) }
+            mustRunAfter(kspTasks)
+        }
     }
 }
 

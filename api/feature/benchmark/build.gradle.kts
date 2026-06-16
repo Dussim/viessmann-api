@@ -1,7 +1,7 @@
 plugins {
     alias(conventions.plugins.xyz.dussim.kotlin.jvm.common)
     id("me.champeau.jmh") version "0.7.3"
-    id("xyz.dussim.jmhreport") version "0.10.1"
+    id("xyz.dussim.jmhreport") version "0.10.2"
 }
 
 dependencies {
@@ -15,7 +15,14 @@ dependencies {
 jmh {
     jmhVersion.set("1.37")
     // JVM arguments
-    jvmArgs.addAll("-Xms2g", "-Xmx2g", "-XX:+UseCompactObjectHeaders", "-XX:+UnlockExperimentalVMOptions", "-XX:+TrustFinalNonStaticFields")
+    jvmArgs.addAll(
+        "-Xms2g",
+        "-Xmx2g",
+        "-XX:+UseCompactObjectHeaders",
+        "-XX:+UnlockExperimentalVMOptions",
+        "-XX:+TrustFinalNonStaticFields",
+        "--sun-misc-unsafe-memory-access=allow",
+    )
 
     // GC profiling
     profilers.addAll("gc")

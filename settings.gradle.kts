@@ -5,14 +5,6 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        exclusiveContent {
-            forRepository {
-                maven("https://maven.dussim.xyz/snapshots")
-            }
-            filter {
-                includeGroupAndSubgroups("xyz.dussim")
-            }
-        }
     }
 }
 
