@@ -40,6 +40,13 @@ class KotlinCommonPlugin : Plugin<Project> {
                     generateTypeScriptDefinitions()
                 }
 
+                val commonMain = sourceSets.getByName("commonMain")
+                val webMain =
+                    sourceSets.maybeCreate("webMain").apply {
+                        dependsOn(commonMain)
+                    }
+                sourceSets.getByName("jsMain").dependsOn(webMain)
+
                 sourceSets.getByName("commonTest") {
                     dependencies {
                         implementation(libs.kotlin.test.common)
