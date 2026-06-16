@@ -154,7 +154,13 @@ fun companionObject(context: CommandSymbolContext): TypeSpec {
         .addSuperinterface(typeNameOf<CommandValidationRule>())
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
         .addProperty(commandRuleProperty)
-        .addFunction(generateValidateFunction(typeNameOf<Command>(), ruleExpressions(context)))
+        .addFunction(
+            generateValidateFunction(
+                typeNameOf<Command>(),
+                ruleExpressions(context),
+                useSingleErrorResultAggregation = true,
+            ),
+        )
         .build()
 }
 

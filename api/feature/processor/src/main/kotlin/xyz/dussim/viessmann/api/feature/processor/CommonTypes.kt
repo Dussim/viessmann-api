@@ -20,6 +20,7 @@ import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
+import xyz.dussim.viessmann.feature.api.validation.SingleErrorValidationResultApi
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
@@ -42,6 +43,7 @@ val BASE_FEATURE = ClassName(FEATURE_API_PACKAGE, "BaseFeature")
 val COMMAND_RULE = MemberName(VALIDATION_PACKAGE, "commandRule")
 val EQUALS_IMPL = MemberName(FEATURE_API_PACKAGE, "equalsImpl")
 val VALIDATION_RESULT_OF = ValidationResult.Companion::class.member("of")
+val VALIDATION_RESULT_OF_SINGLE_ERROR_RESULTS = ValidationResult.Companion::class.member("ofSingleErrorResults")
 val STATIC_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "staticFeatureDescriptor")
 val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexedFeatureDescriptor")
 
@@ -96,6 +98,12 @@ val VIESSMANN_API_INTERNAL_EXCEPTION_USAGE_OPT_IN: AnnotationSpec =
     AnnotationSpec
         .builder(ClassName("kotlin", "OptIn"))
         .addMember("%T::class", ViessmannApiInternalExceptionUsage::class.asTypeName())
+        .build()
+
+val SINGLE_ERROR_VALIDATION_RESULT_API_OPT_IN: AnnotationSpec =
+    AnnotationSpec
+        .builder(ClassName("kotlin", "OptIn"))
+        .addMember("%T::class", SingleErrorValidationResultApi::class.asTypeName())
         .build()
 
 val DEFAULT_CONSTRAINTS =
@@ -181,8 +189,12 @@ fun generateValidateFunction(
     targetType: TypeName,
     ruleExpressions: List<CodeBlock>,
     isFailFast: Boolean = false,
-): FunSpec =
-    FunSpec
+    useSingleErrorResultAggregation: Boolean = false,
+): FunSpec {
+    val useSingleErrorResultAggregationForFunction =
+        useSingleErrorResultAggregation && !isFailFast && ruleExpressions.size in 2..3
+
+    return FunSpec
         .builder("validate")
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(ParameterSpec.builder("value", targetType).build())
@@ -190,7 +202,11 @@ fun generateValidateFunction(
             ValidationResult::class
                 .asTypeName()
                 .parameterizedBy(typeNameOf<ValidationError>()),
-        ).addCode(
+        ).apply {
+            if (useSingleErrorResultAggregationForFunction) {
+                addAnnotation(SINGLE_ERROR_VALIDATION_RESULT_API_OPT_IN)
+            }
+        }.addCode(
             CodeBlock
                 .builder()
                 .apply {
@@ -209,13 +225,18 @@ fun generateValidateFunction(
                         add("return ")
                         add(
                             varArgFunctionCall(
-                                VALIDATION_RESULT_OF,
+                                if (useSingleErrorResultAggregationForFunction) {
+                                    VALIDATION_RESULT_OF_SINGLE_ERROR_RESULTS
+                                } else {
+                                    VALIDATION_RESULT_OF
+                                },
                                 ruleExpressions.map { CodeBlock.of("%L.validate(value),\n", it) },
                             ),
                         )
                     }
                 }.build(),
         ).build()
+}
 
 /**
  * Creates a CodeBlock that handles both indexed and non-indexed feature cases.

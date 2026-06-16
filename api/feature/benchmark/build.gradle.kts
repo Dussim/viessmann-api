@@ -39,7 +39,7 @@ jmh {
 
     // Verbose output
     verbosity.set("NORMAL")
-    includes.addAll("xyz.dussim.feature.benchmark.featurevalidation.*")
+    includes.addAll("xyz.dussim.feature.benchmark.featurevalidation.average.MassiveValidationBenchmark")
 
     // exclude map benchmark as I already established performance
 //    excludes.addAll(".*MapBenchmark.*")

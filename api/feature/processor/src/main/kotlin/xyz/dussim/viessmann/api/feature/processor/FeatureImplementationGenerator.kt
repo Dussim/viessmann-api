@@ -256,8 +256,19 @@ fun companionObject(
     TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(FEATURE_VALIDATION_RULE_TYPE)
-        .addFunction(generateValidateFunction(typeNameOf<Feature>(), ruleExpressions(context)))
+        .addFunction(
+            generateValidateFunction(
+                typeNameOf<Feature>(),
+                ruleExpressions(context),
+                useSingleErrorResultAggregation = context.hasOnlySingleErrorRules(),
+            ),
+        )
         .build()
+
+private fun SymbolContext.hasOnlySingleErrorRules(): Boolean =
+    commandProperties.none { command ->
+        !command.isNullable && command.signature.parameters.isNotEmpty()
+    }
 
 /**
  * Generates fail-fast validation object.

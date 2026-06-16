@@ -5,6 +5,12 @@ import kotlin.jvm.JvmInline
 @Suppress("FunctionName")
 fun <E> Valid(): ValidationResult<E> = ValidationResult.Valid
 
+@RequiresOptIn(
+    level = RequiresOptIn.Level.ERROR,
+    message = "This API is only valid when every input ValidationResult is known to contain at most one error.",
+)
+annotation class SingleErrorValidationResultApi
+
 @JvmInline
 value class ValidationResult<out T>
     @PublishedApi
@@ -25,6 +31,9 @@ value class ValidationResult<out T>
         @PublishedApi
         internal inline val invalidFlag: Int
             get() = if (isInvalid) 1 else 0
+
+        @Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
+        internal inline fun singleValue(): T = value as T
 
         @Suppress("UNCHECKED_CAST")
         inline fun forEach(crossinline action: (T) -> Unit) {
@@ -70,6 +79,35 @@ value class ValidationResult<out T>
             fun <E> of(error: E): ValidationResult<E> = Invalid(error)
 
             fun <E> of(result1: ValidationResult<E>): ValidationResult<E> = result1
+
+            @SingleErrorValidationResultApi
+            fun <E> ofSingleErrorResults(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+            ): ValidationResult<E> =
+                when (result1.invalidFlag or (result2.invalidFlag shl 1)) {
+                    0 -> Valid
+                    1 -> result1
+                    2 -> result2
+                    else -> Invalid(arrayOf<Any?>(result1.singleValue(), result2.singleValue()) as Array<E>)
+                }
+
+            @SingleErrorValidationResultApi
+            fun <E> ofSingleErrorResults(
+                result1: ValidationResult<E>,
+                result2: ValidationResult<E>,
+                result3: ValidationResult<E>,
+            ): ValidationResult<E> =
+                when (result1.invalidFlag or (result2.invalidFlag shl 1) or (result3.invalidFlag shl 2)) {
+                    0 -> Valid
+                    1 -> result1
+                    2 -> result2
+                    3 -> Invalid(arrayOf<Any?>(result1.singleValue(), result2.singleValue()) as Array<E>)
+                    4 -> result3
+                    5 -> Invalid(arrayOf<Any?>(result1.singleValue(), result3.singleValue()) as Array<E>)
+                    6 -> Invalid(arrayOf<Any?>(result2.singleValue(), result3.singleValue()) as Array<E>)
+                    else -> Invalid(arrayOf<Any?>(result1.singleValue(), result2.singleValue(), result3.singleValue()) as Array<E>)
+                }
 
             // region generated-validation-result-of
             fun <E> of(
