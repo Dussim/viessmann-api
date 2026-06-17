@@ -4,7 +4,7 @@
       "name": "jvmTest",
       "image": "dussim/build-env:jdk26_gradle-9.6.0-rc3",
       "commands": [
-        "gradle jvmTest"
+        "gradle jvmTest --scan"
       ],
       "when": {
         "event": "push"

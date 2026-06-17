@@ -8,3 +8,5 @@ xyz-dussim-generate-features-yaml = { id = "xyz.dussim.generate.features.yaml" }
 xyz-dussim-generate-features-json = { id = "xyz.dussim.generate.features.json" }
 xyz-dussim-generate-features-json-tests = { id = "xyz.dussim.generate.features.json.tests" }
 xyz-dussim-generate-validation-result-of = { id = "xyz.dussim.generate.validation.result.of" }
+xyz-dussim-git-revision = { id = "xyz.dussim.git-revision" }
+xyz-dussim-build-parameters = { id = "xyz.dussim.build-parameters" }

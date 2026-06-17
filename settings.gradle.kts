@@ -1,7 +1,11 @@
+import xyz.dussim.settings.GitRevisionValueSource
+
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
     includeBuild("gradle/build-logic")
+    includeBuild("gradle/build-parameters")
+    includeBuild("gradle/git-revision-plugin")
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -23,6 +27,12 @@ dependencyResolutionManagement {
             from("io.ktor:ktor-version-catalog:3.5.0")
         }
     }
+}
+
+plugins {
+    id("com.gradle.develocity").version("4.4.3")
+    id("xyz.dussim.build-parameters")
+    id("xyz.dussim.git-revision")
 }
 
 rootProject.name = "viessmann-api"
@@ -61,3 +71,49 @@ project(":client:facade").name = "client-facade"
 //    )
 //    project(":client:integration-test").name = "client-integration-test"
 // }
+
+develocity {
+    val gitHash = providers.of(GitRevisionValueSource::class) {}
+    buildScan {
+        publishing.onlyIf { false }
+
+        termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+        termsOfUseAgree = "yes"
+
+        capture {
+            buildLogging = true
+            testLogging = true
+        }
+
+        tag(
+            when (buildParameters.ci) {
+                true -> "CI"
+                false -> "LOCAL"
+            },
+        )
+
+        background {
+            if (!buildParameters.ci) {
+                value("Git Commit ID", gitHash.get())
+            }
+        }
+    }
+}
+
+buildCache {
+    local {
+        isEnabled = !buildParameters.ci
+        isPush = true
+    }
+
+    remote<HttpBuildCache> {
+        isPush = buildParameters.ci
+
+        url = uri(buildParameters.cache.url)
+
+        credentials {
+            username = buildParameters.cache.username
+            password = buildParameters.cache.password
+        }
+    }
+}
