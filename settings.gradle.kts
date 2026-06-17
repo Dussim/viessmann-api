@@ -78,6 +78,7 @@ project(":api:feature:definitions").name = "api-feature-definitions"
 project(":api:feature:implementations").name = "api-feature-implementations"
 
 develocity {
+    val ci = buildParameters.ci
     val gitHash = providers.of(GitRevisionValueSource::class) {}
     buildScan {
         publishing.onlyIf { false }
@@ -91,15 +92,16 @@ develocity {
         }
 
         tag(
-            when (buildParameters.ci) {
+            when (ci) {
                 true -> "CI"
                 false -> "LOCAL"
             },
         )
 
-        background {
-            if (!buildParameters.ci) {
-                value("Git Commit ID", gitHash.get())
+        if (!ci) {
+            val gitCommitId = gitHash.get()
+            background {
+                value("Git Commit ID", gitCommitId)
             }
         }
     }

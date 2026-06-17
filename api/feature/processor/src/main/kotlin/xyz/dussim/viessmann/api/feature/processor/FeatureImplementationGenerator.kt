@@ -374,6 +374,7 @@ fun generateSharedFeatureImplementation(
 
     return FileSpec
         .builder(implName.packageName, implName.simpleName)
+        .addAnnotation(FILE_DEPRECATION_SUPPRESSION)
         .addType(classImpl)
         .build()
 }

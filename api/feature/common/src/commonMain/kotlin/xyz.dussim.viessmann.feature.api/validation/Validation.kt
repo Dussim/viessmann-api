@@ -57,7 +57,7 @@ value class ValidationResult<out T>
             }
 
         @Suppress("UNCHECKED_CAST")
-        inline fun asIterable(): Iterable<T> =
+        fun asIterable(): Iterable<T> =
             when (value) {
                 null -> emptyList()
                 is Array<*> -> value.asIterable() as Iterable<T>

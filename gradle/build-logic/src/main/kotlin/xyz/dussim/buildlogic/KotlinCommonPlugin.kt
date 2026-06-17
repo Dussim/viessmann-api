@@ -21,6 +21,7 @@ class KotlinCommonPlugin : Plugin<Project> {
                     freeCompilerArgs.addAll(
                         "-opt-in=kotlin.time.ExperimentalTime",
                         "-Xcontext-sensitive-resolution",
+                        "-Xexpect-actual-classes",
                         "-Xreturn-value-checker=check",
                     )
                 }

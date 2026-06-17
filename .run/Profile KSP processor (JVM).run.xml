@@ -10,7 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value=":api:feature:definitions:kspImplementationsJvmMainKotlinJvm" />
+          <option value=":api:feature:api-feature-implementations:kspKotlinJvm" />
         </list>
       </option>
       <option name="vmOptions" value="-Xmx3g -Xms2g -XX:+UseCompactObjectHeaders -XX:+UnlockExperimentalVMOptions -XX:+TrustFinalNonStaticFields" />

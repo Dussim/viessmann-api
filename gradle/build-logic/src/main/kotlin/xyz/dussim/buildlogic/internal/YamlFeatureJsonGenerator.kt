@@ -360,7 +360,7 @@ class YamlFeatureJsonGenerator(
 
             is com.fasterxml.jackson.databind.node.ObjectNode -> {
                 val entries = mutableMapOf<String, JsonElement>()
-                example.fields().forEach { (k, v) -> entries[k] = exampleToJson(jacksonNodeToKotlin(v), api, baseDir) }
+                example.properties().forEach { (k, v) -> entries[k] = exampleToJson(jacksonNodeToKotlin(v), api, baseDir) }
                 JsonObject(entries)
             }
 
@@ -772,7 +772,7 @@ class YamlFeatureJsonGenerator(
 
             node.isObject -> {
                 val map = mutableMapOf<String, Any?>()
-                node.fields().forEach { (k, v) -> map[k] = jacksonNodeToKotlin(v) }
+                node.properties().forEach { (k, v) -> map[k] = jacksonNodeToKotlin(v) }
                 map
             }
 
@@ -817,7 +817,7 @@ class YamlFeatureJsonGenerator(
 
             node.isObject -> {
                 val entries = mutableMapOf<String, JsonElement>()
-                node.fields().forEach { (k, v) -> entries[k] = jacksonNodeToJsonElement(v) }
+                node.properties().forEach { (k, v) -> entries[k] = jacksonNodeToJsonElement(v) }
                 JsonObject(entries)
             }
 

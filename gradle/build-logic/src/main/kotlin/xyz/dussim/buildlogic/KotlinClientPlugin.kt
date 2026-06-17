@@ -23,7 +23,6 @@ class KotlinClientPlugin : Plugin<Project> {
                     freeCompilerArgs.addAll(
                         "-opt-in=kotlin.time.ExperimentalTime",
                         "-Xcontext-sensitive-resolution",
-                        "-Xannotation-target-all",
                         "-Xreturn-value-checker=check",
                     )
                 }

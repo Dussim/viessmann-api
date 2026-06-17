@@ -105,6 +105,7 @@ internal class GeneratedFeatureFilesBuilder(
                 fileSpec =
                     FileSpec
                         .builder(descriptorPackage, fileName)
+                        .addAnnotation(FILE_DEPRECATION_SUPPRESSION)
                         .addProperties(chunk)
                         .build(),
                 dependencies = dependencies,
@@ -114,6 +115,7 @@ internal class GeneratedFeatureFilesBuilder(
                 fileSpec =
                     FileSpec
                         .builder(descriptorPackage, "Descriptors")
+                        .addAnnotation(FILE_DEPRECATION_SUPPRESSION)
                         .addType(descriptorsObject(descriptorNameChunks))
                         .build(),
                 dependencies = dependencies,

@@ -103,6 +103,13 @@ val SINGLE_ERROR_VALIDATION_RESULT_API_OPT_IN: AnnotationSpec =
         .addMember("%T::class", SingleErrorValidationResultApi::class.asTypeName())
         .build()
 
+val FILE_DEPRECATION_SUPPRESSION: AnnotationSpec =
+    AnnotationSpec
+        .builder(Suppress::class)
+        .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+        .addMember("%S", "DEPRECATION")
+        .build()
+
 val DEFAULT_CONSTRAINTS =
     setOf(
         "constraint1",
