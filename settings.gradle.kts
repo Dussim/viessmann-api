@@ -1,5 +1,3 @@
-import xyz.dussim.settings.GitRevisionValueSource
-
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -79,8 +77,10 @@ project(":api:feature:implementations").name = "api-feature-implementations"
 
 develocity {
     val ci = buildParameters.ci
-    val gitHash = providers.of(GitRevisionValueSource::class) {}
+    val gitHash = providers.environmentVariable("CI_COMMIT_SHA")
+    val gitBranch = providers.environmentVariable("CI_COMMIT_BRANCH")
     buildScan {
+        uploadInBackground = false
         publishing.onlyIf { false }
 
         termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
@@ -98,11 +98,9 @@ develocity {
             },
         )
 
-        if (!ci) {
-            val gitCommitId = gitHash.get()
-            background {
-                value("Git Commit ID", gitCommitId)
-            }
+        if (ci) {
+            value("Git Commit ID", gitHash.get())
+            value("Git Branch", gitBranch.get())
         }
     }
 }
