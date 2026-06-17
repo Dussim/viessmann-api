@@ -6,14 +6,20 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
-import org.gradle.work.DisableCachingByDefault
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkerExecutor
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jmailen.gradle.kotlinter.tasks.FormatTask
 import org.jmailen.gradle.kotlinter.tasks.LintTask
@@ -21,6 +27,7 @@ import xyz.dussim.buildlogic.internal.CommandInterfaceGenerator
 import xyz.dussim.buildlogic.internal.YamlFeatureInterfaceGenerator
 import xyz.dussim.buildlogic.internal.identifySharedCommands
 import java.time.LocalDate
+import javax.inject.Inject
 
 abstract class GenerateFeatureInterfacesFromYamlPlugin : Plugin<Project> {
     override fun apply(target: Project): Unit =
@@ -36,7 +43,6 @@ abstract class GenerateFeatureInterfacesFromYamlPlugin : Plugin<Project> {
                     packageName = extension.packageName
                     currentDate = extension.currentDate
                 }
-            extension.currentDate.convention(LocalDate.now())
             pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
                 extensions.configure<KotlinMultiplatformExtension> {
                     sourceSets.named("commonMain") {
@@ -66,9 +72,11 @@ abstract class GenerateFeatureInterfacesFromYamlExtension {
     abstract val currentDate: Property<LocalDate>
 }
 
-@DisableCachingByDefault
+@CacheableTask
 abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
-    @get:InputDirectory
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:SkipWhenEmpty
     abstract val featuresYamls: DirectoryProperty
 
     @get:OutputDirectory
@@ -80,6 +88,9 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
     @get:Input
     abstract val currentDate: Property<LocalDate>
 
+    @get:Inject
+    abstract val workerExecutor: WorkerExecutor
+
     init {
         group = "build"
         description = "Generates feature interfaces from YAML OpenAPI specifications"
@@ -87,52 +98,63 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
-        val inputDir = featuresYamls.get().asFile
         val outputDir = generatedSources.get().asFile
-        outputDir.deleteRecursively()
         outputDir.mkdirs()
 
         val inputFiles =
-            inputDir
-                .listFiles { file -> file.extension == "yaml" }
-                ?.sortedBy { it.name }
-                ?: emptyList()
+            featuresYamls
+                .asFileTree
+                .matching { include("*.yaml") }
+                .files
+                .sortedBy { it.name }
 
         logger.lifecycle("Found ${inputFiles.size} YAML feature files")
 
-        val generator = YamlFeatureInterfaceGenerator(packageName.get(), logger)
+        val pkg = packageName.get()
+        val generator = YamlFeatureInterfaceGenerator(pkg, logger)
 
-        // First pass: parse all features
+        // First pass: parse all features in parallel. Each parseYamlFile call constructs its own
+        // OpenAPIV3Parser instance, so parallel invocation is safe and CPU-bound.
         logger.lifecycle("Pass 1: Parsing YAML features...")
-        val parsedFeatures = inputFiles.mapNotNull { file -> generator.parseYamlFile(file) }
+        val parsedFeatures =
+            inputFiles
+                .parallelStream()
+                .map { file -> generator.parseYamlFile(file) }
+                .filter { it != null }
+                .map { it!! }
+                .toList()
 
-        // Collect all command signatures
+        // Collect all command signatures and identify shared ones (must remain sequential)
         val commandSignatures =
             parsedFeatures.flatMap { feature ->
                 feature.commands.map { command -> generator.getCommandSignature(command) }
             }
 
-        val sharedCommandsMap = identifySharedCommands(commandSignatures, packageName.get())
+        val sharedCommandsMap = identifySharedCommands(commandSignatures, pkg)
         logger.lifecycle("Found ${sharedCommandsMap.size} shared command signatures")
 
         generator.useSharedCommands(sharedCommandsMap)
 
-        // Generate shared command interfaces
+        // Generate shared command interfaces in parallel via the Worker API
+        val queue = workerExecutor.noIsolation()
         sharedCommandsMap.forEach { (sig, className) ->
-            val fileSpec =
-                FileSpec
-                    .builder(className.packageName, className.simpleName)
-                    .addType(CommandInterfaceGenerator.generateCommandInterface(className.simpleName, sig.name, sig.parameters))
-                    .build()
-            fileSpec.writeTo(outputDir)
+            queue.submit(WriteSharedCommandAction::class.java) {
+                this.outputDir.set(outputDir)
+                packageName.set(className.packageName)
+                simpleName.set(className.simpleName)
+                commandName.set(sig.name)
+                parameterNames.set(sig.parameters.map { it.name })
+                parameterTypes.set(sig.parameters.map { it.type })
+            }
         }
 
-        // Second pass: generate feature files
+        // Second pass: generate feature files in parallel
         logger.lifecycle("Pass 2: Generating feature files...")
-        var success = 0
-        var duplicate = 0
-        var omitted = 0
         val now = currentDate.get()
+        val existing = mutableSetOf<String>()
+        var omitted = 0
+        var duplicate = 0
+        var submitted = 0
 
         for (feature in parsedFeatures) {
             val removalDate = feature.removalDate
@@ -141,22 +163,79 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
                 logger.warn("Omitted generation of feature '${feature.featureName}' as it is deprecated and past removal date ($removalDate)")
                 continue
             }
-
-            val outputFile = outputDir.resolve("${feature.className}.kt")
-            if (outputFile.exists()) {
+            if (!existing.add(feature.className)) {
                 duplicate++
-                logger.warn("File already exists: $outputFile")
-            } else {
-                val fileSpec = generator.generate(feature)
-                fileSpec.writeTo(outputDir)
-                success++
+                logger.warn("Duplicate feature class: ${feature.className}")
+                continue
             }
+            val fileSpec = generator.generate(feature)
+            queue.submit(WriteFileSpecAction::class.java) {
+                this.outputDir.set(outputDir)
+                packageName.set(fileSpec.packageName)
+                fileName.set(fileSpec.name)
+                fileContents.set(fileSpec.toString())
+            }
+            submitted++
         }
 
+        // workerExecutor.await() is implicit at the end of the @TaskAction
         logger.lifecycle(
-            "Results: $success success, $duplicate duplicate, $omitted omitted due to removal date out of ${inputFiles.size} total",
+            "Results: $submitted success, $duplicate duplicate, $omitted omitted due to removal date out of ${inputFiles.size} total",
         )
         logger.lifecycle("Shared commands: ${sharedCommandsMap.size}")
         logger.lifecycle("Output directory: $outputDir")
+    }
+}
+
+internal interface WriteSharedCommandParameters : WorkParameters {
+    val outputDir: DirectoryProperty
+    val packageName: Property<String>
+    val simpleName: Property<String>
+    val commandName: Property<String>
+    val parameterNames: org.gradle.api.provider.ListProperty<String>
+    val parameterTypes: org.gradle.api.provider.ListProperty<String>
+}
+
+internal abstract class WriteSharedCommandAction : WorkAction<WriteSharedCommandParameters> {
+    override fun execute() {
+        val pkg = parameters.packageName.get()
+        val simple = parameters.simpleName.get()
+        val cmdName = parameters.commandName.get()
+        val names = parameters.parameterNames.get()
+        val types = parameters.parameterTypes.get()
+
+        val parameters =
+            names.zip(types).map { (n, t) ->
+                xyz.dussim.buildlogic.internal.ParameterSignature(n, t)
+            }
+
+        val fileSpec =
+            FileSpec
+                .builder(pkg, simple)
+                .addType(CommandInterfaceGenerator.generateCommandInterface(simple, cmdName, parameters))
+                .build()
+        fileSpec.writeTo(this.parameters.outputDir.get().asFile)
+    }
+}
+
+internal interface WriteFileSpecParameters : WorkParameters {
+    val outputDir: DirectoryProperty
+    val packageName: Property<String>
+    val fileName: Property<String>
+    val fileContents: Property<String>
+}
+
+internal abstract class WriteFileSpecAction : WorkAction<WriteFileSpecParameters> {
+    override fun execute() {
+        val outDir = parameters.outputDir.get().asFile
+        val pkg = parameters.packageName.get()
+        val fileName = parameters.fileName.get()
+        val contents = parameters.fileContents.get()
+
+        val pkgDir =
+            if (pkg.isEmpty()) outDir else outDir.resolve(pkg.replace('.', java.io.File.separatorChar))
+        pkgDir.mkdirs()
+        val outFile = pkgDir.resolve("$fileName.kt")
+        outFile.writeText(contents)
     }
 }
