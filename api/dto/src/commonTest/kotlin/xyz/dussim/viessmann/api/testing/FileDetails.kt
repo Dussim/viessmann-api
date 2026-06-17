@@ -10,8 +10,3 @@ data class FileDetails(
 }
 
 expect fun readFilesContentsIn(path: String): List<FileDetails>
-
-expect fun forEachFileContentIn(
-    path: String,
-    block: (String) -> Unit,
-)
