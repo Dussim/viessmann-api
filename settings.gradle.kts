@@ -77,15 +77,6 @@ project(":api:feature:benchmark").name = "api-feature-benchmark"
 project(":api:feature:definitions").name = "api-feature-definitions"
 project(":api:feature:implementations").name = "api-feature-implementations"
 
-// if (System.getenv("VIESSMANN_API_DEV") == "true") {
-//    include(
-//        ":client:auth-secret",
-//        ":client:integration-test",
-//    )
-//    project(":client:auth-secret").name = "client-auth-secret"
-//    project(":client:integration-test").name = "client-integration-test"
-// }
-
 develocity {
     val gitHash = providers.of(GitRevisionValueSource::class) {}
     buildScan {
@@ -115,6 +106,21 @@ develocity {
 }
 
 buildCache {
+    // Please never log the password in the build script, so that it won't be exposed in the CI logs
+    logger.warn(
+        """
+        Build cache configuration:
+        Local:
+        - isEnabled: ${!buildParameters.ci}
+        - isPush:    true
+        Remote:
+        - isEnabled: true
+        - isPush:    ${buildParameters.ci}
+        - url:       ${buildParameters.cache.url}
+        - user:      ${buildParameters.cache.username}
+        """.trimIndent(),
+    )
+
     local {
         isEnabled = !buildParameters.ci
         isPush = true
