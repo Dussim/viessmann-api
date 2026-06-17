@@ -21,17 +21,17 @@ class KotlinJvmCommonPlugin : Plugin<Project> {
             extensions.configure<KotlinJvmProjectExtension> {
                 compilerOptions {
                     freeCompilerArgs.addAll(
-                        "-Xjdk-release=21",
+                        "-Xjdk-release=25",
                         "-Xcontext-sensitive-resolution",
                         "-Xreturn-value-checker=check",
                     )
-                    jvmTarget.set(JvmTarget.JVM_21)
+                    jvmTarget.set(JvmTarget.JVM_25)
                 }
             }
 
             extensions.configure<JavaPluginExtension> {
-                sourceCompatibility = JavaVersion.VERSION_21
-                targetCompatibility = JavaVersion.VERSION_21
+                sourceCompatibility = JavaVersion.VERSION_25
+                targetCompatibility = JavaVersion.VERSION_25
             }
 
             val testImplementation = configurations.named("testImplementation")
