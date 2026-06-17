@@ -14,7 +14,7 @@ private data class RenderedGeneratedFile(
     val packageName: String,
     val fileName: String,
     val dependencies: Dependencies,
-    val content: ByteArray,
+    val content: String,
 )
 
 internal class GeneratedFileEmitter(
@@ -31,7 +31,9 @@ internal class GeneratedFileEmitter(
                     fileName = file.fileName,
                     extensionName = "kt",
                 ).use { output ->
-                    output.write(file.content)
+                    output.bufferedWriter().use {
+                        it.write(file.content)
+                    }
                 }
         }
     }

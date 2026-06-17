@@ -58,6 +58,7 @@ class YamlFeatureInterfaceGenerator(
     private val packageName: String,
     private val logger: Logger,
 ) {
+    private val openApi = OpenAPIV3Parser()
     private val sharedCommands = mutableMapOf<CommandSignature, ClassName>()
 
     fun useSharedCommands(commands: Map<CommandSignature, ClassName>) {
@@ -122,7 +123,7 @@ class YamlFeatureInterfaceGenerator(
                 isResolveFully = true
             }
 
-        return OpenAPIV3Parser().readLocation(file.toURI().toString(), null, parseOptions).openAPI
+        return openApi.readLocation(file.toURI().toString(), null, parseOptions).openAPI
     }
 
     // endregion
@@ -678,10 +679,14 @@ class YamlFeatureInterfaceGenerator(
             val requestType = requestParameterTypes[name]
             val apiType =
                 when {
-                    normalized == "array" ->
+                    normalized == "array" -> {
                         requestType
                             ?: ParameterSignature.unsupportedCommandParameterType(featureName, commandName, name, "array")
-                    else -> normalized
+                    }
+
+                    else -> {
+                        normalized
+                    }
                 }
             val constraintType =
                 when (apiType) {
@@ -744,18 +749,34 @@ class YamlFeatureInterfaceGenerator(
         parameterName: String,
     ): String =
         when (schema.type) {
-            "boolean" -> "boolean"
-            "number", "integer" -> "number"
-            "string" -> "string"
-            "array" -> mapArrayCommandParameterType(schema.items, featureName, commandName, parameterName)
-            "object" -> "object"
-            else ->
+            "boolean" -> {
+                "boolean"
+            }
+
+            "number", "integer" -> {
+                "number"
+            }
+
+            "string" -> {
+                "string"
+            }
+
+            "array" -> {
+                mapArrayCommandParameterType(schema.items, featureName, commandName, parameterName)
+            }
+
+            "object" -> {
+                "object"
+            }
+
+            else -> {
                 ParameterSignature.unsupportedCommandParameterType(
                     featureName,
                     commandName,
                     parameterName,
                     schema.type ?: "unknown",
                 )
+            }
         }
 
     private fun mapArrayCommandParameterType(
@@ -765,17 +786,30 @@ class YamlFeatureInterfaceGenerator(
         parameterName: String,
     ): String =
         when (items?.type) {
-            "number", "integer" -> "array:number"
-            "string" -> "array:string"
-            "boolean" -> "array:boolean"
-            "object" -> "array:object"
-            else ->
+            "number", "integer" -> {
+                "array:number"
+            }
+
+            "string" -> {
+                "array:string"
+            }
+
+            "boolean" -> {
+                "array:boolean"
+            }
+
+            "object" -> {
+                "array:object"
+            }
+
+            else -> {
                 ParameterSignature.unsupportedCommandParameterType(
                     featureName,
                     commandName,
                     parameterName,
                     items?.type ?: "array",
                 )
+            }
         }
 
     // endregion

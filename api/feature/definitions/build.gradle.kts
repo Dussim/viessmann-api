@@ -1,5 +1,3 @@
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
@@ -70,6 +68,10 @@ dependencies {
     add("kspJsImplementationsJsMain", projects.api.feature.processor)
 }
 
+ksp {
+    arg("formatGeneratedSources", "false")
+}
+
 generateFeatureInterfacesFromYaml {
     featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
     generatedSources = layout.buildDirectory.dir("generated/features")
@@ -102,14 +104,16 @@ val kspImplementationsJsMain =
 
 kspImplementationsJvmMain.configureEach {
     dependsOn("generateFeatureInterfacesFromYaml")
-    inputs.files(featureProcessorInputs)
+    inputs
+        .files(featureProcessorInputs)
         .withPropertyName("featureImplementationProcessorInputs")
         .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 kspImplementationsJsMain.configureEach {
     dependsOn("generateFeatureInterfacesFromYaml")
-    inputs.files(featureProcessorInputs)
+    inputs
+        .files(featureProcessorInputs)
         .withPropertyName("featureImplementationProcessorInputs")
         .withPathSensitivity(PathSensitivity.RELATIVE)
 }

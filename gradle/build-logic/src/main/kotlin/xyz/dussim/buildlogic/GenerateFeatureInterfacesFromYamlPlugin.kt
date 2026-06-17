@@ -5,6 +5,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -24,8 +26,16 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jmailen.gradle.kotlinter.tasks.FormatTask
 import org.jmailen.gradle.kotlinter.tasks.LintTask
 import xyz.dussim.buildlogic.internal.CommandInterfaceGenerator
+import xyz.dussim.buildlogic.internal.ParameterSignature
+import xyz.dussim.buildlogic.internal.YamlCommandDeclaration
+import xyz.dussim.buildlogic.internal.YamlCommandParameter
+import xyz.dussim.buildlogic.internal.YamlFeatureInterface
 import xyz.dussim.buildlogic.internal.YamlFeatureInterfaceGenerator
+import xyz.dussim.buildlogic.internal.YamlPropertyDeclaration
 import xyz.dussim.buildlogic.internal.identifySharedCommands
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -112,17 +122,39 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
 
         val pkg = packageName.get()
         val generator = YamlFeatureInterfaceGenerator(pkg, logger)
+        val queue = workerExecutor.noIsolation()
 
-        // First pass: parse all features in parallel. Each parseYamlFile call constructs its own
-        // OpenAPIV3Parser instance, so parallel invocation is safe and CPU-bound.
+        // First pass: parse all features in parallel. Workers write parsed feature DTOs
+        // to the task temporary directory because Gradle workers do not return values.
         logger.lifecycle("Pass 1: Parsing YAML features...")
+        val parsedFeaturesDir = temporaryDir.resolve("parsed-features")
+        parsedFeaturesDir.deleteRecursively()
+        parsedFeaturesDir.mkdirs()
+        val parsedFeatureFiles =
+            inputFiles.mapIndexed { index, file ->
+                parsedFeaturesDir.resolve("${index.toString().padStart(5, '0')}-${file.nameWithoutExtension}.bin")
+            }
+
+        inputFiles.zip(parsedFeatureFiles).forEach { (file, parsedFeatureFile) ->
+            queue.submit(ParseYamlFeatureAction::class.java) {
+                yamlFile.set(file)
+                outputFile.set(parsedFeatureFile)
+                packageName.set(pkg)
+            }
+        }
+        queue.await()
+
         val parsedFeatures =
-            inputFiles
-                .parallelStream()
-                .map { file -> generator.parseYamlFile(file) }
-                .filter { it != null }
-                .map { it!! }
-                .toList()
+            parsedFeatureFiles
+                .mapNotNull { file ->
+                    if (file.isFile) {
+                        ObjectInputStream(file.inputStream()).use { input ->
+                            (input.readObject() as SerializableYamlFeatureInterface).toFeature()
+                        }
+                    } else {
+                        null
+                    }
+                }
 
         // Collect all command signatures and identify shared ones (must remain sequential)
         val commandSignatures =
@@ -136,7 +168,6 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
         generator.useSharedCommands(sharedCommandsMap)
 
         // Generate shared command interfaces in parallel via the Worker API
-        val queue = workerExecutor.noIsolation()
         sharedCommandsMap.forEach { (sig, className) ->
             queue.submit(WriteSharedCommandAction::class.java) {
                 this.outputDir.set(outputDir)
@@ -178,12 +209,139 @@ abstract class GenerateFeatureInterfacesFromYamlTask : DefaultTask() {
             submitted++
         }
 
-        // workerExecutor.await() is implicit at the end of the @TaskAction
+        queue.await()
         logger.lifecycle(
             "Results: $submitted success, $duplicate duplicate, $omitted omitted due to removal date out of ${inputFiles.size} total",
         )
         logger.lifecycle("Shared commands: ${sharedCommandsMap.size}")
         logger.lifecycle("Output directory: $outputDir")
+    }
+}
+
+internal interface ParseYamlFeatureParameters : WorkParameters {
+    val yamlFile: RegularFileProperty
+    val outputFile: RegularFileProperty
+    val packageName: Property<String>
+}
+
+internal abstract class ParseYamlFeatureAction : WorkAction<ParseYamlFeatureParameters> {
+    override fun execute() {
+        val logger = Logging.getLogger(ParseYamlFeatureAction::class.java)
+        val file = parameters.yamlFile.get().asFile
+        val generator = YamlFeatureInterfaceGenerator(parameters.packageName.get(), logger)
+        val feature = generator.parseYamlFile(file) ?: return
+
+        val outputFile = parameters.outputFile.get().asFile
+        outputFile.parentFile.mkdirs()
+        ObjectOutputStream(outputFile.outputStream()).use { output ->
+            output.writeObject(SerializableYamlFeatureInterface.from(feature))
+        }
+    }
+}
+
+private data class SerializableYamlFeatureInterface(
+    val featureName: String,
+    val className: String,
+    val properties: List<SerializableYamlPropertyDeclaration>,
+    val commands: List<SerializableYamlCommandDeclaration>,
+    val isDeprecated: Boolean,
+    val deprecationMessage: String?,
+    val removalDate: LocalDate?,
+) : Serializable {
+    fun toFeature(): YamlFeatureInterface =
+        YamlFeatureInterface(
+            featureName = featureName,
+            className = className,
+            properties = properties.map { it.toProperty() },
+            commands = commands.map { it.toCommand() },
+            isDeprecated = isDeprecated,
+            deprecationMessage = deprecationMessage,
+            removalDate = removalDate,
+        )
+
+    companion object {
+        fun from(feature: YamlFeatureInterface): SerializableYamlFeatureInterface =
+            SerializableYamlFeatureInterface(
+                featureName = feature.featureName,
+                className = feature.className,
+                properties = feature.properties.map { SerializableYamlPropertyDeclaration.from(it) },
+                commands = feature.commands.map { SerializableYamlCommandDeclaration.from(it) },
+                isDeprecated = feature.isDeprecated,
+                deprecationMessage = feature.deprecationMessage,
+                removalDate = feature.removalDate,
+            )
+    }
+}
+
+private data class SerializableYamlPropertyDeclaration(
+    val name: String,
+    val type: String,
+    val isRequired: Boolean,
+) : Serializable {
+    fun toProperty(): YamlPropertyDeclaration =
+        YamlPropertyDeclaration(
+            name = name,
+            type = type,
+            isRequired = isRequired,
+        )
+
+    companion object {
+        fun from(property: YamlPropertyDeclaration): SerializableYamlPropertyDeclaration =
+            SerializableYamlPropertyDeclaration(
+                name = property.name,
+                type = property.type,
+                isRequired = property.isRequired,
+            )
+    }
+}
+
+private data class SerializableYamlCommandDeclaration(
+    val propertyName: String,
+    val commandName: String,
+    val interfaceName: String,
+    val parameters: List<SerializableYamlCommandParameter>,
+    val isRequired: Boolean,
+) : Serializable {
+    fun toCommand(): YamlCommandDeclaration =
+        YamlCommandDeclaration(
+            propertyName = propertyName,
+            commandName = commandName,
+            interfaceName = interfaceName,
+            parameters = parameters.map { it.toCommandParameter() },
+            isRequired = isRequired,
+        )
+
+    companion object {
+        fun from(command: YamlCommandDeclaration): SerializableYamlCommandDeclaration =
+            SerializableYamlCommandDeclaration(
+                propertyName = command.propertyName,
+                commandName = command.commandName,
+                interfaceName = command.interfaceName,
+                parameters = command.parameters.map { SerializableYamlCommandParameter.from(it) },
+                isRequired = command.isRequired,
+            )
+    }
+}
+
+private data class SerializableYamlCommandParameter(
+    val name: String,
+    val type: String,
+    val constraintType: String,
+) : Serializable {
+    fun toCommandParameter(): YamlCommandParameter =
+        YamlCommandParameter(
+            name = name,
+            type = type,
+            constraintType = constraintType,
+        )
+
+    companion object {
+        fun from(parameter: YamlCommandParameter): SerializableYamlCommandParameter =
+            SerializableYamlCommandParameter(
+                name = parameter.name,
+                type = parameter.type,
+                constraintType = parameter.constraintType,
+            )
     }
 }
 
@@ -206,7 +364,7 @@ internal abstract class WriteSharedCommandAction : WorkAction<WriteSharedCommand
 
         val parameters =
             names.zip(types).map { (n, t) ->
-                xyz.dussim.buildlogic.internal.ParameterSignature(n, t)
+                ParameterSignature(n, t)
             }
 
         val fileSpec =
@@ -214,7 +372,11 @@ internal abstract class WriteSharedCommandAction : WorkAction<WriteSharedCommand
                 .builder(pkg, simple)
                 .addType(CommandInterfaceGenerator.generateCommandInterface(simple, cmdName, parameters))
                 .build()
-        fileSpec.writeTo(this.parameters.outputDir.get().asFile)
+        fileSpec.writeTo(
+            this.parameters.outputDir
+                .get()
+                .asFile,
+        )
     }
 }
 
