@@ -7,10 +7,10 @@ This module is the primary source of truth for the generated feature interfaces 
 - **YAML Location**: Sources are expected in `.ignored/featuresOpenApi/features/` (relative to settings directory).
 
 #### Technical Details
-- **Output Path**: Generated Kotlin source code is placed in `build/generated/features`.
+- **Output Path**: Generated Kotlin source code is placed in `build/generated/features` and attached to `jvmMain` and `jsMain`.
 - **Compilation Dependency**: All Kotlin compilation tasks in this module depend on the `generateFeatureInterfacesFromYaml` task.
 
 #### AI Context
 When working with this module, avoid manually editing the files in `build/generated/features`. If you need to change the structure of a feature, modify the YAML source or the `YamlFeatureInterfaceGenerator` plugin in `gradle/build-logic`.
 
-**Caution**: This module generates both the feature interface definitions and the KSP-backed implementation artifacts. Keep interface-only and implementation source sets separated.
+**Caution**: This module only owns generated feature interface definitions. KSP-backed implementation artifacts belong to `:api:feature:implementations`.

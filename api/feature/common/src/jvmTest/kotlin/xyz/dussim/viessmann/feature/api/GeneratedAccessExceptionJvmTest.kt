@@ -1,3 +1,5 @@
+@file:OptIn(ViessmannApiInternalExceptionUsage::class)
+
 package xyz.dussim.viessmann.feature.api
 
 import io.kotest.assertions.throwables.shouldThrow

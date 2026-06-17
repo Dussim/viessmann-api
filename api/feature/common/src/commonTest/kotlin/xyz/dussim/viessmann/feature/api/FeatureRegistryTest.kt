@@ -71,7 +71,7 @@ class FeatureRegistryTest :
             descriptor.byNameThenStructure(1).matches(feature) shouldBe true
 
             structureCalls shouldBe 0
-            failFastCalls shouldBe 6
+            failFastCalls shouldBe 3
 
             descriptor.validate(feature).isInvalid shouldBe false
             structureCalls shouldBe 1

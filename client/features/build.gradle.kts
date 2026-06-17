@@ -4,10 +4,10 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(project(":client:client-core"))
-        api(project(":api:features"))
-        api(project(":api:feature:common"))
-        api(project(":api:errors"))
+        api(projects.client.clientCore)
+        api(projects.api.apiFeatures)
+        api(projects.api.feature.apiFeatureCommon)
+        api(projects.api.apiErrors)
         api(libs.kotlinx.serialization.json)
     }
     sourceSets.commonTest.dependencies {

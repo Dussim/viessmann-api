@@ -4,8 +4,8 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(projects.api.feature.common)
-        api(projects.api.errors)
+        api(projects.api.feature.apiFeatureCommon)
+        api(projects.api.apiErrors)
         api(libs.kotlinx.serialization.json)
     }
 }

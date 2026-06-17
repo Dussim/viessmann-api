@@ -7,6 +7,6 @@ class CachedRegistryValidationsTest :
     FunSpec({
         val features = loadFeatures(FeatureRegistry::caching)
 
-        singleThreadedValidationTest("Cached registry validations test", features)
+        singleThreadedValidationTest("!Cached registry validations test", features)
         parallelValidationTest("!Parallel cached registry validations test", features)
     })

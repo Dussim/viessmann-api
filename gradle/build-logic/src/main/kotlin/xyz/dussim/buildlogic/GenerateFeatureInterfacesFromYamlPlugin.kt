@@ -7,6 +7,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -43,6 +44,7 @@ abstract class GenerateFeatureInterfacesFromYamlPlugin : Plugin<Project> {
     override fun apply(target: Project): Unit =
         target.run {
             val extension = extensions.create<GenerateFeatureInterfacesFromYamlExtension>("generateFeatureInterfacesFromYaml")
+            extension.sourceSets.convention(listOf("commonMain"))
             val generateFeatureInterfaces =
                 tasks.register(
                     "generateFeatureInterfacesFromYaml",
@@ -55,8 +57,12 @@ abstract class GenerateFeatureInterfacesFromYamlPlugin : Plugin<Project> {
                 }
             pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
                 extensions.configure<KotlinMultiplatformExtension> {
-                    sourceSets.named("commonMain") {
-                        kotlin.srcDir(extension.generatedSources)
+                    afterEvaluate {
+                        extension.sourceSets.get().forEach { sourceSetName ->
+                            sourceSets.named(sourceSetName) {
+                                kotlin.srcDir(extension.generatedSources)
+                            }
+                        }
                     }
                     tasks.named { it.startsWith("ksp") && it.contains("KotlinMetadata") }.configureEach {
                         dependsOn(generateFeatureInterfaces)
@@ -76,6 +82,8 @@ abstract class GenerateFeatureInterfacesFromYamlExtension {
     abstract val featuresYamls: DirectoryProperty
 
     abstract val generatedSources: DirectoryProperty
+
+    abstract val sourceSets: ListProperty<String>
 
     abstract val packageName: Property<String>
 

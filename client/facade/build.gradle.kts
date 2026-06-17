@@ -4,11 +4,11 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(project(":client:client-core"))
-        api(project(":client:client-auth"))
-        api(project(":client:client-equipment"))
-        api(project(":client:client-features"))
-        api(project(":client:client-users"))
+        api(projects.client.clientCore)
+        api(projects.client.clientAuth)
+        api(projects.client.clientEquipment)
+        api(projects.client.clientFeatures)
+        api(projects.client.clientUsers)
         api(ktorLibs.client.core)
     }
     sourceSets.commonTest.dependencies {

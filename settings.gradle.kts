@@ -55,20 +55,34 @@ include(
     ":api:feature:common",
     ":api:feature:benchmark",
     ":api:feature:definitions",
+    ":api:feature:implementations",
 )
 
+project(":api:dto").name = "api-dto"
+project(":api:errors").name = "api-errors"
+project(":api:equipment").name = "api-equipment"
+project(":api:features").name = "api-features"
+project(":api:auth").name = "api-auth"
+project(":api:users").name = "api-users"
 project(":client:core").name = "client-core"
 project(":client:auth").name = "client-auth"
 project(":client:equipment").name = "client-equipment"
 project(":client:features").name = "client-features"
 project(":client:users").name = "client-users"
 project(":client:facade").name = "client-facade"
+project(":api:feature:annotations").name = "api-feature-annotations"
+project(":api:feature:processor").name = "api-feature-processor"
+project(":api:feature:common").name = "api-feature-common"
+project(":api:feature:benchmark").name = "api-feature-benchmark"
+project(":api:feature:definitions").name = "api-feature-definitions"
+project(":api:feature:implementations").name = "api-feature-implementations"
 
 // if (System.getenv("VIESSMANN_API_DEV") == "true") {
 //    include(
 //        ":client:auth-secret",
 //        ":client:integration-test",
 //    )
+//    project(":client:auth-secret").name = "client-auth-secret"
 //    project(":client:integration-test").name = "client-integration-test"
 // }
 

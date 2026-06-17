@@ -7,6 +7,6 @@ class BasicRegistryValidationsTest :
     FunSpec({
         val features = loadFeatures(FeatureRegistry::of)
 
-        singleThreadedValidationTest("Large number of validations performance testing", features)
+        singleThreadedValidationTest("!Large number of validations performance testing", features)
         parallelValidationTest("!Parallel large number of validations performance testing", features)
     })

@@ -5,11 +5,11 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.api.dto)
-    implementation(projects.api.feature.annotations)
-    implementation(projects.api.feature.common)
-    implementation(projects.api.feature.definitions)
-    implementation(project(mapOf("path" to ":api:feature:definitions", "configuration" to "jvmImplementationsElements")))
+    implementation(projects.api.apiDto)
+    implementation(projects.api.feature.apiFeatureAnnotations)
+    implementation(projects.api.feature.apiFeatureCommon)
+    implementation(projects.api.feature.apiFeatureDefinitions)
+    implementation(projects.api.feature.apiFeatureImplementations)
 }
 
 jmh {

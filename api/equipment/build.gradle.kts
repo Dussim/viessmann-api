@@ -4,7 +4,7 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(projects.api.dto)
-        api(projects.api.errors)
+        api(projects.api.apiDto)
+        api(projects.api.apiErrors)
     }
 }
