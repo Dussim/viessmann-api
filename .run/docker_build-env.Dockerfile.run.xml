@@ -5,7 +5,7 @@
         <option name="imageTag" value="dussim/build-env:jdk26_gradle-9.6.0-rc3" />
         <option name="buildOnly" value="true" />
         <option name="containerName" value="" />
-        <option name="sourceFilePath" value=".crow/docker/build-env.Dockerfile" />
+        <option name="sourceFilePath" value=".docker/build-env.Dockerfile" />
       </settings>
     </deployment>
     <method v="2" />
