@@ -1,4 +1,5 @@
 import com.google.devtools.ksp.gradle.KspAATask
+import xyz.dussim.buildlogic.GenerateFeatureJsonsFromYamlTask
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
@@ -23,6 +24,7 @@ val featureProcessorInputs =
         featureProcessorProject.layout.projectDirectory.dir("src/main"),
         featureProcessorProject.layout.projectDirectory.file("build.gradle.kts"),
     )
+val generateFeatureJsonsFromYamlTask = tasks.named<GenerateFeatureJsonsFromYamlTask>("generateFeatureJsonsFromYaml")
 
 kotlin {
     jvm {
@@ -60,12 +62,8 @@ generateFeatureJsonsFromYaml {
 }
 
 generateFeatureJsonTests {
-    generatedJsons = layout.buildDirectory.dir("generated/feature-jsons")
+    generatedJsons = generateFeatureJsonsFromYamlTask.flatMap { it.generatedJsons }
     generatedTests = layout.buildDirectory.dir("generated/feature-json-tests")
-}
-
-tasks.named("generateFeatureJsonTests") {
-    dependsOn("generateFeatureJsonsFromYaml")
 }
 
 tasks.withType<KspAATask>().configureEach {
