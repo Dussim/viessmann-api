@@ -3,6 +3,9 @@
     {
       "name": "jvmTest",
       "image": "dussim/build-env:jdk26_gradle-9.6.0-rc3",
+      "environment": [
+        "CI": "true"
+      ],
       "commands": [
         "gradle jvmTest --scan"
       ],
