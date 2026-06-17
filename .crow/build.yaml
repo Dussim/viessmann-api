@@ -2,7 +2,7 @@
   "steps": [
     {
       "name": "jvmTest",
-      "image": "gradle:9.5.1-jdk26-alpine",
+      "image": "dussim/build-env:jdk26_gradle-9.6.0-rc3",
       "commands": [
         "gradle jvmTest"
       ],
