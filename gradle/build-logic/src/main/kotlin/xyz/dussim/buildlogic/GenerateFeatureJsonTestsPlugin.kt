@@ -15,6 +15,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.create
@@ -48,6 +49,7 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
     }
 
     @get:InputDirectory
+    @get:SkipWhenEmpty
     abstract val generatedJsons: DirectoryProperty
 
     @get:OutputDirectory

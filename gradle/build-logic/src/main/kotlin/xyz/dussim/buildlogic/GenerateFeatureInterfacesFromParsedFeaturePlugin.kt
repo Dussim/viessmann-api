@@ -18,6 +18,7 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.configure
@@ -67,6 +68,7 @@ abstract class GenerateFeatureInterfacesFromParsedFeaturesExtension {
 @DisableCachingByDefault
 abstract class GenerateFeatureInterfacesFromParsedFeaturesTask : DefaultTask() {
     @get:InputDirectory
+    @get:SkipWhenEmpty
     abstract val featuresJsons: DirectoryProperty
 
     @get:OutputDirectory
