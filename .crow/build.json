@@ -1,0 +1,14 @@
+{
+  "steps": [
+    {
+      "name": "jvmTest",
+      "image": "gradle:9.5.1-jdk26-alpine",
+      "commands": [
+        "gradle jvmTest"
+      ],
+      "when": {
+        "event": "push"
+      }
+    }
+  ]
+}
