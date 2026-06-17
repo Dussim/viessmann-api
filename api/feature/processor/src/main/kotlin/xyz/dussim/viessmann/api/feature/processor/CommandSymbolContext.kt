@@ -28,7 +28,6 @@ interface ConvertibleToConstraintPropertySpec {
 data class ConstraintProperty(
     val name: String,
     val type: TypeName,
-    val property: KSClassDeclaration,
 ) : ConvertibleToPropertySpec,
     ConvertibleToConstraintPropertySpec {
     companion object {
@@ -36,7 +35,6 @@ data class ConstraintProperty(
             ConstraintProperty(
                 property.simpleName.asString(),
                 property.type.resolve().toTypeName(),
-                property.type.resolve().declaration as KSClassDeclaration,
             )
     }
 
@@ -75,37 +73,27 @@ data class CommandSymbolContext(
         command.getAnnotationsByType(CommandName::class).firstOrNull()?.name
             ?: command.simpleName.asString().replaceFirstChar(Char::lowercaseChar)
 
-    val name = command.simpleName.asString()
     val lowerCaseName = realName
 
     val superInterface = command.toClassName()
 
-    val signature by lazy {
-        CommandSignature(
-            name = realName.replaceFirstChar { it.uppercase() },
-            parameters = constraintsProperties.map { it.name to it.type },
-        )
-    }
-
-    val implName by lazy { signature.implName }
-    val implType by lazy { ClassName(parentContext.implName.packageName + ".commands", implName) }
-
-    val constraintsProperties by lazy {
+    val constraintsProperties =
         command
             .getDeclaredProperties()
             .filterNot { it.simpleName.asString() in DEFAULT_CONSTRAINTS }
             .map(ConstraintProperty::from)
             .toList()
-    }
 
-    val constraintsPropertiesImpl by lazy {
-        constraintsProperties.map(ConstraintProperty::asPropertySpec)
-    }
+    val signature =
+        CommandSignature(
+            name = realName.replaceFirstChar { it.uppercase() },
+            parameters = constraintsProperties.map { it.name to it.type },
+        )
 
-    val inheritedConstraintsProperties by lazy {
+    val implName = signature.implName
+    val implType = ClassName(parentContext.implName.packageName + ".commands", implName)
+
+    val inheritedConstraintsProperties =
         constraintsProperties
             .mapIndexed { index, property -> property.asConstraintPropertySpec(index) }
-    }
-
-    val allPropertiesImpl by lazy { inheritedConstraintsProperties + constraintsPropertiesImpl }
 }

@@ -9,6 +9,7 @@ dependencies {
     implementation(projects.api.feature.common)
 
     implementation(libs.ksp.symbol.processing.api)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.auto.service.annotations)
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.ktlint.rule.engine)

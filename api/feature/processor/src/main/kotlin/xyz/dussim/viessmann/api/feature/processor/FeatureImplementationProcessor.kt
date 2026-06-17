@@ -1,418 +1,46 @@
-@file:OptIn(KspExperimental::class)
-
 package xyz.dussim.viessmann.api.feature.processor
 
-import com.google.devtools.ksp.KspExperimental
-import com.google.devtools.ksp.getAllSuperTypes
-import com.google.devtools.ksp.getClassDeclarationByName
-import com.google.devtools.ksp.getDeclaredProperties
-import com.google.devtools.ksp.isAnnotationPresent
-import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
-import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSTypeReference
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.STAR
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.WildcardTypeName
-import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.ksp.toClassName
-import xyz.dussim.viessmann.api.feature.annotations.FeatureEnum
 import xyz.dussim.viessmann.api.feature.annotations.GenerateFeatureImplementation
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.CompanionNotImplementingFeatureEnumFactory
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.InvalidFeatureEnumFactoryTypeArgument
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.IsUnsupportedType
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.MissingCompanionObject
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.MissingFeatureEnumAnnotation
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.MissingFeatureEnumFactoryAnnotation
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.MissingPublicCompanionObject
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.NotImplementingCorrectInterface
-import xyz.dussim.viessmann.api.feature.processor.SymbolValidationError.NotInterface
-import xyz.dussim.viessmann.feature.api.Command0
-import xyz.dussim.viessmann.feature.api.Command1
-import xyz.dussim.viessmann.feature.api.Command2
-import xyz.dussim.viessmann.feature.api.Command3
-import xyz.dussim.viessmann.feature.api.Command4
-import xyz.dussim.viessmann.feature.api.Command5
-import xyz.dussim.viessmann.feature.api.Command6
-import xyz.dussim.viessmann.feature.api.Command7
-import xyz.dussim.viessmann.feature.api.Command8
-import xyz.dussim.viessmann.feature.api.Feature
-import xyz.dussim.viessmann.feature.api.FeatureDescriptor
-import xyz.dussim.viessmann.feature.api.FeatureEnumFactory
-import xyz.dussim.viessmann.feature.api.validation.Valid
-import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
-import xyz.dussim.viessmann.feature.api.validation.ValidationRule
-import xyz.dussim.viessmann.feature.api.validation.onError
-import xyz.dussim.viessmann.feature.api.validation.transform
-import xyz.dussim.viessmann.feature.api.validation.validateAll
-import kotlin.reflect.KClass
-
-typealias SymbolRule = ValidationRule<KSClassDeclaration, SymbolErrorMetadata>
 
 class FeatureImplementationProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
     private val descriptorsChunkSize: Int,
+    private val formatGeneratedSources: Boolean = true,
+    private val renderParallelism: Int = 1,
 ) : SymbolProcessor {
     companion object {
         private val ANNOTATION_NAME = GenerateFeatureImplementation::class.qualifiedName!!
-
-        private val FEATURE_SUBTYPES =
-            listOf(
-                Feature::class,
-            )
-
-        private val PROPERTY_COMMAND_TYPES =
-            listOf(
-                Command0::class,
-                Command1::class,
-                Command2::class,
-                Command3::class,
-                Command4::class,
-                Command5::class,
-                Command6::class,
-                Command7::class,
-                Command8::class,
-            )
-
-        private val PROPERTY_TO_KS_CLASS_DECLARATION = { property: KSPropertyDeclaration ->
-            property.type.resolve().declaration as KSClassDeclaration
-        }
-
-        private val IS_INTERFACE_RULE: SymbolRule =
-            booleanRule(NotInterface) { it.classKind == ClassKind.INTERFACE }
-
-        private val HAS_PUBLIC_COMPANION_OBJECT_RULE: SymbolRule =
-            booleanRule(MissingPublicCompanionObject) { symbol ->
-                symbol.declarations.any { it is KSClassDeclaration && it.isCompanionObject && it.isPublic() }
-            }
-
-        private fun isDirectSubtypeOf(declarations: List<KSClassDeclaration>): SymbolRule =
-            booleanRule(NotImplementingCorrectInterface) { symbol ->
-                symbol.superTypes.any { type -> type.resolve().declaration in declarations }
-            }
-
-        private fun isTypeOf(declarations: List<KSClassDeclaration>): SymbolRule =
-            booleanRule(IsUnsupportedType) { symbol ->
-                symbol in declarations
-            }
-
-        private fun isPropertyTypeOf(declarations: List<KSClassDeclaration>) =
-            isTypeOf(declarations)
-                .transform(PROPERTY_TO_KS_CLASS_DECLARATION)
-
-        private fun isPropertyDirectSubtypeOf(declarations: List<KSClassDeclaration>) =
-            isDirectSubtypeOf(declarations)
-                .transform(PROPERTY_TO_KS_CLASS_DECLARATION)
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        fun KClass<*>.declaration(): KSClassDeclaration {
-            val qualifiedName = requireName()
-            return requireNotNull(resolver.getClassDeclarationByName(qualifiedName)) {
-                "$qualifiedName class not found on classpath. Did you forget to add it as dependency?"
-            }
-        }
-        return run {
-            val featureDeclarations = FEATURE_SUBTYPES.map { it.declaration() }
-            val propertiesSupportedPrimitiveTypes =
-                PROPERTY_VALIDATION_FUNCTIONS.keys
-                    .mapNotNull { typeName ->
-                        val className = typeName as? ClassName ?: return@mapNotNull null
-                        val fqName = "${className.packageName}.${className.simpleName}"
-                        resolver.getClassDeclarationByName(fqName)
-                    }
-            val propertiesSupportedSuperTypes = PROPERTY_COMMAND_TYPES.map { it.declaration() }
+        val enumValueRegistry = EnumValueRegistry()
+        val ksSymbols = resolver.annotatedFeatureSymbols()
+        if (ksSymbols.isEmpty()) return emptyList()
 
-            val featureEnumFactory = FeatureEnumFactory::class.declaration()
+        FeatureSymbolValidator(logger).validate(resolver, ksSymbols, enumValueRegistry)
 
-            val propertyValidation =
-                ValidationRule.or(
-                    isPropertyTypeOf(propertiesSupportedPrimitiveTypes),
-                    isPropertyDirectSubtypeOf(propertiesSupportedSuperTypes),
-                    featureEnumValidation(featureEnumFactory),
-                )
+        val ruleRegistry = RuleRegistry("${ksSymbols.first().packageName.asString()}.components.rules")
+        val symbolContexts = ksSymbols.map { SymbolContext(it, ruleRegistry, enumValueRegistry) }
+        val generatedFiles = GeneratedFeatureFilesBuilder(descriptorsChunkSize).build(ksSymbols, symbolContexts)
 
-            val symbolValidationRule: SymbolRule =
-                ValidationRule.and(
-                    IS_INTERFACE_RULE,
-                    HAS_PUBLIC_COMPANION_OBJECT_RULE,
-                    isDirectSubtypeOf(featureDeclarations),
-                    { symbol ->
-                        propertyValidation.validateAll(symbol.getDeclaredProperties())
-                    },
-                )
+        GeneratedFileEmitter(
+            codeGenerator = codeGenerator,
+            formatGeneratedSources = formatGeneratedSources,
+            renderParallelism = renderParallelism,
+        ).emit(generatedFiles)
 
-            val symbols =
-                resolver
-                    .getSymbolsWithAnnotation(ANNOTATION_NAME)
-                    .filterIsInstance<KSClassDeclaration>()
-                    .toList()
-                    .let { symbols ->
-                        symbolValidationRule
-                            .validateAll(symbols)
-                            .onError {
-                                logger.error(it.toString())
-                                throw IllegalStateException(it.toString())
-                            }
-
-                        symbols
-                    }.let { ksSymbols ->
-                        if (ksSymbols.isEmpty()) return emptyList()
-
-                        val basePackage = ksSymbols.first().packageName.asString()
-                        val rulesPackage = "$basePackage.components.rules"
-                        val ruleRegistry = RuleRegistry(rulesPackage)
-
-                        val symbols = ksSymbols.map { SymbolContext(it, ruleRegistry) }
-
-                        val allDescriptorProperties =
-                            mutableListOf<PropertySpec>()
-                        val allDescriptorNames =
-                            mutableListOf<String>()
-                        var descriptorPackage = ""
-
-                        // Group features by signature for deduplication
-                        symbols.groupBy { it.featureSignature }.forEach { (signature, group) ->
-                            val firstContext = group.first()
-                            val implName =
-                                ClassName(
-                                    firstContext.implName.packageName + ".implementations",
-                                    signature.implName,
-                                )
-                            val superInterfaces = group.map { it.superInterface }.distinct()
-
-                            // Generate shared implementation
-                            generateSharedFeatureImplementation(implName, superInterfaces, firstContext)
-                                .writeFormattedTo(
-                                    codeGenerator,
-                                    Dependencies(true, *group.map { it.symbol.containingFile!! }.toTypedArray()),
-                                )
-
-                            // Collect descriptor and extension properties for each feature in the group
-                            group.forEach { context ->
-                                if (descriptorPackage.isEmpty()) {
-                                    descriptorPackage = context.implName.packageName
-                                }
-                                val generatedProps = generateFeatureDescriptorAndExtensions(context, implName)
-                                allDescriptorProperties += generatedProps
-                                // First property is always the descriptor, rest are extensions
-                                allDescriptorNames += generatedProps.first().name
-                            }
-                        }
-
-                        // Write descriptors, chunked into multiple files if configured
-                        if (allDescriptorProperties.isNotEmpty()) {
-                            val allDependencies = Dependencies(true, *ksSymbols.map { it.containingFile!! }.toTypedArray())
-                            val chunks =
-                                if (descriptorsChunkSize > 0) {
-                                    allDescriptorProperties.chunked(descriptorsChunkSize)
-                                } else {
-                                    listOf(allDescriptorProperties)
-                                }
-                            chunks.forEachIndexed { index, chunk ->
-                                val fileName =
-                                    if (chunks.size == 1) {
-                                        "GeneratedDescriptors"
-                                    } else {
-                                        "GeneratedDescriptors${index + 1}"
-                                    }
-                                FileSpec
-                                    .builder(descriptorPackage, fileName)
-                                    .addProperties(chunk)
-                                    .build()
-                                    .writeFormattedTo(codeGenerator, allDependencies)
-                            }
-
-                            // Generate Descriptors object
-                            val descriptorNameChunks =
-                                if (descriptorsChunkSize > 0) {
-                                    allDescriptorNames.chunked(descriptorsChunkSize)
-                                } else {
-                                    listOf(allDescriptorNames)
-                                }
-                            val descriptorsObject =
-                                TypeSpec
-                                    .objectBuilder("Descriptors")
-                                    .addProperty(
-                                        PropertySpec
-                                            .builder(
-                                                "all",
-                                                FeatureDescriptor::class
-                                                    .asTypeName()
-                                                    .parameterizedBy(STAR)
-                                                    .let {
-                                                        Set::class.asTypeName().parameterizedBy(it)
-                                                    },
-                                            ).initializer(
-                                                CodeBlock
-                                                    .builder()
-                                                    .beginControlFlow("buildSet")
-                                                    .apply {
-                                                        descriptorNameChunks.forEachIndexed { index, _ ->
-                                                            addStatement("addAll(chunk%L())", index + 1)
-                                                        }
-                                                    }.endControlFlow()
-                                                    .build(),
-                                            ).build(),
-                                    ).apply {
-                                        descriptorNameChunks.forEachIndexed { index, nameChunk ->
-                                            addFunction(
-                                                com.squareup.kotlinpoet.FunSpec
-                                                    .builder("chunk${index + 1}")
-                                                    .addModifiers(KModifier.PRIVATE)
-                                                    .returns(
-                                                        FeatureDescriptor::class
-                                                            .asTypeName()
-                                                            .parameterizedBy(STAR)
-                                                            .let {
-                                                                List::class.asTypeName().parameterizedBy(it)
-                                                            },
-                                                    ).addCode(
-                                                        CodeBlock
-                                                            .builder()
-                                                            .add("return listOf(\n")
-                                                            .apply {
-                                                                nameChunk.forEach { name ->
-                                                                    add("%L,\n", name)
-                                                                }
-                                                            }.add(")\n")
-                                                            .build(),
-                                                    ).build(),
-                                            )
-                                        }
-                                    }.build()
-
-                            FileSpec
-                                .builder(descriptorPackage, "Descriptors")
-                                .addType(descriptorsObject)
-                                .build()
-                                .writeFormattedTo(codeGenerator, allDependencies)
-                        }
-
-                        symbols
-                            .flatMap { it.nestedCommands }
-                            .groupBy { it.signature }
-                            .forEach { (signature, group) ->
-                                val firstCommand = group.first()
-                                val implName = ClassName(firstCommand.parentContext.implName.packageName + ".commands", signature.implName)
-                                val superInterfaces = group.map { it.superInterface }.distinct()
-
-                                generateCommandImplementation(implName, superInterfaces, firstCommand)
-                                    .writeFormattedTo(
-                                        codeGenerator,
-                                        Dependencies(true, *group.map { it.command.containingFile!! }.toTypedArray()),
-                                    )
-                            }
-
-                        generateValidationRules(ruleRegistry)
-                            .writeFormattedTo(
-                                codeGenerator,
-                                Dependencies(true, *ksSymbols.map { it.containingFile!! }.toTypedArray()),
-                            )
-
-                        symbols
-                    }
-
-            return emptyList()
-        }
+        return emptyList()
     }
+
+    private fun Resolver.annotatedFeatureSymbols(): List<KSClassDeclaration> =
+        getSymbolsWithAnnotation(ANNOTATION_NAME)
+            .filterIsInstance<KSClassDeclaration>()
+            .toList()
 }
-
-sealed interface SymbolValidationError : (KSAnnotated) -> SymbolErrorMetadata {
-    data object NotInterface : SymbolValidationError
-
-    data object MissingPublicCompanionObject : SymbolValidationError
-
-    data object NotImplementingCorrectInterface : SymbolValidationError
-
-    data object IsUnsupportedType : SymbolValidationError
-
-    data object MissingFeatureEnumAnnotation : SymbolValidationError
-
-    data object MissingCompanionObject : SymbolValidationError
-
-    data object MissingFeatureEnumFactoryAnnotation : SymbolValidationError
-
-    data object CompanionNotImplementingFeatureEnumFactory : SymbolValidationError
-
-    data object InvalidFeatureEnumFactoryTypeArgument : SymbolValidationError
-
-    override fun invoke(symbol: KSAnnotated) = SymbolErrorMetadata(symbol, this)
-}
-
-data class SymbolErrorMetadata(
-    val symbol: KSAnnotated,
-    val error: SymbolValidationError,
-)
-
-fun KClass<*>.requireName() = qualifiedName ?: error("Class $this has no qualified name")
-
-fun KSTypeReference.implementsInterface(interfaceClass: KClass<*>): Boolean {
-    val classDeclaration =
-        this.resolve().declaration as? KSClassDeclaration
-            ?: return false
-
-    val interfaceQualifiedName = interfaceClass.qualifiedName ?: return false
-
-    return classDeclaration
-        .getAllSuperTypes()
-        .any { superType ->
-            superType.declaration.qualifiedName?.asString() == interfaceQualifiedName
-        }
-}
-
-private fun featureEnumValidation(featureEnumFactory: KSClassDeclaration): ValidationRule<KSPropertyDeclaration, SymbolErrorMetadata> =
-    ValidationRule { property ->
-        val declaration =
-            property.type.resolve().declaration as? KSClassDeclaration
-                ?: return@ValidationRule Invalid(IsUnsupportedType(property))
-
-        if (!declaration.isAnnotationPresent(FeatureEnum::class)) {
-            return@ValidationRule Invalid(MissingFeatureEnumAnnotation(property))
-        }
-
-        val companion =
-            declaration.declarations
-                .filterIsInstance<KSClassDeclaration>()
-                .firstOrNull { it.isCompanionObject }
-                ?: return@ValidationRule Invalid(MissingCompanionObject(property))
-
-        if (!companion.isAnnotationPresent(FeatureEnum.Factory::class)) {
-            return@ValidationRule Invalid(MissingFeatureEnumFactoryAnnotation(property))
-        }
-
-        val companionImplementsInterface =
-            companion.superTypes
-                .map { it.resolve() }
-                .firstOrNull { it.declaration == featureEnumFactory }
-                ?: return@ValidationRule Invalid(CompanionNotImplementingFeatureEnumFactory(property))
-
-        val propertyValueType =
-            companionImplementsInterface.arguments
-                .firstOrNull()
-                ?.type
-                ?.resolve()
-                ?.declaration as? KSClassDeclaration
-                ?: return@ValidationRule Invalid(InvalidFeatureEnumFactoryTypeArgument(property))
-
-        SymbolContext.ENUM_VALUES_TO_VALIDATION_RULE[declaration.toClassName()] =
-            PROPERTY_VALIDATION_FUNCTIONS.getValue(propertyValueType.toClassName())
-        SymbolContext.ENUM_VALUES_TO_TYPE[declaration.toClassName()] =
-            propertyValueType.toClassName()
-
-        Valid()
-    }

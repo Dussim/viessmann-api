@@ -92,7 +92,10 @@ fun initBlock(
  * Adds property initialization code with validation.
  */
 internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
-    val (name, type, _, isListProperty, isEnumProperty) = property
+    val name = property.name
+    val type = property.type
+    val isListProperty = property.isListProperty
+    val isEnumProperty = property.isEnumProperty
     val combined = propertyHash(name.hashCode(), name.length)
     val isNullable = property.isNullable
     val nonNullType = type.copy(nullable = false)

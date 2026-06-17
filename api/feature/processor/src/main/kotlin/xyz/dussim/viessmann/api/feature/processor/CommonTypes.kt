@@ -15,17 +15,14 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Command
-import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
-import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.SingleErrorValidationResultApi
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
-import kotlin.time.Instant
 
 const val VALIDATION_PACKAGE = "xyz.dussim.viessmann.feature.api.validation"
 private const val FEATURE_API_PACKAGE = "xyz.dussim.viessmann.feature.api"
@@ -440,28 +437,11 @@ class RuleRegistry(
     fun getAllRules(): Map<RuleSignature, MemberName> = rules
 }
 
-private val SUPERINTERFACE_PROPERTIES =
-    mapOf(
-        "feature" to typeNameOf<String>(),
-        "wildcardFeature" to typeNameOf<String>(),
-        "isEnabled" to typeNameOf<Boolean>(),
-        "isReady" to typeNameOf<Boolean>(),
-        "apiVersion" to typeNameOf<Int>(),
-        "timestamp" to typeNameOf<Instant>(),
-        "uri" to typeNameOf<String>(),
-        "properties" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Property>()),
-        "commands" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Command>()),
-        "deviceId" to typeNameOf<String?>(),
-        "gatewayId" to typeNameOf<String?>(),
-        "isActive" to typeNameOf<Boolean?>(),
-    )
-
 enum class BaseFeature(
-    val superInterfaceProperties: Map<String, TypeName>,
     val delegate: TypeName,
     val abstractClass: ClassName,
 ) {
-    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>(), BASE_FEATURE),
+    Feature(typeNameOf<Feature>(), BASE_FEATURE),
 }
 
 data class FeatureSignature(
