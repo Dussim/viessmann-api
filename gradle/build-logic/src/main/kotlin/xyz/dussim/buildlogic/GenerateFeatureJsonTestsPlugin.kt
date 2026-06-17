@@ -1,5 +1,14 @@
 package xyz.dussim.buildlogic
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonObject
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -35,23 +44,7 @@ abstract class GenerateFeatureJsonTestsExtension {
 abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
     companion object {
         private val pattern = "(?<!_)0(?=[A-Za-z])".toRegex()
-        private val temporarilyDisabledTests =
-            setOf<String>(
-//                "device.busTopology",
-//                "device.product.matrix",
-//                "ems.power.balance",
-//                "ems.power.instantaneous",
-//                "fuel.cell.errors.raw",
-//                "heating.cooling.circuits.n.messages",
-//                "solarlog.devices.detected",
-//                "tcu.wifi.detected",
-//                "tcu.wifi.environment",
-//                "ventilation.messages",
-//                "fuelCell.errors.raw",
-//                "heating.coolingCircuits.0.messages",
-//                "device.productMatrix",
-//                "heating.fuelCell.errors.raw",
-            )
+        private val temporarilyDisabledTests = setOf<String>()
     }
 
     @get:InputDirectory
@@ -64,6 +57,8 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
         group = "build"
         description = "Generates Kotest test files for each generated feature JSON"
     }
+
+    private val json = Json
 
     @TaskAction
     fun generate() {
@@ -96,29 +91,39 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
 
             val resourcePath = jsonFile.name
 
-            val featureType = "ViessmannFeature"
             val isTemporarilyDisabled = baseName in temporarilyDisabledTests
+            val featureJson = json.parseToJsonElement(jsonFile.readText()).jsonObject
+            val assertions = buildAssertions(featureJson)
 
             val testContent =
                 buildString {
                     appendLine("package xyz.dussim.viessmann.api.features.generated")
                     appendLine()
                     appendLine("import io.kotest.core.spec.style.FunSpec")
-                    appendLine("import io.kotest.matchers.nulls.shouldNotBeNull")
-                    appendLine("import xyz.dussim.viessmann.feature.api.json")
-                    appendLine("import xyz.dussim.viessmann.feature.api.$featureType")
-                    appendLine("import xyz.dussim.viessmann.api.features.generated.descriptor")
                     appendLine()
+                    append(
+                        """
+                        @Suppress(
+                            "ktlint:standard:class-naming",
+                            "ktlint:standard:max-line-length",
+                            "ClassName",
+                            "RedundantSuppression",
+                            "RemoveRedundantBackticks",
+                            "UNNECESSARY_SAFE_CALL",
+                        )
+                        """.trimIndent(),
+                    )
                     appendLine("class $testClassName :")
                     appendLine("    FunSpec({")
                     if (isTemporarilyDisabled) {
                         appendLine("        // Disabled for now: these generated tests are not working due to issues with the underlying data.")
                     }
                     appendLine("        ${if (isTemporarilyDisabled) "xtest" else "test"}(\"Parse $baseName as $className\") {")
-                    appendLine("            val content = this::class.java.classLoader.getResource(\"$resourcePath\")!!.readText()")
-                    appendLine("            val genericFeature = json.decodeFromString($featureType.serializer(), content)")
-                    appendLine("            val feature = $className.descriptor.getOrThrow(genericFeature)")
-                    appendLine("            feature.shouldNotBeNull()")
+                    appendLine("            featureJsonTest(\"$resourcePath\", $className.descriptor) {")
+                    assertions.forEach { assertion ->
+                        appendLine("                $assertion")
+                    }
+                    appendLine("            }")
                     appendLine("        }")
                     appendLine("    })")
                 }
@@ -128,4 +133,236 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
 
         logger.lifecycle("Generated ${jsonFiles.size} test files in: $outputDir")
     }
+
+    private fun buildAssertions(featureJson: JsonObject): List<String> =
+        buildList {
+            addAll(buildPropertyAssertions(featureJson["properties"] as? JsonObject ?: return@buildList))
+            addAll(buildCommandAssertions(featureJson["commands"] as? JsonObject ?: JsonObject(emptyMap())))
+        }
+
+    private fun buildPropertyAssertions(properties: JsonObject): List<String> =
+        properties
+            .entries
+            .sortedBy { it.key }
+            .mapNotNull { (name, property) ->
+                val propertyObject = property as? JsonObject ?: return@mapNotNull null
+                val value = propertyObject["value"] ?: return@mapNotNull null
+                if (value is JsonArray && value.isEmpty()) return@mapNotNull null
+                val literal = valueLiteral(value) ?: return@mapNotNull null
+                "${accessor(name)} shouldHaveElement $literal"
+            }
+
+    private fun buildCommandAssertions(commands: JsonObject): List<String> =
+        commands.entries.sortedBy { it.key }.flatMap { (name, command) ->
+            val commandObject = command as? JsonObject ?: return@flatMap emptyList()
+            val commandAccessor = accessor(name)
+            buildList {
+                val commandName = stringValue(commandObject, "name")
+                val isExecutable = booleanValue(commandObject, "isExecutable")
+                val uri = stringValue(commandObject, "uri")
+                if (commandName != null && isExecutable != null && uri != null) {
+                    add("$commandAccessor.shouldHaveCommand(${kotlinString(commandName)}, $isExecutable, ${kotlinString(uri)})")
+                }
+
+                val params = commandObject["params"] as? JsonObject ?: return@buildList
+                params.entries.sortedBy { it.key }.forEach { (paramName, param) ->
+                    val paramObject = param as? JsonObject ?: return@forEach
+                    val constraints = paramObject["constraints"] as? JsonObject ?: JsonObject(emptyMap())
+                    buildConstraintAssertion("$commandAccessor?.${accessor(paramName)}", paramObject, constraints)?.let(::add)
+                }
+            }
+        }
+
+    private fun buildConstraintAssertion(
+        accessor: String,
+        parameter: JsonObject,
+        constraints: JsonObject,
+    ): String? =
+        when (val type = stringValue(parameter, "type")) {
+            "string" -> {
+                constraintFunctionCall(
+                    accessor,
+                    "shouldHaveStringConstraints",
+                    constraints,
+                    listOf("minLength", "maxLength", "regEx", "enum", "sameDayAllowed"),
+                )
+            }
+
+            "number", "integer" -> {
+                constraintFunctionCall(
+                    accessor,
+                    "shouldHaveNumberConstraints",
+                    constraints,
+                    listOf("min", "efficientLowerBorder", "efficientUpperBorder", "max", "stepping", "enum"),
+                )
+            }
+
+            "array" -> {
+                arrayConstraintFunctionCall(accessor, constraints)
+            }
+
+            "array:string" -> {
+                constraintFunctionCall(
+                    accessor,
+                    "shouldHaveArrayStringConstraints",
+                    constraints,
+                    listOf("minLength", "maxLength", "enum"),
+                )
+            }
+
+            "array:number" -> {
+                constraintFunctionCall(
+                    accessor,
+                    "shouldHaveArrayNumberConstraints",
+                    constraints,
+                    listOf("minLength", "maxLength", "enum"),
+                )
+            }
+
+            "array:boolean" -> {
+                constraintFunctionCall(
+                    accessor,
+                    "shouldHaveArrayBooleanConstraints",
+                    constraints,
+                    listOf("minLength", "maxLength", "enum"),
+                )
+            }
+
+            "object" -> {
+                constraintFunctionCall(
+                    accessor,
+                    "shouldHaveObjectConstraints",
+                    constraints,
+                    listOf("minProperties", "maxProperties", "required"),
+                )
+            }
+
+            "Schedule" -> {
+                constraintFunctionCall(
+                    accessor,
+                    "shouldHaveScheduleConstraints",
+                    constraints,
+                    listOf("modes", "maxEntries", "resolution", "defaultMode", "overlapAllowed"),
+                )
+            }
+
+            else -> {
+                logger.debug("Skipping assertions for unsupported parameter type '$type'")
+                null
+            }
+        }
+
+    private fun constraintFunctionCall(
+        accessor: String,
+        functionName: String,
+        constraints: JsonObject,
+        fields: List<String>,
+    ): String? {
+        val integerFields = setOf("minLength", "maxLength", "minProperties", "maxProperties", "maxEntries", "resolution")
+        val arguments =
+            fields.map { field ->
+                val value = constraints[field] ?: JsonNull
+                val literal =
+                    if (field in integerFields) {
+                        intValueLiteral(value) ?: return null
+                    } else {
+                        valueLiteral(value) ?: return null
+                    }
+                "$field = $literal"
+            }
+        return "$accessor.$functionName(${arguments.joinToString()})"
+    }
+
+    private fun arrayConstraintFunctionCall(
+        accessor: String,
+        constraints: JsonObject,
+    ): String? {
+        val enum = constraints["enum"] as? JsonArray
+        val functionName =
+            when (val firstEnumValue = enum?.firstOrNull()) {
+                is JsonPrimitive -> {
+                    when {
+                        firstEnumValue.isString -> "shouldHaveArrayStringConstraints"
+                        firstEnumValue.booleanOrNull != null -> "shouldHaveArrayBooleanConstraints"
+                        else -> "shouldHaveArrayNumberConstraints"
+                    }
+                }
+
+                else -> {
+                    return null
+                }
+            }
+        return constraintFunctionCall(
+            accessor = accessor,
+            functionName = functionName,
+            constraints = constraints,
+            fields = listOf("minLength", "maxLength", "enum"),
+        )
+    }
+
+    private fun valueLiteral(value: JsonElement): String? =
+        when (value) {
+            JsonNull -> "null"
+            is JsonPrimitive -> primitiveLiteral(value)
+            is JsonArray -> arrayLiteral(value)
+            is JsonObject -> null
+        }
+
+    private fun arrayLiteral(array: JsonArray): String? {
+        if (array.isEmpty()) return "emptyList<Nothing>()"
+
+        val literals = array.map { valueLiteral(it) ?: return null }
+        return "listOf(${literals.joinToString()})"
+    }
+
+    private fun intValueLiteral(value: JsonElement): String? =
+        when (value) {
+            JsonNull -> "null"
+            is JsonPrimitive -> primitiveIntLiteral(value)
+            else -> null
+        }
+
+    private fun primitiveIntLiteral(primitive: JsonPrimitive): String =
+        when {
+            primitive.isString -> primitive.content.toInt().toString()
+            primitive.booleanOrNull != null -> error("Cannot render boolean as integer literal: $primitive")
+            else -> primitive.double.toInt().toString()
+        }
+
+    private fun primitiveLiteral(primitive: JsonPrimitive): String =
+        when {
+            primitive.isString -> kotlinString(primitive.content)
+            primitive.booleanOrNull != null -> primitive.booleanOrNull.toString()
+            else -> primitive.double.toString()
+        }
+
+    private fun stringValue(
+        jsonObject: JsonObject,
+        name: String,
+    ): String? = (jsonObject[name] as? JsonPrimitive)?.content
+
+    private fun booleanValue(
+        jsonObject: JsonObject,
+        name: String,
+    ): Boolean? = (jsonObject[name] as? JsonPrimitive)?.booleanOrNull
+
+    private fun accessor(name: String): String = "`$name`"
+
+    private fun kotlinString(value: String): String =
+        buildString {
+            append('"')
+            value.forEach { char ->
+                when (char) {
+                    '\\' -> append("\\\\")
+                    '"' -> append("\\\"")
+                    '$' -> append("\\$")
+                    '\n' -> append("\\n")
+                    '\r' -> append("\\r")
+                    '\t' -> append("\\t")
+                    '\b' -> append("\\b")
+                    else -> append(char)
+                }
+            }
+            append('"')
+        }
 }
