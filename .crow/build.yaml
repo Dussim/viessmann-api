@@ -4,7 +4,19 @@
       "name": "jvmTest",
       "image": "dussim/build-env:jdk26_gradle-9.6.0-rc3",
       "environment": {
-        "CI": "true"
+        "CI": "true",
+        "BUILD_CACHE_USER": {
+          "from_secret": "BUILD_CACHE_USER"
+        },
+        "BUILD_CACHE_USER_PASSWORD": {
+          "from_secret": "BUILD_CACHE_USER_PASSWORD"
+        },
+        "REPO_PASSWORD": {
+          "from_secret": "REPO_PASSWORD"
+        },
+        "REPO_USERNAME": {
+          "from_secret": "REPO_USERNAME"
+        }
       },
       "commands": [
         "gradle jvmTest --scan"
