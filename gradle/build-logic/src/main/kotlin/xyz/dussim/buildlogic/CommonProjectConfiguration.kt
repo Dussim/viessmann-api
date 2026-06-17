@@ -70,6 +70,13 @@ fun Project.configureGroupAndVersion() {
 }
 
 fun Project.configurePublishing() {
+    val repoUsername = providers.gradleProperty("repoUsername")
+    val repoPassword = providers.gradleProperty("repoPassword")
+
+    if (!repoUsername.isPresent || !repoPassword.isPresent) {
+        return
+    }
+
     pluginManager.apply("maven-publish")
 
     extensions.configure<PublishingExtension> {
@@ -79,8 +86,8 @@ fun Project.configurePublishing() {
                 url = uri("https://maven.dussim.xyz/snapshots")
 
                 credentials {
-                    username = providers.gradleProperty("repoUsername").get()
-                    password = providers.gradleProperty("repoPassword").get()
+                    username = repoUsername.get()
+                    password = repoPassword.get()
                 }
             }
         }
