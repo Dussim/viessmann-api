@@ -36,10 +36,6 @@ gradlePlugin {
             id = "xyz.dussim.kotlin.client"
             implementationClass = "xyz.dussim.buildlogic.KotlinClientPlugin"
         }
-        register("anonymizeJson") {
-            id = "xyz.dussim.anonymize.json"
-            implementationClass = "xyz.dussim.buildlogic.AnonymizeJsonPlugin"
-        }
         register("generateFeatureInterfaces") {
             id = "xyz.dussim.generate.features"
             implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromParsedFeaturePlugin"

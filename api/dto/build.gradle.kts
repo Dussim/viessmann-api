@@ -1,9 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     alias(conventions.plugins.xyz.dussim.kotlin.common)
-    alias(conventions.plugins.xyz.dussim.anonymize.json)
 }
 
 kotlin {
@@ -23,13 +21,4 @@ kotlin {
             implementation(projects.api.feature.apiFeatureImplementations)
         }
     }
-}
-
-tasks.anonymizeJsonVerify {
-    // all JSONs are now anonymized or generated, for now I don't expect to add new ones, and this takes a lot of time
-    enabled = false
-}
-
-tasks.withType<KotlinCompilationTask<*>>().configureEach {
-    dependsOn(tasks.anonymizeJsonVerify)
 }
