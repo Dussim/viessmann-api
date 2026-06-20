@@ -2,7 +2,7 @@
 
 A Kotlin Multiplatform project that models Viessmann API data (DTOs) and provides a type-safe, annotation-driven feature system with code generation (KSP2). The repository also includes JMH benchmarks and comprehensive tests across JVM and JS (Node + Browser) targets.
 
-> **JVM target:** Java 21. **Kotlin:** 2.3.10. **KSP2:** Enabled.
+> **JVM target:** Java 25. **Kotlin:** 2.4.0. **KSP2:** Enabled.
 
 ## Overview
 The project defines:
@@ -11,7 +11,7 @@ The project defines:
 - A benchmarking suite to assess performance characteristics around feature parsing/validation.
 
 ### Tech Stack
-- **Language:** Kotlin 2.3.10 (Multiplatform)
+- **Language:** Kotlin 2.4.0 (Multiplatform)
 - **Frameworks:**
   - Kotlinx Serialization (JSON)
   - KSP2 (Code generation)
@@ -21,7 +21,7 @@ The project defines:
 - **Static Analysis:** Detekt, Kotlinter
 
 ## Requirements
-- Java 21+ (JDK 21 is the target).
+- Java 25+ (JDK 25 is the target).
 - Gradle Wrapper (provided).
 - Node.js (required for JS target tests).
 
@@ -92,7 +92,7 @@ The project defines:
 ```
 
 ## Env Vars
-- `JAVA_HOME`: Should point to a valid JDK 21+ installation.
+- `JAVA_HOME`: Should point to a valid JDK 25+ installation.
 - No specific environment variables are strictly required for standard builds, but ensure Node.js is in your PATH for JS targets.
 
 ## TODOs / Unknowns

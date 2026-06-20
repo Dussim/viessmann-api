@@ -31,8 +31,8 @@ class KotlinClientPlugin : Plugin<Project> {
 
                 jvm {
                     compilerOptions {
-                        freeCompilerArgs.add("-Xjdk-release=21")
-                        jvmTarget.set(JvmTarget.JVM_21)
+                        freeCompilerArgs.add("-Xjdk-release=25")
+                        jvmTarget.set(JvmTarget.JVM_25)
                     }
                 }
 
