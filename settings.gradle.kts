@@ -75,6 +75,68 @@ project(":api:feature:benchmark").name = "api-feature-benchmark"
 project(":api:feature:definitions").name = "api-feature-definitions"
 project(":api:feature:implementations").name = "api-feature-implementations"
 
+fun warnIfBlankBuildParameter(
+    name: String,
+    value: String,
+) {
+    if (value.isBlank()) {
+        logger.warn("Build parameter '$name' is empty. Check the matching Gradle property or environment variable.")
+    }
+}
+
+fun warnIfBlankEnvironmentVariable(name: String) {
+    if (providers.environmentVariable(name).orNull.isNullOrBlank()) {
+        logger.warn("Environment variable '$name' is empty or not set.")
+    }
+}
+
+fun resolveSettingsRelativePath(path: String): File {
+    val file = File(path)
+    return if (file.isAbsolute) file else settingsDir.resolve(file.path)
+}
+
+fun warnIfDirectoryMissingOrEmpty(
+    name: String,
+    directory: File,
+) {
+    if (!directory.isDirectory) {
+        logger.warn("$name does not exist or is not a directory: $directory")
+    } else if (directory.listFiles()?.isEmpty() != false) {
+        logger.warn("$name is empty: $directory")
+    }
+}
+
+warnIfBlankBuildParameter("openApiPath", buildParameters.openApiPath)
+warnIfBlankBuildParameter("cache.username", buildParameters.cache.username)
+warnIfBlankBuildParameter("cache.password", buildParameters.cache.password)
+
+if (buildParameters.ci) {
+    listOf(
+        "OPEN_API_PATH",
+        "BUILD_CACHE_USER",
+        "BUILD_CACHE_USER_PASSWORD",
+        "REPO_USERNAME",
+        "REPO_PASSWORD",
+    ).forEach(::warnIfBlankEnvironmentVariable)
+}
+
+if (buildParameters.openApiPath.isNotBlank()) {
+    val openApiDirectory = resolveSettingsRelativePath(buildParameters.openApiPath)
+    val openApiFeaturesDirectory = openApiDirectory.resolve("features")
+
+    warnIfDirectoryMissingOrEmpty("OpenAPI directory configured by 'openApiPath'", openApiDirectory)
+    warnIfDirectoryMissingOrEmpty("OpenAPI features directory", openApiFeaturesDirectory)
+
+    if (
+        openApiFeaturesDirectory.isDirectory &&
+        openApiFeaturesDirectory
+            .listFiles { file -> file.isFile && file.extension in setOf("yaml", "yml") }
+            ?.isEmpty() != false
+    ) {
+        logger.warn("OpenAPI features directory contains no YAML files: $openApiFeaturesDirectory")
+    }
+}
+
 develocity {
     val ci = buildParameters.ci
     val gitHash = providers.environmentVariable("CI_COMMIT_SHA")
