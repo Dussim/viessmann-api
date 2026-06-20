@@ -16,10 +16,12 @@ The module uses the following configuration to point to the YAML sources:
 
 ```kotlin
 generateFeatureInterfacesFromYaml {
-    featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
+    featuresYamls = openApiFeaturesDirectory
     packageName = "xyz.dussim.viessmann.api.features.generated"
 }
 ```
+
+The OpenAPI source directory is configured through the `openApiPath` build parameter. It defaults to `.ignored/featuresOpenApi` and can be overridden with `OPEN_API_PATH`.
 
 ## Documentation
 For more information on the generation process, refer to the [Feature Processor Code Generation Guide](../../../docs/feature-processor-guide.md).

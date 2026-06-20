@@ -11,6 +11,12 @@ buildParameters {
         description = "True if the build is running in CI environment"
     }
 
+    string("openApiPath") {
+        fromEnvironment("OPEN_API_PATH")
+        defaultValue = ".ignored/featuresOpenApi"
+        description = "Path to the OpenAPI sources directory."
+    }
+
     group("cache") {
         string("url") {
             fromEnvironment("BUILD_CACHE_URL")

@@ -1,11 +1,27 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+import java.io.File
 import java.time.LocalDate
 
 plugins {
+    alias(conventions.plugins.xyz.dussim.build.parameters)
     alias(conventions.plugins.xyz.dussim.kotlin.common)
     alias(conventions.plugins.xyz.dussim.generate.features.yaml)
 }
+
+val openApiFeaturesDirectory =
+    layout.dir(
+        providers.provider {
+            val path = File(buildParameters.openApiPath)
+            val openApiDirectory =
+                if (path.isAbsolute) {
+                    path
+                } else {
+                    layout.settingsDirectory.asFile.resolve(path.path)
+                }
+            openApiDirectory.resolve("features")
+        },
+    )
 
 kotlin {
     jvm {
@@ -21,7 +37,7 @@ kotlin {
 }
 
 generateFeatureInterfacesFromYaml {
-    featuresYamls = layout.settingsDirectory.dir(".ignored/featuresOpenApi/features")
+    featuresYamls = openApiFeaturesDirectory
     generatedSources = layout.buildDirectory.dir("generated/features")
     sourceSets = listOf("jvmMain", "jsMain")
     packageName = "xyz.dussim.viessmann.api.features.generated"

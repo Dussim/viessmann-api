@@ -4,7 +4,7 @@ This module is the primary source of truth for the generated feature interfaces 
 
 #### Core Logic
 - **`YamlFeatureInterfaceGenerator`**: Gradle plugin located in `gradle/build-logic`. It parses YAML files and uses KotlinPoet to generate feature interfaces annotated with `@GenerateFeatureImplementation`.
-- **YAML Location**: Sources are expected in `.ignored/featuresOpenApi/features/` (relative to settings directory).
+- **YAML Location**: Sources are expected in `${openApiPath}/features`, where `openApiPath` defaults to `.ignored/featuresOpenApi` and can be overridden with `OPEN_API_PATH`.
 
 #### Technical Details
 - **Output Path**: Generated Kotlin source code is placed in `build/generated/features` and attached to `jvmMain` and `jsMain`.
