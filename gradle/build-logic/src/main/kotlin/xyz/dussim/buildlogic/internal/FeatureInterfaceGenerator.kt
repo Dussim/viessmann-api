@@ -37,6 +37,15 @@ internal data class FieldMetadata(
     val nullable: Boolean = false,
 )
 
+class UnsupportedPropertyTypeException(
+    val featureName: String,
+    val propertyName: String,
+    val type: String,
+    val reason: String,
+) : IllegalArgumentException(
+        "Unsupported property type in feature '$featureName', property '$propertyName': type='$type'. $reason",
+    )
+
 class FeatureInterfaceGenerator(
     private val packageName: String,
     private val logger: Logger,

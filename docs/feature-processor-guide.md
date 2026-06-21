@@ -297,4 +297,4 @@ Generated implementations handle:
 - Processor logic: `api/feature/processor/src/main/kotlin/.../CommonTypes.kt`
 - Abstract base classes: `api/feature/common/src/commonMain/kotlin/.../AbstractFeatures.kt`
 - Command interfaces: `api/feature/common/src/commonMain/kotlin/.../CommandN.kt`
-- YAML Interface Generator: `gradle/build-logic/src/main/kotlin/.../YamlFeatureInterfaceGenerator.kt`
+- Feature interface generator: `gradle/build-logic/src/main/kotlin/.../FeatureInterfaceGenerator.kt`
