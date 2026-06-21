@@ -98,7 +98,7 @@ class YamlFeatureJsonGenerator(
         responseSchema: Schema<*>,
         baseDir: File,
     ): JsonObject {
-        val resolved = resolveSchemaComposition(responseSchema, featureName)
+        val resolved = OpenApiSchemaResolver.resolve(responseSchema)
         return schemaToJson(resolved, featureName, api, baseDir) as? JsonObject ?: buildDefaultFeatureJson(featureName)
     }
 
@@ -243,7 +243,7 @@ class YamlFeatureJsonGenerator(
         val entries = mutableMapOf<String, JsonElement>()
 
         for ((name, propSchema) in props) {
-            val resolved = resolveSchemaComposition(propSchema, featureName)
+            val resolved = OpenApiSchemaResolver.resolve(propSchema)
             entries[name] = schemaToJson(resolved, featureName, api, baseDir)
         }
 
@@ -257,7 +257,7 @@ class YamlFeatureJsonGenerator(
         baseDir: File,
     ): JsonArray {
         val items = schema.items ?: return JsonArray(emptyList())
-        val resolved = resolveSchemaComposition(items, featureName)
+        val resolved = OpenApiSchemaResolver.resolve(items)
         val element = schemaToJson(resolved, featureName, api, baseDir)
         return JsonArray(listOf(element))
     }
@@ -510,227 +510,6 @@ class YamlFeatureJsonGenerator(
     }
 
     private fun Map<*, *>.containsAnyKey(keys: Set<String>): Boolean = keys.any { containsKey(it) }
-
-    // region Schema composition resolution (reused logic from YamlFeatureInterfaceGenerator)
-
-    private fun resolveSchemaComposition(
-        schema: Schema<*>,
-        featureName: String,
-    ): Schema<*> {
-        val compositionParts = schema.allOf ?: schema.oneOf ?: schema.anyOf
-        if (compositionParts != null) {
-            return compositionParts
-                .map { resolveSchemaComposition(it, featureName) }
-                .fold(Schema<Any>()) { acc, next -> deepMergeSchemas(acc, next, featureName) }
-        }
-
-        val result = Schema<Any>()
-        var hasContent = false
-
-        schema.type?.let {
-            result.type = it
-            hasContent = true
-        }
-        schema.const?.let {
-            result.const = it
-            hasContent = true
-        }
-        schema.example?.let {
-            result.example = it
-            hasContent = true
-        }
-        schema.nullable?.let {
-            result.nullable = it
-            hasContent = true
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        (schema.enum as? MutableList<Any>)?.let {
-            result.enum = it.toMutableList()
-            hasContent = true
-        }
-
-        schema.properties?.let { props ->
-            val mergedProps = mutableMapOf<String, Schema<*>>()
-            for ((name, prop) in props) {
-                val resolved = resolveSchemaComposition(prop, featureName)
-                val existing = mergedProps[name]
-                mergedProps[name] = if (existing != null) deepMergeSchemas(existing, resolved, featureName) else resolved
-            }
-            result.properties = mergedProps
-            if (result.type == null) result.type = "object"
-            hasContent = true
-        }
-
-        schema.required?.let {
-            result.required = it
-            hasContent = true
-        }
-
-        schema.items?.let { items ->
-            result.items = resolveSchemaComposition(items, featureName)
-            if (result.type == null) result.type = "array"
-            hasContent = true
-        }
-
-        val addl = schema.additionalProperties
-        if (addl is Schema<*>) {
-            @Suppress("UNCHECKED_CAST")
-            result.additionalProperties = resolveSchemaComposition(addl, featureName) as Schema<Any>
-            if (result.type == null) result.type = "object"
-            hasContent = true
-        } else if (addl != null) {
-            result.additionalProperties = addl
-            hasContent = true
-        }
-
-        return if (hasContent) result else schema
-    }
-
-    private fun deepMergeSchemas(
-        a: Schema<*>,
-        b: Schema<*>,
-        featureName: String,
-    ): Schema<Any> {
-        val left = resolveSchemaComposition(a, featureName)
-        val right = resolveSchemaComposition(b, featureName)
-        val merged = Schema<Any>()
-
-        merged.type = mergeTypes(left.type, right.type)
-        mergeNullable(left.nullable, right.nullable)?.let { merged.nullable = it }
-        mergeProperties(left, right, featureName)?.let { merged.properties = it }
-        mergeEnums(left, right)?.let { merged.enum = it }
-        merged.example = mergeExample(left.example, right.example)
-        mergeConst(left.const, right.const)?.let { merged.const = it }
-        mergeItems(left.items, right.items, featureName)?.let { merged.items = it }
-        mergeRequired(left.required, right.required)?.let { merged.required = it }
-        mergeAdditionalProperties(left.additionalProperties, right.additionalProperties, featureName)?.let {
-            merged.additionalProperties = it
-        }
-
-        if (merged.type == null) {
-            when {
-                merged.properties != null -> merged.type = "object"
-                merged.items != null -> merged.type = "array"
-                merged.additionalProperties is Schema<*> -> merged.type = "object"
-            }
-        }
-
-        return merged
-    }
-
-    private fun mergeTypes(
-        leftType: String?,
-        rightType: String?,
-    ): String? =
-        when {
-            leftType == "object" || rightType == "object" -> "object"
-            leftType != null -> leftType
-            else -> rightType
-        }
-
-    private fun mergeNullable(
-        leftNullable: Boolean?,
-        rightNullable: Boolean?,
-    ): Boolean? =
-        when {
-            leftNullable == null && rightNullable == null -> null
-            else -> leftNullable == true || rightNullable == true
-        }
-
-    private fun mergeProperties(
-        left: Schema<*>,
-        right: Schema<*>,
-        featureName: String,
-    ): MutableMap<String, Schema<*>>? {
-        val leftProps = left.properties ?: emptyMap()
-        val rightProps = right.properties ?: emptyMap()
-        if (leftProps.isEmpty() && rightProps.isEmpty()) return null
-
-        val merged = LinkedHashMap<String, Schema<*>>(leftProps)
-        for ((key, value) in rightProps) {
-            val existing = merged[key]
-            merged[key] = if (existing != null) deepMergeSchemas(existing, value, featureName) else value
-        }
-        return merged
-    }
-
-    private fun mergeEnums(
-        left: Schema<*>,
-        right: Schema<*>,
-    ): MutableList<Any>? {
-        val lEnum = left.enum
-        val rEnum = right.enum
-        if (lEnum == null && rEnum == null) return null
-
-        val union =
-            buildList {
-                if (lEnum != null) addAll(lEnum)
-                if (rEnum != null) addAll(rEnum)
-            }.distinct()
-
-        return if (union.isNotEmpty()) union.toMutableList() else null
-    }
-
-    private fun mergeExample(
-        left: Any?,
-        right: Any?,
-    ): Any? =
-        when {
-            left != null && right != null && left == right -> left
-            left != null -> left
-            else -> right
-        }
-
-    private fun mergeConst(
-        left: Any?,
-        right: Any?,
-    ): Any? =
-        when {
-            left != null && right != null -> if (left == right) left else null
-            left != null -> left
-            right != null -> right
-            else -> null
-        }
-
-    private fun mergeItems(
-        left: Schema<*>?,
-        right: Schema<*>?,
-        featureName: String,
-    ): Schema<*>? =
-        when {
-            left != null && right != null -> deepMergeSchemas(left, right, featureName)
-            left != null -> left
-            right != null -> right
-            else -> null
-        }
-
-    private fun mergeRequired(
-        left: List<String>?,
-        right: List<String>?,
-    ): List<String>? =
-        when {
-            left != null && right != null -> left.intersect(right.toSet()).toList()
-            left != null -> left
-            right != null -> right
-            else -> null
-        }
-
-    private fun mergeAdditionalProperties(
-        left: Any?,
-        right: Any?,
-        featureName: String,
-    ): Any? =
-        when {
-            left is Schema<*> && right is Schema<*> -> deepMergeSchemas(left, right, featureName)
-            left is Schema<*> -> left
-            right is Schema<*> -> right
-            left != null -> left
-            right != null -> right
-            else -> null
-        }
-
-    // endregion
 
     private fun jacksonNodeToKotlin(node: com.fasterxml.jackson.databind.JsonNode): Any? =
         when {

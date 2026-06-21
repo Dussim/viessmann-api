@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -20,6 +21,10 @@ dependencies {
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.swagger.parser)
+
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.framework.engine)
+    testImplementation(libs.kotest.runner.junit5)
 }
 
 gradlePlugin {
@@ -71,6 +76,10 @@ kotlin {
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 kotlinter {
