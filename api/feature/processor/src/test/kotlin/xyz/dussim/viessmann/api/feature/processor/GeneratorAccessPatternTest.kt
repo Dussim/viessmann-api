@@ -212,6 +212,31 @@ class GeneratorAccessPatternTest :
                 ),
             ) shouldBe true
         }
+
+        test("feature signature implementation name is stable") {
+            val signature =
+                FeatureSignature(
+                    baseFeature = BaseFeature.Feature,
+                    properties =
+                        listOf(
+                            "active" to typeNameOf<DoubleValue>(),
+                            "mode" to typeNameOf<ListStringValue?>(),
+                        ),
+                    commands =
+                        listOf(
+                            Triple(
+                                "setValue",
+                                CommandSignature(
+                                    name = "SetValue",
+                                    parameters = listOf("value" to typeNameOf<NumberConstraints>()),
+                                ),
+                                false,
+                            ),
+                        ),
+                )
+
+            signature.implName shouldBe "FeatFeatureActiveDoubleValueModeListStriGOB341Impl"
+        }
     })
 
 private fun buildPropertyInitCode(property: ParameterProperty): String {

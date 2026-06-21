@@ -14,6 +14,8 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
+import java.security.MessageDigest
+import java.util.Locale
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
@@ -475,12 +477,40 @@ data class FeatureSignature(
                         if (isNullable) "Opt" else ""
                 }
             val rawName = "Feat${basePart}${propsPart}$cmdsPart"
-            val hash =
-                this
-                    .hashCode()
-                    .toUInt()
-                    .toString(36)
-                    .uppercase()
-            return "${rawName.take(40)}${hash}Impl"
+            return "${rawName.take(40)}${stableHashSuffix()}Impl"
+        }
+
+    private fun stableHashSuffix(): String {
+        val signature =
+            buildString {
+                append("base=")
+                append(baseFeature.name)
+                append(";properties=")
+                properties.joinTo(this, separator = ",") { (name, type) ->
+                    "$name:${type.stableSignatureName()}"
+                }
+                append(";commands=")
+                commands.joinTo(this, separator = ",") { (name, signature, isNullable) ->
+                    "$name:${signature.stableSignatureName()}:nullable=$isNullable"
+                }
+            }
+        val digest = MessageDigest.getInstance("SHA-256").digest(signature.encodeToByteArray())
+        val value =
+            digest
+                .take(4)
+                .fold(0U) { acc, byte -> (acc shl 8) or byte.toUByte().toUInt() }
+        return value.toString(36).uppercase(Locale.ROOT)
+    }
+
+    private fun TypeName.stableSignatureName(): String = toString()
+
+    private fun CommandSignature.stableSignatureName(): String =
+        buildString {
+            append(name)
+            append("(")
+            parameters.joinTo(this, separator = ",") { (name, type) ->
+                "$name:${type.stableSignatureName()}"
+            }
+            append(")")
         }
 }
