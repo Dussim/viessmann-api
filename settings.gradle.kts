@@ -48,6 +48,7 @@ include(
     ":client:features",
     ":client:users",
     ":client:facade",
+    ":client:test-support",
     ":api:feature:annotations",
     ":api:feature:processor",
     ":api:feature:common",
@@ -68,6 +69,7 @@ project(":client:equipment").name = "client-equipment"
 project(":client:features").name = "client-features"
 project(":client:users").name = "client-users"
 project(":client:facade").name = "client-facade"
+project(":client:test-support").name = "client-test-support"
 project(":api:feature:annotations").name = "api-feature-annotations"
 project(":api:feature:processor").name = "api-feature-processor"
 project(":api:feature:common").name = "api-feature-common"

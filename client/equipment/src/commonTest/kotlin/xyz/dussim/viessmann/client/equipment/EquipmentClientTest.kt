@@ -3,20 +3,16 @@ package xyz.dussim.viessmann.client.equipment
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
 import xyz.dussim.viessmann.client.core.ViessmannApiException
-import xyz.dussim.viessmann.client.core.ViessmannClientConfig
-import xyz.dussim.viessmann.client.core.installViessmannClient
+import xyz.dussim.viessmann.client.testing.jsonHeaders
+import xyz.dussim.viessmann.client.testing.testViessmannClientConfig
+import xyz.dussim.viessmann.client.testing.testViessmannHttpClient
 
 class EquipmentClientTest :
     FunSpec({
@@ -111,17 +107,6 @@ class EquipmentClientTest :
     })
 
 private fun equipmentClient(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): EquipmentClient {
-    val config =
-        ViessmannClientConfig(
-            apiBaseUrl = "https://example.com",
-            accessTokenProvider = { "token-123" },
-        )
-    val httpClient =
-        HttpClient(MockEngine(handler)) {
-            installViessmannClient(config)
-        }
-
-    return DefaultEquipmentClient(httpClient, config)
+    val config = testViessmannClientConfig()
+    return DefaultEquipmentClient(testViessmannHttpClient(config, handler), config)
 }
-
-private fun jsonHeaders() = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())

@@ -2,18 +2,17 @@ package xyz.dussim.viessmann.client.features
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.setBody
-import io.ktor.http.HttpMethod
 import io.ktor.http.ParametersBuilder
 import kotlinx.serialization.json.JsonObject
 import xyz.dussim.viessmann.api.features.CommandExecutionResponse
 import xyz.dussim.viessmann.api.features.FeatureFilterRequest
 import xyz.dussim.viessmann.api.features.GatewayFeatureFilterRequest
 import xyz.dussim.viessmann.client.core.ViessmannClientConfig
-import xyz.dussim.viessmann.client.core.ViessmannService
 import xyz.dussim.viessmann.client.core.appendAllIfNotEmpty
 import xyz.dussim.viessmann.client.core.appendIfNotNull
-import xyz.dussim.viessmann.client.core.viessmannRequest
-import xyz.dussim.viessmann.client.core.viessmannRequestData
+import xyz.dussim.viessmann.client.core.viessmannApiGetData
+import xyz.dussim.viessmann.client.core.viessmannApiPost
+import xyz.dussim.viessmann.client.core.viessmannApiPostData
 import xyz.dussim.viessmann.feature.api.ViessmannFeature
 
 data class FeatureQuery(
@@ -112,10 +111,8 @@ class DefaultFeaturesClient(
         installationId: String,
         query: FeatureQuery,
     ): List<ViessmannFeature> =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/features/installations/$installationId/features",
         ) {
             url.parameters.applyFeatureQuery(query)
@@ -125,10 +122,8 @@ class DefaultFeaturesClient(
         installationId: String,
         featureName: String,
     ): ViessmannFeature =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/features/installations/$installationId/features/$featureName",
         )
 
@@ -136,10 +131,8 @@ class DefaultFeaturesClient(
         installationId: String,
         request: FeatureFilterRequest,
     ): List<ViessmannFeature> =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiPostData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path = "/iot/v2/features/installations/$installationId/features/filter",
         ) {
             setBody(request)
@@ -150,10 +143,8 @@ class DefaultFeaturesClient(
         gatewaySerial: String,
         query: GatewayFeatureQuery,
     ): List<ViessmannFeature> =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/features",
         ) {
             url.parameters.applyGatewayFeatureQuery(query)
@@ -164,10 +155,8 @@ class DefaultFeaturesClient(
         gatewaySerial: String,
         featureName: String,
     ): ViessmannFeature =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/features/$featureName",
         )
 
@@ -176,10 +165,8 @@ class DefaultFeaturesClient(
         gatewaySerial: String,
         request: GatewayFeatureFilterRequest,
     ): List<ViessmannFeature> =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiPostData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path = "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/features/filter",
         ) {
             setBody(request)
@@ -192,10 +179,8 @@ class DefaultFeaturesClient(
         commandName: String,
         body: JsonObject,
     ): CommandExecutionResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiPost(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path = "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/features/$featureName/commands/$commandName",
         ) {
             setBody(body)
@@ -207,10 +192,8 @@ class DefaultFeaturesClient(
         deviceId: String,
         query: FeatureQuery,
     ): List<ViessmannFeature> =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/devices/$deviceId/features",
         ) {
             url.parameters.applyFeatureQuery(query)
@@ -222,10 +205,8 @@ class DefaultFeaturesClient(
         deviceId: String,
         featureName: String,
     ): ViessmannFeature =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/devices/$deviceId/features/$featureName",
         )
 
@@ -235,10 +216,8 @@ class DefaultFeaturesClient(
         deviceId: String,
         request: FeatureFilterRequest,
     ): List<ViessmannFeature> =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiPostData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path = "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/devices/$deviceId/features/filter",
         ) {
             setBody(request)
@@ -252,10 +231,8 @@ class DefaultFeaturesClient(
         commandName: String,
         body: JsonObject,
     ): CommandExecutionResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiPost(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path =
                 "/iot/v2/features/installations/$installationId/gateways/$gatewaySerial/devices/$deviceId/" +
                     "features/$featureName/commands/$commandName",
@@ -266,15 +243,19 @@ class DefaultFeaturesClient(
 
 private fun ParametersBuilder.applyFeatureQuery(query: FeatureQuery) {
     appendAllIfNotEmpty("filter", query.filter)
-    appendIfNotNull("regex", query.regex)
-    appendIfNotNull("skipDisabled", query.skipDisabled)
-    appendIfNotNull("skipNotReady", query.skipNotReady)
+    appendIfNotNull(
+        "regex" to query.regex,
+        "skipDisabled" to query.skipDisabled,
+        "skipNotReady" to query.skipNotReady,
+    )
 }
 
 private fun ParametersBuilder.applyGatewayFeatureQuery(query: GatewayFeatureQuery) {
     appendAllIfNotEmpty("filter", query.filter)
-    appendIfNotNull("regex", query.regex)
-    appendIfNotNull("skipDisabled", query.skipDisabled)
-    appendIfNotNull("skipNotReady", query.skipNotReady)
-    appendIfNotNull("includeDevicesFeatures", query.includeDevicesFeatures)
+    appendIfNotNull(
+        "regex" to query.regex,
+        "skipDisabled" to query.skipDisabled,
+        "skipNotReady" to query.skipNotReady,
+        "includeDevicesFeatures" to query.includeDevicesFeatures,
+    )
 }

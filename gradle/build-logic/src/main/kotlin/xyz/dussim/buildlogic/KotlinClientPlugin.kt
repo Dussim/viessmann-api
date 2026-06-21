@@ -2,6 +2,8 @@ package xyz.dussim.buildlogic
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class KotlinClientPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -16,8 +18,21 @@ class KotlinClientPlugin : Plugin<Project> {
             configurePublishing()
 
             configureKotlinMultiplatformLibrary()
+            configureClientTestSupportDependency()
 
             configureCommon()
+        }
+    }
+
+    private fun Project.configureClientTestSupportDependency() {
+        if (name == "client-core" || name == "client-test-support") return
+
+        extensions.configure<KotlinMultiplatformExtension> {
+            sourceSets.getByName("commonTest") {
+                dependencies {
+                    implementation(project(":client:client-test-support"))
+                }
+            }
         }
     }
 }

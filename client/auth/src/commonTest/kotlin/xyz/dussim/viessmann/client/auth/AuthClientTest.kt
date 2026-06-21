@@ -3,19 +3,17 @@ package xyz.dussim.viessmann.client.auth
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
-import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import xyz.dussim.viessmann.client.core.ViessmannApiException
-import xyz.dussim.viessmann.client.core.ViessmannClientConfig
-import xyz.dussim.viessmann.client.core.installViessmannClient
+import xyz.dussim.viessmann.client.testing.jsonHeaders
+import xyz.dussim.viessmann.client.testing.testViessmannClientConfig
+import xyz.dussim.viessmann.client.testing.testViessmannHttpClient
 
 class AuthClientTest :
     FunSpec({
@@ -107,17 +105,6 @@ class AuthClientTest :
     })
 
 private fun authClient(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): AuthClient {
-    val config =
-        ViessmannClientConfig(
-            apiBaseUrl = "https://example.com",
-            accessTokenProvider = { "token-123" },
-        )
-    val httpClient =
-        HttpClient(MockEngine(handler)) {
-            installViessmannClient(config)
-        }
-
-    return DefaultAuthClient(httpClient, config)
+    val config = testViessmannClientConfig()
+    return DefaultAuthClient(testViessmannHttpClient(config, handler), config)
 }
-
-private fun jsonHeaders() = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())

@@ -11,9 +11,21 @@ fun ParametersBuilder.appendIfNotNull(
     }
 }
 
+fun ParametersBuilder.appendIfNotNull(vararg parameters: Pair<String, Any?>) {
+    parameters.forEach { (name, value) ->
+        appendIfNotNull(name, value)
+    }
+}
+
 fun ParametersBuilder.appendAllIfNotEmpty(
     name: String,
     values: Iterable<String>?,
 ) {
     values?.forEach { append(name, it) }
+}
+
+fun ParametersBuilder.appendAllIfNotEmpty(vararg parameters: Pair<String, Iterable<String>?>) {
+    parameters.forEach { (name, values) ->
+        appendAllIfNotEmpty(name, values)
+    }
 }

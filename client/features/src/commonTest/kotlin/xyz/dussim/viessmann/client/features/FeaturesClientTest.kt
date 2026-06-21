@@ -3,24 +3,20 @@ package xyz.dussim.viessmann.client.features
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import xyz.dussim.viessmann.api.features.FeatureFilterRequest
 import xyz.dussim.viessmann.api.features.GatewayFeatureFilterRequest
 import xyz.dussim.viessmann.client.core.ViessmannApiException
-import xyz.dussim.viessmann.client.core.ViessmannClientConfig
-import xyz.dussim.viessmann.client.core.installViessmannClient
+import xyz.dussim.viessmann.client.testing.jsonHeaders
+import xyz.dussim.viessmann.client.testing.testViessmannClientConfig
+import xyz.dussim.viessmann.client.testing.testViessmannHttpClient
 
 class FeaturesClientTest :
     FunSpec({
@@ -124,17 +120,8 @@ class FeaturesClientTest :
     })
 
 private fun featuresClient(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FeaturesClient {
-    val config =
-        ViessmannClientConfig(
-            apiBaseUrl = "https://example.com",
-            accessTokenProvider = { "token-123" },
-        )
-    val httpClient =
-        HttpClient(MockEngine(handler)) {
-            installViessmannClient(config)
-        }
-
-    return DefaultFeaturesClient(httpClient, config)
+    val config = testViessmannClientConfig()
+    return DefaultFeaturesClient(testViessmannHttpClient(config, handler), config)
 }
 
 private fun featureListResponse() =
@@ -154,5 +141,3 @@ private fun featureListResponse() =
       ]
     }
     """.trimIndent()
-
-private fun jsonHeaders() = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
