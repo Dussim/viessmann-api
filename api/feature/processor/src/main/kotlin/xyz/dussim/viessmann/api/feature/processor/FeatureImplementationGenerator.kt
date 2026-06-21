@@ -76,6 +76,10 @@ fun initBlock(
         .builder()
         .apply {
             beginControlFlow("try")
+            addDelegateAccessLocals(
+                hasProperties = context.parameterProperties.isNotEmpty(),
+                hasCommands = context.commandProperties.isNotEmpty(),
+            )
             context.parameterProperties.forEach { property ->
                 addPropertyInitialization(property)
             }
@@ -86,6 +90,18 @@ fun initBlock(
             addValidationException(context, implName)
             endControlFlow()
         }.build()
+}
+
+internal fun CodeBlock.Builder.addDelegateAccessLocals(
+    hasProperties: Boolean,
+    hasCommands: Boolean,
+) {
+    if (hasProperties) {
+        addStatement("val properties = properties")
+    }
+    if (hasCommands) {
+        addStatement("val commands = `commands`")
+    }
 }
 
 /**
@@ -202,14 +218,14 @@ internal fun CodeBlock.Builder.addCommandInitialization(property: CommandPropert
     val propertyHash = propertyHash(name.hashCode(), name.length)
     if (property.isNullable) {
         add(
-            "%N = delegate.commands[%S, %L]?.let { %T(it) }\n",
+            "%N = commands[%S, %L]?.let { %T(it) }\n",
             name,
             name,
             propertyHash,
             property.implType.copy(nullable = false),
         )
     } else {
-        add("%N = %T(delegate.commands.%M(%S, %L))\n", name, property.implType, REQUIRE_COMMAND, name, propertyHash)
+        add("%N = %T(commands.%M(%S, %L))\n", name, property.implType, REQUIRE_COMMAND, name, propertyHash)
     }
 }
 

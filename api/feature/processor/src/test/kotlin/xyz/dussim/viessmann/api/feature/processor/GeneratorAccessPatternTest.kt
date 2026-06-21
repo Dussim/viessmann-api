@@ -96,7 +96,19 @@ class GeneratorAccessPatternTest :
                 )
 
             code shouldContain """requireCommand("setValue""""
-            code shouldContain "SetValueImpl(delegate.commands."
+            code shouldContain "SetValueImpl(commands."
+            code shouldNotContain "delegate.commands"
+            code shouldNotContain "!!"
+        }
+
+        test("feature generator emits cached feature access locals when needed") {
+            buildDelegateAccessLocalsCode(hasProperties = true, hasCommands = false) shouldContain "val properties = properties"
+            buildDelegateAccessLocalsCode(hasProperties = false, hasCommands = true) shouldContain "val commands = `commands`"
+
+            val code = buildDelegateAccessLocalsCode(hasProperties = true, hasCommands = true)
+
+            code shouldContain "val properties = properties"
+            code shouldContain "val commands = `commands`"
             code shouldNotContain "!!"
         }
 
@@ -211,5 +223,14 @@ private fun buildPropertyInitCode(property: ParameterProperty): String {
 private fun buildCommandInitCode(property: CommandProperty): String {
     val builder = CodeBlock.builder()
     builder.addCommandInitialization(property)
+    return builder.build().toString()
+}
+
+private fun buildDelegateAccessLocalsCode(
+    hasProperties: Boolean,
+    hasCommands: Boolean,
+): String {
+    val builder = CodeBlock.builder()
+    builder.addDelegateAccessLocals(hasProperties, hasCommands)
     return builder.build().toString()
 }
