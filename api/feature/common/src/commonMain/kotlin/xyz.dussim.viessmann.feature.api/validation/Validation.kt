@@ -2956,37 +2956,6 @@ value class ValidationResult<out T>
     }
 
 fun interface ValidationRule<T, E> {
-    companion object {
-        @Suppress("UNCHECKED_CAST")
-        fun <T, E> and(
-            rule: ValidationRule<T, E>,
-            vararg rules: ValidationRule<T, E>,
-        ): ValidationRule<T, E> =
-            ValidationRule { value ->
-                rules.fold(rule(value)) { acc, currentRule ->
-                    ValidationResult.of(acc, currentRule(value))
-                }
-            }
-
-        @Suppress("UNCHECKED_CAST")
-        fun <T, E> or(
-            rule: ValidationRule<T, E>,
-            vararg rules: ValidationRule<T, E>,
-        ): ValidationRule<T, E> =
-            ValidationRule { value ->
-                rules.fold(rule(value)) { acc, currentRule ->
-                    if (!acc.isInvalid) {
-                        return@ValidationRule acc
-                    }
-                    val next = currentRule(value)
-                    if (!next.isInvalid) {
-                        return@ValidationRule next
-                    }
-                    ValidationResult.of(acc, next)
-                }
-            }
-    }
-
     fun validate(value: T): ValidationResult<E>
 }
 

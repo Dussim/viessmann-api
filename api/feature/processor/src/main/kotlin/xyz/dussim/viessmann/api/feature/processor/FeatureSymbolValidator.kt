@@ -39,8 +39,10 @@ import xyz.dussim.viessmann.feature.api.Command8
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureEnumFactory
 import xyz.dussim.viessmann.feature.api.validation.Valid
+import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.Invalid
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
+import xyz.dussim.viessmann.feature.api.validation.invoke
 import xyz.dussim.viessmann.feature.api.validation.onError
 import xyz.dussim.viessmann.feature.api.validation.transform
 import xyz.dussim.viessmann.feature.api.validation.validateAll
@@ -68,18 +70,35 @@ internal class FeatureSymbolValidator(
     ): SymbolRule {
         val featureDeclarations = FEATURE_SUBTYPES.map { resolver.declaration(it) }
         val propertyValidation =
-            ValidationRule.or(
-                isPropertyTypeOf(resolver.supportedPropertyValueDeclarations()),
-                isPropertyDirectSubtypeOf(PROPERTY_COMMAND_TYPES.map { resolver.declaration(it) }),
-                featureEnumValidation(resolver.declaration(FeatureEnumFactory::class), enumValueRegistry),
-            )
+            ValidationRule<KSPropertyDeclaration, SymbolErrorMetadata> { value ->
+                listOf(
+                    isPropertyDirectSubtypeOf(PROPERTY_COMMAND_TYPES.map { resolver.declaration(it) }),
+                    featureEnumValidation(resolver.declaration(FeatureEnumFactory::class), enumValueRegistry),
+                ).fold(
+                    isPropertyTypeOf(resolver.supportedPropertyValueDeclarations())(value),
+                ) { acc, currentRule ->
+                    if (!acc.isInvalid) {
+                        return@ValidationRule acc
+                    }
+                    val next = currentRule(value)
+                    if (!next.isInvalid) {
+                        return@ValidationRule next
+                    }
+                    ValidationResult.of(acc, next)
+                }
+            }
 
-        return ValidationRule.and(
-            IS_INTERFACE_RULE,
-            HAS_PUBLIC_COMPANION_OBJECT_RULE,
-            isDirectSubtypeOf(featureDeclarations),
-            { symbol -> propertyValidation.validateAll(symbol.getDeclaredProperties()) },
-        )
+        return ValidationRule { value ->
+            listOf(
+                HAS_PUBLIC_COMPANION_OBJECT_RULE,
+                isDirectSubtypeOf(featureDeclarations),
+                ValidationRule { symbol: KSClassDeclaration -> propertyValidation.validateAll(symbol.getDeclaredProperties()) },
+            ).fold(
+                IS_INTERFACE_RULE(value),
+            ) { acc, currentRule ->
+                ValidationResult.of(acc, currentRule(value))
+            }
+        }
     }
 
     private fun Resolver.supportedPropertyValueDeclarations(): List<KSClassDeclaration> =
