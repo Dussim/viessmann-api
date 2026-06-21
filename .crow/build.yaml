@@ -1,4 +1,16 @@
 {
+  "clone": [
+    {
+      "name": "clone",
+      "image": "codefloe.com/crow-plugins/clone",
+      "settings": {
+        "partial": true,
+        "depth": 1,
+        "lfs": false,
+        "recursive": false
+      }
+    }
+  ],
   "steps": [
     {
       "name": "jvmTest",
