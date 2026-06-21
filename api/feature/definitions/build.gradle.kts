@@ -1,3 +1,4 @@
+import xyz.dussim.buildlogic.GenerateFeatureJsonsFromYamlTask
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import java.io.File
@@ -6,7 +7,8 @@ import java.time.LocalDate
 plugins {
     alias(conventions.plugins.xyz.dussim.build.parameters)
     alias(conventions.plugins.xyz.dussim.kotlin.common)
-    alias(conventions.plugins.xyz.dussim.generate.features.yaml)
+    alias(conventions.plugins.xyz.dussim.generate.features)
+    alias(conventions.plugins.xyz.dussim.generate.features.json)
 }
 
 val openApiFeaturesDirectory =
@@ -36,28 +38,35 @@ kotlin {
     }
 }
 
-generateFeatureInterfacesFromYaml {
+val generateFeatureJsonsFromYamlTask = tasks.named<GenerateFeatureJsonsFromYamlTask>("generateFeatureJsonsFromYaml")
+
+generateFeatureJsonsFromYaml {
     featuresYamls = openApiFeaturesDirectory
-    generatedSources = layout.buildDirectory.dir("generated/features")
-    sourceSets = listOf("jvmMain", "jsMain")
-    packageName = "xyz.dussim.viessmann.api.features.generated"
+    generatedJsons = layout.buildDirectory.dir("generated/feature-jsons")
 
     currentDate = LocalDate.of(2000, 1, 1)
 }
 
+generateFeatureInterfaces {
+    featuresJsons = generateFeatureJsonsFromYamlTask.flatMap { it.generatedJsons }
+    generatedSources = layout.buildDirectory.dir("generated/features")
+    sourceSets = listOf("jvmMain", "jsMain")
+    packageName = "xyz.dussim.viessmann.api.features.generated"
+}
+
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
-    dependsOn("generateFeatureInterfacesFromYaml")
+    dependsOn("generateFeatureInterfaces")
 }
 
 tasks.matching { it.name in setOf("sourcesJar", "jvmSourcesJar", "jsSourcesJar") }.configureEach {
-    dependsOn("generateFeatureInterfacesFromYaml")
+    dependsOn("generateFeatureInterfaces")
 }
 
 dokka {
     dokkaSourceSets.jvmMain {
-        sourceRoots.from(tasks.generateFeatureInterfacesFromYaml.map { it.outputs })
+        sourceRoots.from(tasks.generateFeatureInterfaces.map { it.outputs })
     }
     dokkaSourceSets.jsMain {
-        sourceRoots.from(tasks.generateFeatureInterfacesFromYaml.map { it.outputs })
+        sourceRoots.from(tasks.generateFeatureInterfaces.map { it.outputs })
     }
 }

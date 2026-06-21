@@ -1,5 +1,10 @@
 package xyz.dussim.buildlogic.internal
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.parser.OpenAPIV3Parser
@@ -12,6 +17,12 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import org.gradle.api.logging.Logger
 import java.io.File
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 /**
  * Generates valid JSON instances for each feature defined in YAML OpenAPI specs.
@@ -23,7 +34,7 @@ class YamlFeatureJsonGenerator(
     data class GenerationResult(
         val featureName: String,
         val json: JsonObject,
-        val removalDate: java.time.LocalDate? = null,
+        val removalDate: LocalDate? = null,
     )
 
     fun generateJsonForFile(file: File): GenerationResult? =
@@ -43,7 +54,7 @@ class YamlFeatureJsonGenerator(
             null
         }
 
-    private fun extractRemovalDate(api: OpenAPI): java.time.LocalDate? {
+    private fun extractRemovalDate(api: OpenAPI): LocalDate? {
         val pathItem = api.paths.values.firstOrNull { it.get != null } ?: return null
         val getOp = pathItem.get ?: return null
         if (getOp.deprecated != true) return null
@@ -52,8 +63,8 @@ class YamlFeatureJsonGenerator(
         val removalDateString = deprecationInfo?.get("removal-date")?.toString() ?: return null
 
         return try {
-            java.time.LocalDate.parse(removalDateString)
-        } catch (e: java.time.format.DateTimeParseException) {
+            LocalDate.parse(removalDateString)
+        } catch (e: DateTimeParseException) {
             logger.warn("Invalid removal-date format: $removalDateString. Expected YYYY-MM-DD.")
             null
         }
@@ -99,7 +110,8 @@ class YamlFeatureJsonGenerator(
         baseDir: File,
     ): JsonObject {
         val resolved = OpenApiSchemaResolver.resolve(responseSchema)
-        return schemaToJson(resolved, featureName, api, baseDir) as? JsonObject ?: buildDefaultFeatureJson(featureName)
+        val featureJson = schemaToJson(resolved, featureName, api, baseDir) as? JsonObject ?: buildDefaultFeatureJson(featureName)
+        return featureJson.withMetadata(buildFeatureMetadata(api, featureName, resolved))
     }
 
     private fun buildDefaultFeatureJson(featureName: String): JsonObject =
@@ -262,9 +274,262 @@ class YamlFeatureJsonGenerator(
         return JsonArray(listOf(element))
     }
 
+    private fun JsonObject.withMetadata(metadata: JsonObject): JsonObject =
+        JsonObject(
+            toMutableMap().apply {
+                put("_metadata", metadata)
+            },
+        )
+
+    private fun buildFeatureMetadata(
+        api: OpenAPI,
+        featureName: String,
+        responseSchema: Schema<*>,
+    ): JsonObject =
+        JsonObject(
+            mapOf(
+                "properties" to JsonArray(extractPropertyMetadata(responseSchema)),
+                "commands" to JsonArray(extractCommandMetadata(api, featureName, responseSchema)),
+            ),
+        )
+
+    private fun extractPropertyMetadata(responseSchema: Schema<*>): List<JsonObject> =
+        mapResolvedProperties(responseSchema.properties?.get("properties")) { name, schema, required ->
+            buildFeaturePropertyMetadata(name = name, schema = schema, required = required)
+        }
+
+    /**
+     * Resolves [container], iterates its `properties` in sorted order and yields the resolved
+     * property schema plus `required` flag derived from the container's `required` list.
+     */
+    private fun <T : Any> mapResolvedProperties(
+        container: Schema<*>?,
+        transform: (name: String, schema: Schema<*>, required: Boolean) -> T?,
+    ): List<T> {
+        val resolved = OpenApiSchemaResolver.resolve(container ?: return emptyList())
+        val entries = resolved.properties ?: return emptyList()
+        val required = resolved.required?.toSet() ?: emptySet()
+        return entries.entries
+            .sortedBy { it.key }
+            .mapNotNull { (name, schema) ->
+                transform(name, OpenApiSchemaResolver.resolve(schema), name in required)
+            }
+    }
+
+    private fun extractCommandMetadata(
+        api: OpenAPI,
+        featureName: String,
+        responseSchema: Schema<*>,
+    ): List<JsonObject> =
+        mapResolvedProperties(responseSchema.properties?.get("commands")) { name, commandSchema, required ->
+            val commandFields = commandSchema.properties ?: return@mapResolvedProperties null
+            val commandName = commandFields["name"]?.example?.toString() ?: name
+            val requestParameters = extractRequestParameterMetadata(api, featureName, commandName)
+            val responseParameters = extractResponseParameterMetadata(commandFields["params"])
+            val parameters = mergeCommandParameterMetadata(responseParameters, requestParameters)
+
+            JsonObject(
+                mapOf(
+                    "name" to JsonPrimitive(commandName),
+                    "required" to JsonPrimitive(required),
+                    "parameters" to JsonArray(parameters),
+                ),
+            )
+        }
+
+    private fun extractRequestParameterMetadata(
+        api: OpenAPI,
+        featureName: String,
+        commandName: String,
+    ): List<JsonObject> {
+        val commandPathPart = "/features/$featureName/commands/$commandName"
+        val postOp =
+            api.paths
+                ?.entries
+                ?.firstOrNull { (path, _) -> path.endsWith(commandPathPart) }
+                ?.value
+                ?.post
+                ?: return emptyList()
+        val requestSchema =
+            postOp.requestBody
+                ?.content
+                ?.get("application/json")
+                ?.schema
+                ?: return emptyList()
+
+        return mapResolvedProperties(requestSchema) { name, schema, required ->
+            buildSchemaFieldMetadata(name = name, schema = schema, required = required)
+        }
+    }
+
+    private fun extractResponseParameterMetadata(paramsSchema: Schema<*>?): List<JsonObject> =
+        mapResolvedProperties(paramsSchema) { name, paramSchema, requiredFromSet ->
+            val paramFields = paramSchema.properties ?: return@mapResolvedProperties null
+            val type = paramFields["type"]?.example?.toString() ?: schemaType(paramSchema)
+            val required = (paramFields["required"]?.example as? Boolean) ?: requiredFromSet
+            buildFieldMetadata(
+                name = name,
+                type = type,
+                subtype = schemaSubtype(paramFields["value"]),
+                required = required,
+                nullable = paramFields["value"]?.nullable == true,
+            )
+        }
+
+    private fun buildFeaturePropertyMetadata(
+        name: String,
+        schema: Schema<*>,
+        required: Boolean,
+    ): JsonObject {
+        val fields = schema.properties ?: emptyMap()
+        val valueSchema = fields["value"]
+        val type = fields["type"]?.example?.toString() ?: schemaType(valueSchema ?: schema)
+        return buildFieldMetadata(
+            name = name,
+            type = type,
+            subtype = schemaSubtype(valueSchema, name),
+            required = required,
+            nullable = valueSchema?.nullable == true || schema.nullable == true,
+        )
+    }
+
+    private fun buildSchemaFieldMetadata(
+        name: String,
+        schema: Schema<*>,
+        required: Boolean,
+    ): JsonObject =
+        buildFieldMetadata(
+            name = name,
+            type = schemaType(schema),
+            subtype = schemaSubtype(schema),
+            required = required,
+            nullable = schema.nullable == true,
+        )
+
+    private fun buildFieldMetadata(
+        name: String,
+        type: String,
+        subtype: String?,
+        required: Boolean,
+        nullable: Boolean,
+    ): JsonObject =
+        JsonObject(
+            mapOf(
+                "name" to JsonPrimitive(name),
+                "type" to JsonPrimitive(type),
+                "subtype" to (subtype?.let(::JsonPrimitive) ?: JsonNull),
+                "required" to JsonPrimitive(required),
+                "nullable" to JsonPrimitive(nullable),
+            ),
+        )
+
+    private fun schemaType(schema: Schema<*>): String =
+        when {
+            schema.type != null -> schema.type
+            schema.properties != null -> "object"
+            schema.items != null -> "array"
+            else -> "unknown"
+        }
+
+    private fun schemaSubtype(
+        schema: Schema<*>?,
+        propertyName: String? = null,
+    ): String? {
+        val resolved = OpenApiSchemaResolver.resolve(schema ?: return null)
+        return when (schemaType(resolved)) {
+            "array" -> {
+                val items = OpenApiSchemaResolver.resolve(resolved.items ?: return null)
+                if (schemaType(items) == "object") {
+                    arrayObjectSubtype(items.properties, propertyName)
+                } else {
+                    schemaType(items)
+                }
+            }
+
+            "object" -> {
+                objectSubtype(resolved.properties)
+            }
+
+            else -> {
+                null
+            }
+        }
+    }
+
+    private fun arrayObjectSubtype(
+        itemProperties: Map<String, Schema<*>>?,
+        propertyName: String?,
+    ): String? {
+        for (matcher in ARRAY_OBJECT_MATCHERS) {
+            if (itemProperties.containsAll(matcher.requiredKeys) && (matcher.excludedKeys.isEmpty() || !itemProperties.containsAny(matcher.excludedKeys))) {
+                return matcher.subtype
+            }
+        }
+
+        if (itemProperties.containsAll(listOf("value", "unit", "type"))) {
+            return when (itemProperties?.get("type")?.example?.toString()) {
+                "string" -> "string"
+                "number" -> "number"
+                else -> "powerBalanceEntry"
+            }
+        }
+
+        if (propertyName == "actors") {
+            return "roomActor"
+        }
+
+        return "object"
+    }
+
+    private fun objectSubtype(properties: Map<String, Schema<*>>?): String? {
+        for (matcher in OBJECT_MATCHERS) {
+            if (properties.containsAll(matcher.requiredKeys)) {
+                return matcher.subtype
+            }
+        }
+        return null
+    }
+
+    private fun Map<String, Schema<*>>?.containsAll(keys: List<String>): Boolean = this != null && keys.all(::containsKey)
+
+    private fun Map<String, Schema<*>>?.containsAny(keys: List<String>): Boolean = this != null && keys.any(::containsKey)
+
+    private data class ArrayObjectSubtypeMatcher(
+        val requiredKeys: List<String>,
+        val excludedKeys: List<String> = emptyList(),
+        val subtype: String,
+    )
+
+    private data class ObjectSubtypeMatcher(
+        val requiredKeys: List<String>,
+        val subtype: String,
+    )
+
+    private fun mergeCommandParameterMetadata(
+        responseParameters: List<JsonObject>,
+        requestParameters: List<JsonObject>,
+    ): List<JsonObject> {
+        val requestByName = requestParameters.associateBy { it["name"] }
+        val mergedResponseParameters =
+            responseParameters.map { response ->
+                val request = requestByName[response["name"]]
+                if (request != null && response["subtype"] is JsonNull && request["subtype"] !is JsonNull) {
+                    JsonObject(
+                        response.toMutableMap().apply {
+                            put("subtype", request.getValue("subtype"))
+                        },
+                    )
+                } else {
+                    response
+                }
+            }
+        val responseNames = responseParameters.map { it["name"] }.toSet()
+        return mergedResponseParameters + requestParameters.filterNot { it["name"] in responseNames }
+    }
+
     private fun extractRef(example: Any?): String? =
         when (example) {
-            is com.fasterxml.jackson.databind.node.ObjectNode -> {
+            is ObjectNode -> {
                 if (example.has("\$ref")) example.get("\$ref").textValue() else null
             }
 
@@ -317,7 +582,7 @@ class YamlFeatureJsonGenerator(
                 JsonPrimitive(example)
             }
 
-            is java.math.BigDecimal -> {
+            is BigDecimal -> {
                 if (example.stripTrailingZeros().scale() <= 0) {
                     JsonPrimitive(example.longValueExact())
                 } else {
@@ -354,29 +619,31 @@ class YamlFeatureJsonGenerator(
                 JsonObject(entries)
             }
 
-            is com.fasterxml.jackson.databind.node.ArrayNode -> {
-                JsonArray(example.map { exampleToJson(jacksonNodeToKotlin(it), api, baseDir) })
+            is JsonNode -> {
+                // ArrayNode/ObjectNode may contain nested $ref entries; route them back through
+                // exampleToJson via the kotlin-typed projection so $ref resolution still works.
+                when (example) {
+                    is ArrayNode -> {
+                        JsonArray(example.map { exampleToJson(jacksonNodeToKotlin(it), api, baseDir) })
+                    }
+
+                    is ObjectNode -> {
+                        val entries = mutableMapOf<String, JsonElement>()
+                        example.properties().forEach { (k, v) -> entries[k] = exampleToJson(jacksonNodeToKotlin(v), api, baseDir) }
+                        JsonObject(entries)
+                    }
+
+                    else -> {
+                        jacksonNodeToJsonElement(example)
+                    }
+                }
             }
 
-            is com.fasterxml.jackson.databind.node.ObjectNode -> {
-                val entries = mutableMapOf<String, JsonElement>()
-                example.properties().forEach { (k, v) -> entries[k] = exampleToJson(jacksonNodeToKotlin(v), api, baseDir) }
-                JsonObject(entries)
+            is OffsetDateTime -> {
+                JsonPrimitive(OFFSET_DATE_TIME_FORMATTER.format(example.withOffsetSameInstant(ZoneOffset.UTC)))
             }
 
-            is com.fasterxml.jackson.databind.JsonNode -> {
-                jacksonNodeToJsonElement(example)
-            }
-
-            is java.time.OffsetDateTime -> {
-                JsonPrimitive(
-                    java.time.format.DateTimeFormatter
-                        .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                        .format(example.withOffsetSameInstant(java.time.ZoneOffset.UTC)),
-                )
-            }
-
-            is java.time.LocalDate -> {
+            is LocalDate -> {
                 JsonPrimitive(example.toString())
             }
 
@@ -440,6 +707,119 @@ class YamlFeatureJsonGenerator(
     private val yamlCache = mutableMapOf<String, Map<String, Any?>>()
 
     private companion object {
+        private val YAML_MAPPER: ObjectMapper = ObjectMapper(YAMLFactory())
+
+        private val OFFSET_DATE_TIME_FORMATTER: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+
+        private val ARRAY_OBJECT_MATCHERS =
+            listOf(
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("errorCode", "timestamp", "accessLevel", "priority", "audiences", "busAddress", "busType"),
+                    subtype = "deviceError",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("device", "value"),
+                    subtype = "zigbeeDeviceStatus",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("deviceId", "heatingCircuit"),
+                    subtype = "roomActor",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("fingerprint"),
+                    subtype = "device",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("timestamp", "actor", "status", "event", "circuit", "stateMachine", "additionalInfo"),
+                    subtype = "logBookEntry",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("deviceFamily", "error", "subCode"),
+                    subtype = "onboardUpdaterLastErrorCode",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("type", "brand", "model", "id", "ski"),
+                    subtype = "eebusDevice",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("type", "id", "ski"),
+                    subtype = "eebusServicePartner",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("type", "busAddress"),
+                    excludedKeys = listOf("brand", "model", "id", "ski", "busType", "value", "unit"),
+                    subtype = "eebusDevicesPaired",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("type", "index"),
+                    excludedKeys = listOf("manufacturer", "model", "serialNumber", "value", "unit"),
+                    subtype = "solarlogDevicesPaired",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("voltageValue", "cellBalance", "functionStatus", "safetyStatus"),
+                    subtype = "operatingDataCellsDetail",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("id", "role", "status", "memberId", "value", "unit"),
+                    subtype = "energyChargedDevice",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("deviceObjectProperty", "deviceFunction", "softwareVersion", "hardwareVersion", "etn"),
+                    excludedKeys = listOf("busAddress", "busType"),
+                    subtype = "deviceInformation",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("timestamp", "errorCode", "accessLevel", "priority"),
+                    excludedKeys = listOf("busAddress", "busType", "audiences"),
+                    subtype = "fuelCellError",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("ssid", "signalStrength"),
+                    subtype = "wifiNetwork",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("timestamp", "errorCode", "status", "count", "priority"),
+                    subtype = "ventilationMessage",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys =
+                        listOf(
+                            "code",
+                            "firstAppearanceTime",
+                            "firstGoneTime",
+                            "lastAppearanceTime",
+                            "lastGoneTime",
+                            "counter",
+                            "busAddress",
+                            "busType",
+                            "controller",
+                            "active",
+                            "dataTracing",
+                            "audiences",
+                        ),
+                    subtype = "systemMessageEntry",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("busAddress", "busType"),
+                    excludedKeys = listOf("value", "unit", "type"),
+                    subtype = "busType",
+                ),
+                ArrayObjectSubtypeMatcher(
+                    requiredKeys = listOf("index", "manufacturer", "model", "serialNumber"),
+                    subtype = "solarlogDevice",
+                ),
+            )
+
+        private val OBJECT_MATCHERS =
+            listOf(
+                ObjectSubtypeMatcher(listOf("hydraulicBalance"), "otherRoomConfiguration"),
+                ObjectSubtypeMatcher(listOf("logs"), "logs"),
+                ObjectSubtypeMatcher(listOf("busType", "busAddress", "viessmannIdentificationNumber", "productFamily"), "productInfo"),
+                ObjectSubtypeMatcher(listOf("day", "month", "year"), "factoryResetInfo"),
+                ObjectSubtypeMatcher(listOf("type", "value", "unit"), "property"),
+            )
+
         private val SCHEMA_INDICATOR_KEYS =
             setOf(
                 "type",
@@ -463,18 +843,13 @@ class YamlFeatureJsonGenerator(
         yamlCache[cacheKey]?.let { return it }
 
         return try {
-            val mapper =
-                com.fasterxml.jackson.databind
-                    .ObjectMapper(
-                        com.fasterxml.jackson.dataformat.yaml
-                            .YAMLFactory(),
-                    )
-
             @Suppress("UNCHECKED_CAST")
-            val raw = mapper.readValue(file, Map::class.java) as Map<String, Any?>
+            val raw = YAML_MAPPER.readValue(file, Map::class.java) as Map<String, Any?>
             yamlCache[cacheKey] = raw
             raw
-        } catch (e: Exception) {
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception,
+        ) {
             logger.debug("Failed to load raw YAML from ${file.name}: ${e.message}")
             null
         }
@@ -511,56 +886,27 @@ class YamlFeatureJsonGenerator(
 
     private fun Map<*, *>.containsAnyKey(keys: Set<String>): Boolean = keys.any { containsKey(it) }
 
-    private fun jacksonNodeToKotlin(node: com.fasterxml.jackson.databind.JsonNode): Any? =
+    /**
+     * Projects a Jackson [JsonNode] into a plain Kotlin value tree (`Boolean`/`Number`/`String`/`List`/`Map`).
+     * Used to feed back into [exampleToJson] so that `$ref` resolution can recursively traverse nested examples.
+     */
+    private fun jacksonNodeToKotlin(node: JsonNode): Any? =
         when {
-            node.isNull -> {
-                null
-            }
-
-            node.isBoolean -> {
-                node.booleanValue()
-            }
-
-            node.isInt -> {
-                node.intValue()
-            }
-
-            node.isLong -> {
-                node.longValue()
-            }
-
-            node.isFloat -> {
-                node.floatValue()
-            }
-
-            node.isDouble -> {
-                node.doubleValue()
-            }
-
-            node.isNumber -> {
-                node.numberValue()
-            }
-
-            node.isTextual -> {
-                node.textValue()
-            }
-
-            node.isArray -> {
-                node.map { jacksonNodeToKotlin(it) }
-            }
-
-            node.isObject -> {
-                val map = mutableMapOf<String, Any?>()
-                node.properties().forEach { (k, v) -> map[k] = jacksonNodeToKotlin(v) }
-                map
-            }
-
-            else -> {
-                node.toString()
-            }
+            node.isNull -> null
+            node.isBoolean -> node.booleanValue()
+            node.isInt -> node.intValue()
+            node.isLong -> node.longValue()
+            node.isFloat -> node.floatValue()
+            node.isDouble -> node.doubleValue()
+            node.isNumber -> node.numberValue()
+            node.isTextual -> node.textValue()
+            node.isArray -> node.map(::jacksonNodeToKotlin)
+            node.isObject -> buildMap(node.size()) { node.properties().forEach { (k, v) -> put(k, jacksonNodeToKotlin(v)) } }
+            else -> node.toString()
         }
 
-    private fun jacksonNodeToJsonElement(node: com.fasterxml.jackson.databind.JsonNode): JsonElement =
+    /** Direct projection of a Jackson [JsonNode] into a kotlinx [JsonElement] without going through [exampleToJson]. */
+    private fun jacksonNodeToJsonElement(node: JsonNode): JsonElement =
         when {
             node.isNull -> {
                 JsonNull
@@ -591,13 +937,11 @@ class YamlFeatureJsonGenerator(
             }
 
             node.isArray -> {
-                JsonArray(node.map { jacksonNodeToJsonElement(it) })
+                JsonArray(node.map(::jacksonNodeToJsonElement))
             }
 
             node.isObject -> {
-                val entries = mutableMapOf<String, JsonElement>()
-                node.properties().forEach { (k, v) -> entries[k] = jacksonNodeToJsonElement(v) }
-                JsonObject(entries)
+                JsonObject(buildMap(node.size()) { node.properties().forEach { (k, v) -> put(k, jacksonNodeToJsonElement(v)) } })
             }
 
             else -> {

@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     `kotlin-dsl`
+    kotlin("plugin.serialization") version embeddedKotlinVersion
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.ben.manes.versions)
 }
@@ -44,10 +45,6 @@ gradlePlugin {
         register("generateFeatureInterfaces") {
             id = "xyz.dussim.generate.features"
             implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromParsedFeaturePlugin"
-        }
-        register("generateFeatureInterfacesFromYaml") {
-            id = "xyz.dussim.generate.features.yaml"
-            implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromYamlPlugin"
         }
         register("generateFeatureJsonsFromYaml") {
             id = "xyz.dussim.generate.features.json"

@@ -3,33 +3,18 @@ import xyz.dussim.buildlogic.GenerateFeatureJsonsFromYamlTask
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
-import java.io.File
-import java.time.LocalDate
 
 plugins {
     alias(conventions.plugins.xyz.dussim.build.parameters)
     alias(conventions.plugins.xyz.dussim.kotlin.common)
-    alias(conventions.plugins.xyz.dussim.generate.features.json)
     alias(conventions.plugins.xyz.dussim.generate.features.json.tests)
 }
 
-val openApiFeaturesDirectory =
-    layout.dir(
-        providers.provider {
-            val path = File(buildParameters.openApiPath)
-            val openApiDirectory =
-                if (path.isAbsolute) {
-                    path
-                } else {
-                    layout.settingsDirectory.asFile.resolve(path.path)
-                }
-            openApiDirectory.resolve("features")
-        },
-    )
-
 val definitionsProject = project(":api:feature:api-feature-definitions")
 val generatedFeatureDefinitionSources = definitionsProject.layout.buildDirectory.dir("generated/features")
-val generateFeatureDefinitions = definitionsProject.tasks.named("generateFeatureInterfacesFromYaml")
+val generatedFeatureJsons = definitionsProject.layout.buildDirectory.dir("generated/feature-jsons")
+val generateFeatureDefinitions = definitionsProject.tasks.named("generateFeatureInterfaces")
+val generateFeatureJsonsFromYamlTask = definitionsProject.tasks.named<GenerateFeatureJsonsFromYamlTask>("generateFeatureJsonsFromYaml")
 
 val jvmKspSources = layout.buildDirectory.dir("generated/ksp/jvm/jvmMain/kotlin")
 val jsKspSources = layout.buildDirectory.dir("generated/ksp/js/jsMain/kotlin")
@@ -40,8 +25,6 @@ val featureProcessorInputs =
         featureProcessorProject.layout.projectDirectory.dir("src/main"),
         featureProcessorProject.layout.projectDirectory.file("build.gradle.kts"),
     )
-val generateFeatureJsonsFromYamlTask = tasks.named<GenerateFeatureJsonsFromYamlTask>("generateFeatureJsonsFromYaml")
-
 kotlin {
     jvm {
         compilerOptions.jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
@@ -57,7 +40,7 @@ kotlin {
 
     sourceSets.named("jvmTest") {
         kotlin.srcDir(layout.buildDirectory.dir("generated/feature-json-tests"))
-        resources.srcDir(layout.buildDirectory.dir("generated/feature-jsons"))
+        resources.srcDir(generatedFeatureJsons)
     }
 }
 
@@ -68,13 +51,6 @@ dependencies {
 
 ksp {
     arg("formatGeneratedSources", "false")
-}
-
-generateFeatureJsonsFromYaml {
-    featuresYamls = openApiFeaturesDirectory
-    generatedJsons = layout.buildDirectory.dir("generated/feature-jsons")
-
-    currentDate = LocalDate.of(2000, 1, 1)
 }
 
 generateFeatureJsonTests {
@@ -99,7 +75,7 @@ tasks.named("compileTestKotlinJvm") {
 }
 
 tasks.named("jvmTestProcessResources") {
-    dependsOn("generateFeatureJsonsFromYaml")
+    dependsOn(generateFeatureJsonsFromYamlTask)
 }
 
 tasks.matching { it.name in setOf("sourcesJar", "jvmSourcesJar", "jsSourcesJar") }.configureEach {
