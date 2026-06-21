@@ -76,7 +76,7 @@ internal inline fun propertyHash(
 internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
     propertyName: String,
     expectedIndex: Int,
-    required: Boolean = true,
+    required: Boolean,
 ): ValidationRule<Feature, ValidationError> {
     val missingResult =
         if (required) {
@@ -101,7 +101,7 @@ internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
 internal inline fun <reified T : PropertyValue<*>, reified NonNullT : PropertyValue<*>> typedNullablePropertyRule(
     propertyName: String,
     expectedIndex: Int,
-    required: Boolean = true,
+    required: Boolean,
 ): ValidationRule<Feature, ValidationError> {
     val missingResult =
         if (required) {
@@ -126,7 +126,7 @@ internal inline fun <reified T : PropertyValue<*>, reified NonNullT : PropertyVa
 internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
     propertyName: String,
     expectedIndex: Int,
-    required: Boolean = true,
+    required: Boolean,
 ): ValidationRule<Feature, ValidationError> {
     val missingResult =
         if (required) {
