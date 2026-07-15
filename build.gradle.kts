@@ -8,7 +8,7 @@ plugins {
 tasks.wrapper {
     group = "gradle"
     distributionType = Wrapper.DistributionType.BIN
-    gradleVersion = "9.6.0-rc-3"
+    gradleVersion = "latest"
 }
 
 tasks.dependencyUpdates {
