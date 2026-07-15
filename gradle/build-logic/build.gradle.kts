@@ -11,7 +11,7 @@ plugins {
 dependencies {
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 
-    implementation(libs.plugins.kotest)
+    implementation(libs.plugins.testBalloon)
     implementation(libs.plugins.kotlinter)
     implementation(libs.plugins.dokka)
     implementation(libs.plugins.kotlin.jvm)
@@ -24,8 +24,8 @@ dependencies {
     implementation(libs.swagger.parser)
 
     testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotest.framework.engine)
-    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.testBalloon.framework.core)
+    testImplementation(libs.testBalloon.integration.kotest.assertions)
 }
 
 gradlePlugin {

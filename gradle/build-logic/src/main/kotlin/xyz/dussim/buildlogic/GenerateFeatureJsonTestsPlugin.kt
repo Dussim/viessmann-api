@@ -116,7 +116,7 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
         buildString {
             appendLine("package xyz.dussim.viessmann.api.features.generated")
             appendLine()
-            appendLine("import io.kotest.core.spec.style.FunSpec")
+            appendLine("import de.infix.testBalloon.framework.core.testSuite")
             appendLine()
             append(
                 """
@@ -130,12 +130,12 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
                 )
                 """.trimIndent(),
             )
-            appendLine("class $specClassName :")
-            appendLine("    FunSpec({")
+            appendLine()
+            appendLine("val $specClassName by testSuite {")
             files.sortedBy { it.name }.forEach { jsonFile ->
                 appendFeatureTest(jsonFile)
             }
-            appendLine("    })")
+            appendLine("}")
         }
 
     private fun StringBuilder.appendFeatureTest(jsonFile: File) {

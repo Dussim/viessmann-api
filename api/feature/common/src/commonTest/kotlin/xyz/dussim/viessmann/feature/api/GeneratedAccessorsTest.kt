@@ -2,141 +2,140 @@
 
 package xyz.dussim.viessmann.feature.api
 
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
-class GeneratedAccessorsTest :
-    FunSpec({
-        fun hash(name: String): Long = propertyHash(name.hashCode(), name.length)
+val GeneratedAccessorsTest by testSuite {
+    fun hash(name: String): Long = propertyHash(name.hashCode(), name.length)
 
-        test("requireProperty throws GeneratedAccessException for missing property") {
-            val properties = EfficientStringKeyMap<Property>(emptyMap())
-            val exception =
-                shouldThrow<GeneratedAccessException> {
-                    properties.requireProperty("temperature", hash("temperature"))
-                }
-
-            exception shouldBe GeneratedAccessException
-        }
-
-        test("requireCommand throws GeneratedAccessException for missing command") {
-            val commands = EfficientStringKeyMap<Command>(emptyMap())
-            val exception =
-                shouldThrow<GeneratedAccessException> {
-                    commands.requireCommand("setValue", hash("setValue"))
-                }
-
-            exception shouldBe GeneratedAccessException
-        }
-
-        test("requireParam throws GeneratedAccessException for missing parameter") {
-            val params = EfficientStringKeyMap<Parameter>(emptyMap())
-            val exception =
-                shouldThrow<GeneratedAccessException> {
-                    params.requireParam("value", hash("value"))
-                }
-
-            exception shouldBe GeneratedAccessException
-        }
-
-        test("requirePropertyValue throws GeneratedAccessException on type mismatch") {
-            val properties = EfficientStringKeyMap(mapOf("temperature" to Property.of("high")))
-            val exception =
-                shouldThrow<GeneratedAccessException> {
-                    properties.requirePropertyValue<DoubleValue>("temperature", hash("temperature"))
-                }
-
-            exception shouldBe GeneratedAccessException
-        }
-
-        test("findPropertyValueOrNull returns null for missing and mismatch") {
-            val missing = EfficientStringKeyMap<Property>(emptyMap())
-            missing.findPropertyValueOrNull<DoubleValue>("temperature", hash("temperature")).shouldBeNull()
-
-            val presentWrongType = EfficientStringKeyMap(mapOf("temperature" to Property.of("high")))
-            presentWrongType.findPropertyValueOrNull<DoubleValue>("temperature", hash("temperature")).shouldBeNull()
-        }
-
-        test("nullable primitive accessors wrap scalar primitive values") {
-            val properties =
-                EfficientStringKeyMap(
-                    mapOf(
-                        "enabled" to Property.ofBoolean(true),
-                        "temperature" to Property.ofDouble(21.5),
-                        "mode" to Property.of("auto"),
-                    ),
-                )
-
-            properties.requireNullableBooleanPropertyValue("enabled", hash("enabled")) shouldBe NullableBooleanValue(true)
-            properties.requireNullableDoublePropertyValue("temperature", hash("temperature")) shouldBe NullableDoubleValue(21.5)
-            properties.requireNullableStringPropertyValue("mode", hash("mode")) shouldBe NullableStringValue("auto")
-        }
-
-        test("nullable primitive find accessors return null for missing and mismatch") {
-            val missing = EfficientStringKeyMap<Property>(emptyMap())
-            missing.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
-
-            val presentWrongType = EfficientStringKeyMap(mapOf("mode" to Property.ofDouble(1.0)))
-            presentWrongType.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
-        }
-
-        test("requirePropertyValueOrPromoteEmpty promotes ListEmptyValue and throws on mismatch or missing") {
-            val default = ListStringValue.EMPTY
-
-            val listEmptyValue = EfficientStringKeyMap(mapOf("values" to Property(ARRAY, ListEmptyValue)))
-            listEmptyValue.requirePropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
-
-            val wrongType = EfficientStringKeyMap(mapOf("values" to Property.of("wrong")))
+    test("requireProperty throws GeneratedAccessException for missing property") {
+        val properties = EfficientStringKeyMap<Property>(emptyMap())
+        val exception =
             shouldThrow<GeneratedAccessException> {
-                wrongType.requirePropertyValueOrPromoteEmpty("values", hash("values"), default)
-            } shouldBe GeneratedAccessException
+                properties.requireProperty("temperature", hash("temperature"))
+            }
 
-            val missing = EfficientStringKeyMap<Property>(emptyMap())
+        exception shouldBe GeneratedAccessException
+    }
+
+    test("requireCommand throws GeneratedAccessException for missing command") {
+        val commands = EfficientStringKeyMap<Command>(emptyMap())
+        val exception =
             shouldThrow<GeneratedAccessException> {
-                missing.requirePropertyValueOrPromoteEmpty("values", hash("values"), default)
-            } shouldBe GeneratedAccessException
-        }
+                commands.requireCommand("setValue", hash("setValue"))
+            }
 
-        test("findPropertyValueOrPromoteEmpty returns defaultValue on missing, mismatch, or ListEmptyValue") {
-            val default = ListStringValue.EMPTY
+        exception shouldBe GeneratedAccessException
+    }
 
-            val missing = EfficientStringKeyMap<Property>(emptyMap())
-            missing.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+    test("requireParam throws GeneratedAccessException for missing parameter") {
+        val params = EfficientStringKeyMap<Parameter>(emptyMap())
+        val exception =
+            shouldThrow<GeneratedAccessException> {
+                params.requireParam("value", hash("value"))
+            }
 
-            val wrongType = EfficientStringKeyMap(mapOf("values" to Property.of("wrong")))
-            wrongType.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+        exception shouldBe GeneratedAccessException
+    }
 
-            val listEmptyValue = EfficientStringKeyMap(mapOf("values" to Property(ARRAY, ListEmptyValue)))
-            listEmptyValue.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
-        }
+    test("requirePropertyValue throws GeneratedAccessException on type mismatch") {
+        val properties = EfficientStringKeyMap(mapOf("temperature" to Property.of("high")))
+        val exception =
+            shouldThrow<GeneratedAccessException> {
+                properties.requirePropertyValue<DoubleValue>("temperature", hash("temperature"))
+            }
 
-        test("requireConstraints throws GeneratedAccessException on mismatch") {
-            val exception =
-                shouldThrow<GeneratedAccessException> {
-                    BooleanConstraints.requireConstraints<NumberConstraints>()
-                }
+        exception shouldBe GeneratedAccessException
+    }
 
-            exception shouldBe GeneratedAccessException
-        }
+    test("findPropertyValueOrNull returns null for missing and mismatch") {
+        val missing = EfficientStringKeyMap<Property>(emptyMap())
+        missing.findPropertyValueOrNull<DoubleValue>("temperature", hash("temperature")).shouldBeNull()
 
-        test("requireArrayConstraintsOrPromoteEmpty promotes ArrayEmptyConstraints") {
-            val promoted =
-                ArrayEmptyConstraints(minLength = 1, maxLength = 3).requireArrayConstraintsOrPromoteEmpty(
-                    fromEmpty = ::ArrayStringConstraints,
-                )
+        val presentWrongType = EfficientStringKeyMap(mapOf("temperature" to Property.of("high")))
+        presentWrongType.findPropertyValueOrNull<DoubleValue>("temperature", hash("temperature")).shouldBeNull()
+    }
 
-            promoted shouldBe ArrayStringConstraints(minLength = 1, maxLength = 3, enum = null)
-        }
+    test("nullable primitive accessors wrap scalar primitive values") {
+        val properties =
+            EfficientStringKeyMap(
+                mapOf(
+                    "enabled" to Property.ofBoolean(true),
+                    "temperature" to Property.ofDouble(21.5),
+                    "mode" to Property.of("auto"),
+                ),
+            )
 
-        test("toArrayStringConstraintsOrThrow throws GeneratedAccessException on type mismatch") {
-            val exception =
-                shouldThrow<GeneratedAccessException> {
-                    BooleanConstraints.toArrayStringConstraintsOrThrow()
-                }
+        properties.requireNullableBooleanPropertyValue("enabled", hash("enabled")) shouldBe NullableBooleanValue(true)
+        properties.requireNullableDoublePropertyValue("temperature", hash("temperature")) shouldBe NullableDoubleValue(21.5)
+        properties.requireNullableStringPropertyValue("mode", hash("mode")) shouldBe NullableStringValue("auto")
+    }
 
-            exception shouldBe GeneratedAccessException
-        }
-    })
+    test("nullable primitive find accessors return null for missing and mismatch") {
+        val missing = EfficientStringKeyMap<Property>(emptyMap())
+        missing.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
+
+        val presentWrongType = EfficientStringKeyMap(mapOf("mode" to Property.ofDouble(1.0)))
+        presentWrongType.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
+    }
+
+    test("requirePropertyValueOrPromoteEmpty promotes ListEmptyValue and throws on mismatch or missing") {
+        val default = ListStringValue.EMPTY
+
+        val listEmptyValue = EfficientStringKeyMap(mapOf("values" to Property(ARRAY, ListEmptyValue)))
+        listEmptyValue.requirePropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+
+        val wrongType = EfficientStringKeyMap(mapOf("values" to Property.of("wrong")))
+        shouldThrow<GeneratedAccessException> {
+            wrongType.requirePropertyValueOrPromoteEmpty("values", hash("values"), default)
+        } shouldBe GeneratedAccessException
+
+        val missing = EfficientStringKeyMap<Property>(emptyMap())
+        shouldThrow<GeneratedAccessException> {
+            missing.requirePropertyValueOrPromoteEmpty("values", hash("values"), default)
+        } shouldBe GeneratedAccessException
+    }
+
+    test("findPropertyValueOrPromoteEmpty returns defaultValue on missing, mismatch, or ListEmptyValue") {
+        val default = ListStringValue.EMPTY
+
+        val missing = EfficientStringKeyMap<Property>(emptyMap())
+        missing.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+
+        val wrongType = EfficientStringKeyMap(mapOf("values" to Property.of("wrong")))
+        wrongType.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+
+        val listEmptyValue = EfficientStringKeyMap(mapOf("values" to Property(ARRAY, ListEmptyValue)))
+        listEmptyValue.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+    }
+
+    test("requireConstraints throws GeneratedAccessException on mismatch") {
+        val exception =
+            shouldThrow<GeneratedAccessException> {
+                BooleanConstraints.requireConstraints<NumberConstraints>()
+            }
+
+        exception shouldBe GeneratedAccessException
+    }
+
+    test("requireArrayConstraintsOrPromoteEmpty promotes ArrayEmptyConstraints") {
+        val promoted =
+            ArrayEmptyConstraints(minLength = 1, maxLength = 3).requireArrayConstraintsOrPromoteEmpty(
+                fromEmpty = ::ArrayStringConstraints,
+            )
+
+        promoted shouldBe ArrayStringConstraints(minLength = 1, maxLength = 3, enum = null)
+    }
+
+    test("toArrayStringConstraintsOrThrow throws GeneratedAccessException on type mismatch") {
+        val exception =
+            shouldThrow<GeneratedAccessException> {
+                BooleanConstraints.toArrayStringConstraintsOrThrow()
+            }
+
+        exception shouldBe GeneratedAccessException
+    }
+}

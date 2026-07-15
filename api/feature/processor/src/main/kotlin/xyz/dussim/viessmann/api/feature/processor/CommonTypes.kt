@@ -14,8 +14,6 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
-import java.security.MessageDigest
-import java.util.Locale
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
@@ -25,6 +23,8 @@ import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
+import java.security.MessageDigest
+import java.util.Locale
 
 const val VALIDATION_PACKAGE = "xyz.dussim.viessmann.feature.api.validation"
 private const val FEATURE_API_PACKAGE = "xyz.dussim.viessmann.feature.api"

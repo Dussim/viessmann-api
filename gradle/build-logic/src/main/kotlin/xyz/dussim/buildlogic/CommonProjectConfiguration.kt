@@ -18,7 +18,7 @@ fun Project.configureCommonPlugins() {
         apply(libs.plugins.dokka)
         apply(libs.plugins.kotlinter)
         apply(libs.plugins.ksp)
-        apply(libs.plugins.kotest)
+        apply(libs.plugins.testBalloon)
     }
 }
 
@@ -76,12 +76,14 @@ fun Project.configurePublishing() {
         providers
             .gradleProperty("repoUsername")
             .orElse(providers.environmentVariable("REPO_USERNAME"))
+
     val repoPassword =
         providers
             .gradleProperty("repoPassword")
             .orElse(providers.environmentVariable("REPO_PASSWORD"))
 
     val hasRepositoryCredentials = repoUsername.isPresent && repoPassword.isPresent
+
     if (!hasRepositoryCredentials) {
         logger.info(
             "Skipping Maven publishing repository configuration because repoUsername/repoPassword properties " +

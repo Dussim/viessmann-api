@@ -6,8 +6,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 internal fun Project.configureKotlinMultiplatformLibrary() {
-    val catalog = libs
-
     extensions.configure<KotlinMultiplatformExtension> {
         compilerOptions {
             freeCompilerArgs.addAll(
@@ -45,16 +43,11 @@ internal fun Project.configureKotlinMultiplatformLibrary() {
 
         sourceSets.getByName("commonTest") {
             dependencies {
-                implementation(catalog.kotlin.test.common)
-                implementation(catalog.kotlin.test.annotations.common)
-                implementation(catalog.kotest.framework.engine)
-                implementation(catalog.kotest.assertions.core)
-            }
-        }
-
-        sourceSets.getByName("jvmTest") {
-            dependencies {
-                implementation(catalog.kotest.runner.junit5)
+                implementation(libs.kotlin.test.common)
+                implementation(libs.kotlin.test.annotations.common)
+                implementation(libs.kotest.assertions.core)
+                implementation(libs.testBalloon.framework.core)
+                implementation(libs.testBalloon.integration.kotest.assertions)
             }
         }
     }

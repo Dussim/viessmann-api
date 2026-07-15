@@ -1,38 +1,37 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class TokenTypeTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                TokenType.Invited,
-                TokenType.Requested,
-            ) {
-                TokenType.entries shouldContain it
+val TokenTypeTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            TokenType.Invited,
+            TokenType.Requested,
+        ).forEach { item ->
+            test(item.name) {
+                TokenType.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "Invited" to TokenType.Invited,
-                "Requested" to TokenType.Requested,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "Invited" to TokenType.Invited,
+            "Requested" to TokenType.Requested,
+        ).forEach { (name, expected) ->
+            test(name) {
                 TokenType.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                TokenType.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        TokenType.entries.forEach { entry ->
+            test(entry.name) {
                 TokenType.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

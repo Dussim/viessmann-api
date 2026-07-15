@@ -1,46 +1,45 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class AggregatedStatusTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                AggregatedStatus.Error,
-                AggregatedStatus.Offline,
-                AggregatedStatus.Maintenance,
-                AggregatedStatus.WorksProperly,
-                AggregatedStatus.RemoteDiagnosticSession,
-                AggregatedStatus.NbIotConnected,
-            ) {
-                AggregatedStatus.entries shouldContain it
+val AggregatedStatusTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            AggregatedStatus.Error,
+            AggregatedStatus.Offline,
+            AggregatedStatus.Maintenance,
+            AggregatedStatus.WorksProperly,
+            AggregatedStatus.RemoteDiagnosticSession,
+            AggregatedStatus.NbIotConnected,
+        ).forEach { item ->
+            test(item.name) {
+                AggregatedStatus.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "Error" to AggregatedStatus.Error,
-                "Offline" to AggregatedStatus.Offline,
-                "Maintenance" to AggregatedStatus.Maintenance,
-                "WorksProperly" to AggregatedStatus.WorksProperly,
-                "RemoteDiagnosticSession" to AggregatedStatus.RemoteDiagnosticSession,
-                "NbIotConnected" to AggregatedStatus.NbIotConnected,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "Error" to AggregatedStatus.Error,
+            "Offline" to AggregatedStatus.Offline,
+            "Maintenance" to AggregatedStatus.Maintenance,
+            "WorksProperly" to AggregatedStatus.WorksProperly,
+            "RemoteDiagnosticSession" to AggregatedStatus.RemoteDiagnosticSession,
+            "NbIotConnected" to AggregatedStatus.NbIotConnected,
+        ).forEach { (name, expected) ->
+            test(name) {
                 AggregatedStatus.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                AggregatedStatus.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        AggregatedStatus.entries.forEach { entry ->
+            test(entry.name) {
                 AggregatedStatus.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

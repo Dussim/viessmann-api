@@ -1,40 +1,39 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class GenderTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                Gender.Male,
-                Gender.Female,
-                Gender.Other,
-            ) {
-                Gender.entries shouldContain it
+val GenderTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            Gender.Male,
+            Gender.Female,
+            Gender.Other,
+        ).forEach { item ->
+            test(item.name) {
+                Gender.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "MALE" to Gender.Male,
-                "FEMALE" to Gender.Female,
-                "OTHER" to Gender.Other,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "MALE" to Gender.Male,
+            "FEMALE" to Gender.Female,
+            "OTHER" to Gender.Other,
+        ).forEach { (name, expected) ->
+            test(name) {
                 Gender.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                Gender.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        Gender.entries.forEach { entry ->
+            test(entry.name) {
                 Gender.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

@@ -11,10 +11,8 @@ class KotlinClientPlugin : Plugin<Project> {
             with(pluginManager) {
                 apply(libs.plugins.kotlin.multiplatform)
                 apply(libs.plugins.kotlin.serialization)
-                apply(libs.plugins.kotlinter)
-                apply(libs.plugins.dokka)
             }
-
+            configureCommonPlugins()
             configurePublishing()
 
             configureKotlinMultiplatformLibrary()

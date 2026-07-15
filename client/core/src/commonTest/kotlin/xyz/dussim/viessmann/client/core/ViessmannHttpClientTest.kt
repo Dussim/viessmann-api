@@ -1,6 +1,6 @@
 package xyz.dussim.viessmann.client.core
 
-import io.kotest.core.spec.style.FunSpec
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -22,116 +22,115 @@ private data class TestPayload(
     val value: String,
 )
 
-class ViessmannHttpClientTest :
-    FunSpec({
-        test("injects bearer token for authenticated requests") {
-            lateinit var request: HttpRequestData
-            val client =
-                testClient("token-123") {
-                    request = it
-                    respond("""{"data":{"value":"ok"}}""", headers = jsonHeaders())
-                }
+val ViessmannHttpClientTest by testSuite {
+    test("injects bearer token for authenticated requests") {
+        lateinit var request: HttpRequestData
+        val client =
+            testClient("token-123") {
+                request = it
+                respond("""{"data":{"value":"ok"}}""", headers = jsonHeaders())
+            }
 
-            client
-                .viessmannRequestData<TestPayload>(
+        client
+            .viessmannRequestData<TestPayload>(
+                config = testConfig("token-123"),
+                service = ViessmannService.Api,
+                method = HttpMethod.Get,
+                path = "/test",
+            ).value shouldBe "ok"
+
+        request.headers[HttpHeaders.Authorization] shouldBe "Bearer token-123"
+    }
+
+    test("decodes typed JSON response") {
+        val client =
+            testClient("token-123") {
+                respond("""{"value":"ok"}""", headers = jsonHeaders())
+            }
+
+        client
+            .viessmannRequest<TestPayload>(
+                config = testConfig("token-123"),
+                service = ViessmannService.Api,
+                method = HttpMethod.Get,
+                path = "/test",
+            ).value shouldBe "ok"
+    }
+
+    test("maps Viessmann JSON error responses") {
+        val client =
+            testClient("token-123") {
+                respond(
+                    content =
+                        """
+                        {
+                          "statusCode": 403,
+                          "errorType": "NOT_ALLOWED",
+                          "message": "App is not allowed."
+                        }
+                        """.trimIndent(),
+                    status = HttpStatusCode.Forbidden,
+                    headers = jsonHeaders(),
+                )
+            }
+
+        val exception =
+            runCatching {
+                client.viessmannRequest<TestPayload>(
                     config = testConfig("token-123"),
                     service = ViessmannService.Api,
                     method = HttpMethod.Get,
                     path = "/test",
-                ).value shouldBe "ok"
+                )
+            }.exceptionOrNull().shouldBeInstanceOf<ViessmannApiException>()
 
-            request.headers[HttpHeaders.Authorization] shouldBe "Bearer token-123"
-        }
+        exception.statusCode shouldBe HttpStatusCode.Forbidden
+        exception.error?.message shouldBe "App is not allowed."
+    }
 
-        test("decodes typed JSON response") {
-            val client =
-                testClient("token-123") {
-                    respond("""{"value":"ok"}""", headers = jsonHeaders())
-                }
+    test("falls back to raw body for non-json errors") {
+        val client =
+            testClient("token-123") {
+                respond(
+                    content = "upstream failed",
+                    status = HttpStatusCode.BadGateway,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()),
+                )
+            }
 
-            client
-                .viessmannRequest<TestPayload>(
+        val exception =
+            runCatching {
+                client.viessmannRequest<TestPayload>(
                     config = testConfig("token-123"),
                     service = ViessmannService.Api,
                     method = HttpMethod.Get,
                     path = "/test",
-                ).value shouldBe "ok"
-        }
+                )
+            }.exceptionOrNull().shouldBeInstanceOf<ViessmannApiException>()
 
-        test("maps Viessmann JSON error responses") {
-            val client =
-                testClient("token-123") {
-                    respond(
-                        content =
-                            """
-                            {
-                              "statusCode": 403,
-                              "errorType": "NOT_ALLOWED",
-                              "message": "App is not allowed."
-                            }
-                            """.trimIndent(),
-                        status = HttpStatusCode.Forbidden,
-                        headers = jsonHeaders(),
-                    )
-                }
+        exception.responseBody shouldBe "upstream failed"
+        exception.error shouldBe null
+    }
 
-            val exception =
-                runCatching {
-                    client.viessmannRequest<TestPayload>(
-                        config = testConfig("token-123"),
-                        service = ViessmannService.Api,
-                        method = HttpMethod.Get,
-                        path = "/test",
-                    )
-                }.exceptionOrNull().shouldBeInstanceOf<ViessmannApiException>()
+    test("fails fast when token is missing") {
+        val client =
+            testClient(null) {
+                respond("""{"value":"ok"}""", headers = jsonHeaders())
+            }
 
-            exception.statusCode shouldBe HttpStatusCode.Forbidden
-            exception.error?.message shouldBe "App is not allowed."
-        }
+        val exception =
+            runCatching {
+                client.viessmannRequest<TestPayload>(
+                    config = testConfig(null),
+                    service = ViessmannService.Api,
+                    method = HttpMethod.Get,
+                    path = "/test",
+                )
+            }.exceptionOrNull().shouldBeInstanceOf<MissingAccessTokenException>()
 
-        test("falls back to raw body for non-json errors") {
-            val client =
-                testClient("token-123") {
-                    respond(
-                        content = "upstream failed",
-                        status = HttpStatusCode.BadGateway,
-                        headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()),
-                    )
-                }
-
-            val exception =
-                runCatching {
-                    client.viessmannRequest<TestPayload>(
-                        config = testConfig("token-123"),
-                        service = ViessmannService.Api,
-                        method = HttpMethod.Get,
-                        path = "/test",
-                    )
-                }.exceptionOrNull().shouldBeInstanceOf<ViessmannApiException>()
-
-            exception.responseBody shouldBe "upstream failed"
-            exception.error shouldBe null
-        }
-
-        test("fails fast when token is missing") {
-            val client =
-                testClient(null) {
-                    respond("""{"value":"ok"}""", headers = jsonHeaders())
-                }
-
-            val exception =
-                runCatching {
-                    client.viessmannRequest<TestPayload>(
-                        config = testConfig(null),
-                        service = ViessmannService.Api,
-                        method = HttpMethod.Get,
-                        path = "/test",
-                    )
-                }.exceptionOrNull().shouldBeInstanceOf<MissingAccessTokenException>()
-
-            exception.shouldHaveMessage("No Viessmann access token is available for an authenticated request")
-        }
-    })
+        exception.shouldHaveMessage("No Viessmann access token is available for an authenticated request")
+    }
+}
 
 private fun testClient(
     token: String?,

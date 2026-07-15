@@ -1,38 +1,37 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class TargetRealmTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                TargetRealm.Dc,
-                TargetRealm.Genesis,
-            ) {
-                TargetRealm.entries shouldContain it
+val TargetRealmTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            TargetRealm.Dc,
+            TargetRealm.Genesis,
+        ).forEach { item ->
+            test(item.name) {
+                TargetRealm.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "DC" to TargetRealm.Dc,
-                "Genesis" to TargetRealm.Genesis,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "DC" to TargetRealm.Dc,
+            "Genesis" to TargetRealm.Genesis,
+        ).forEach { (name, expected) ->
+            test(name) {
                 TargetRealm.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                TargetRealm.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        TargetRealm.entries.forEach { entry ->
+            test(entry.name) {
                 TargetRealm.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

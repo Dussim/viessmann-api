@@ -39,9 +39,9 @@ class KotlinJvmCommonPlugin : Plugin<Project> {
             dependencies {
                 testImplementation(libs.kotlin.test.common)
                 testImplementation(libs.kotlin.test.annotations.common)
-                testImplementation(libs.kotest.framework.engine)
                 testImplementation(libs.kotest.assertions.core)
-                testImplementation(libs.kotest.runner.junit5)
+                testImplementation(libs.testBalloon.framework.core)
+                testImplementation(libs.testBalloon.integration.kotest.assertions)
             }
 
             configureCommon()

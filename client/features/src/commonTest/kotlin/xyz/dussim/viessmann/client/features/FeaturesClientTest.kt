@@ -1,6 +1,6 @@
 package xyz.dussim.viessmann.client.features
 
-import io.kotest.core.spec.style.FunSpec
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -18,106 +18,105 @@ import xyz.dussim.viessmann.client.testing.jsonHeaders
 import xyz.dussim.viessmann.client.testing.testViessmannClientConfig
 import xyz.dussim.viessmann.client.testing.testViessmannHttpClient
 
-class FeaturesClientTest :
-    FunSpec({
-        test("builds installation feature filters as query params") {
-            lateinit var request: HttpRequestData
-            val client =
-                featuresClient {
-                    request = it
-                    respond(featureListResponse(), headers = jsonHeaders())
-                }
+val FeaturesClientTest by testSuite {
+    test("builds installation feature filters as query params") {
+        lateinit var request: HttpRequestData
+        val client =
+            featuresClient {
+                request = it
+                respond(featureListResponse(), headers = jsonHeaders())
+            }
 
-            client
-                .getInstallationFeatures(
-                    installationId = "100",
-                    query =
-                        FeatureQuery(
-                            filter = listOf("heating.circuits.*", "heating.dhw.*"),
-                            skipDisabled = true,
-                        ),
-                ).single()
-                .feature shouldBe "heating.dhw.temperature.main"
+        client
+            .getInstallationFeatures(
+                installationId = "100",
+                query =
+                    FeatureQuery(
+                        filter = listOf("heating.circuits.*", "heating.dhw.*"),
+                        skipDisabled = true,
+                    ),
+            ).single()
+            .feature shouldBe "heating.dhw.temperature.main"
 
-            request.method shouldBe HttpMethod.Get
-            request.url.encodedPath shouldBe "/iot/v2/features/installations/100/features"
-            request.url.parameters.getAll("filter") shouldBe listOf("heating.circuits.*", "heating.dhw.*")
-            request.url.parameters["skipDisabled"] shouldBe "true"
-        }
+        request.method shouldBe HttpMethod.Get
+        request.url.encodedPath shouldBe "/iot/v2/features/installations/100/features"
+        request.url.parameters.getAll("filter") shouldBe listOf("heating.circuits.*", "heating.dhw.*")
+        request.url.parameters["skipDisabled"] shouldBe "true"
+    }
 
-        test("posts gateway filter body") {
-            lateinit var request: HttpRequestData
-            val client =
-                featuresClient {
-                    request = it
-                    respond(featureListResponse(), headers = jsonHeaders())
-                }
+    test("posts gateway filter body") {
+        lateinit var request: HttpRequestData
+        val client =
+            featuresClient {
+                request = it
+                respond(featureListResponse(), headers = jsonHeaders())
+            }
 
-            client
-                .filterGatewayFeatures(
-                    installationId = "100",
-                    gatewaySerial = "serial-1",
-                    request = GatewayFeatureFilterRequest(includeDevicesFeatures = true),
-                ).size shouldBe 1
+        client
+            .filterGatewayFeatures(
+                installationId = "100",
+                gatewaySerial = "serial-1",
+                request = GatewayFeatureFilterRequest(includeDevicesFeatures = true),
+            ).size shouldBe 1
 
-            request.method shouldBe HttpMethod.Post
-            request.url.encodedPath shouldBe "/iot/v2/features/installations/100/gateways/serial-1/features/filter"
-        }
+        request.method shouldBe HttpMethod.Post
+        request.url.encodedPath shouldBe "/iot/v2/features/installations/100/gateways/serial-1/features/filter"
+    }
 
-        test("posts device command payload") {
-            lateinit var request: HttpRequestData
-            val client =
-                featuresClient {
-                    request = it
-                    respond(
-                        """{"data":{"success":"True","message":null,"reason":null}}""",
-                        headers = jsonHeaders(),
-                    )
-                }
-
-            val response =
-                client.executeDeviceCommand(
-                    installationId = "100",
-                    gatewaySerial = "serial-1",
-                    deviceId = "device-1",
-                    featureName = "heating.dhw.temperature.main",
-                    commandName = "setTargetTemperature",
-                    body =
-                        buildJsonObject {
-                            put("temperature", 55)
-                        },
+    test("posts device command payload") {
+        lateinit var request: HttpRequestData
+        val client =
+            featuresClient {
+                request = it
+                respond(
+                    """{"data":{"success":"True","message":null,"reason":null}}""",
+                    headers = jsonHeaders(),
                 )
+            }
 
-            response.data.success shouldBe "True"
-            request.url.encodedPath shouldBe
-                "/iot/v2/features/installations/100/gateways/serial-1/devices/device-1/" +
-                "features/heating.dhw.temperature.main/commands/setTargetTemperature"
-        }
+        val response =
+            client.executeDeviceCommand(
+                installationId = "100",
+                gatewaySerial = "serial-1",
+                deviceId = "device-1",
+                featureName = "heating.dhw.temperature.main",
+                commandName = "setTargetTemperature",
+                body =
+                    buildJsonObject {
+                        put("temperature", 55)
+                    },
+            )
 
-        test("maps feature endpoint errors") {
-            val client =
-                featuresClient {
-                    respond(
-                        """
-                        {
-                          "statusCode": 403,
-                          "errorType": "NOT_ALLOWED",
-                          "message": "Write access is required."
-                        }
-                        """.trimIndent(),
-                        status = HttpStatusCode.Forbidden,
-                        headers = jsonHeaders(),
-                    )
-                }
+        response.data.success shouldBe "True"
+        request.url.encodedPath shouldBe
+            "/iot/v2/features/installations/100/gateways/serial-1/devices/device-1/" +
+            "features/heating.dhw.temperature.main/commands/setTargetTemperature"
+    }
 
-            val exception =
-                runCatching {
-                    client.filterInstallationFeatures("100", FeatureFilterRequest())
-                }.exceptionOrNull().shouldBeInstanceOf<ViessmannApiException>()
+    test("maps feature endpoint errors") {
+        val client =
+            featuresClient {
+                respond(
+                    """
+                    {
+                      "statusCode": 403,
+                      "errorType": "NOT_ALLOWED",
+                      "message": "Write access is required."
+                    }
+                    """.trimIndent(),
+                    status = HttpStatusCode.Forbidden,
+                    headers = jsonHeaders(),
+                )
+            }
 
-            exception.error?.message shouldBe "Write access is required."
-        }
-    })
+        val exception =
+            runCatching {
+                client.filterInstallationFeatures("100", FeatureFilterRequest())
+            }.exceptionOrNull().shouldBeInstanceOf<ViessmannApiException>()
+
+        exception.error?.message shouldBe "Write access is required."
+    }
+}
 
 private fun featuresClient(handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): FeaturesClient {
     val config = testViessmannClientConfig()

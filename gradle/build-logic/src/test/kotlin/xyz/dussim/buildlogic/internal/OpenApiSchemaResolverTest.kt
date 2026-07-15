@@ -1,11 +1,10 @@
 package xyz.dussim.buildlogic.internal
 
-import io.kotest.core.spec.style.FunSpec
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.swagger.v3.oas.models.media.Schema
 
-class OpenApiSchemaResolverTest :
-    FunSpec({
+val OpenApiSchemaResolverTest by testSuite {
         test("resolves composed object properties") {
             val schema =
                 Schema<Any>().apply {
@@ -138,4 +137,4 @@ class OpenApiSchemaResolverTest :
             values?.enum shouldBe mutableListOf("auto")
             attributes.type shouldBe "number"
         }
-    })
+}
