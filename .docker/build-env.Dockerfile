@@ -27,8 +27,8 @@ RUN set -o errexit -o nounset \
         openssh-client \
     && rm --recursive --force /var/lib/apt/lists/*
 
-ENV GRADLE_VERSION="9.6.0-rc-3"
-ARG GRADLE_DOWNLOAD_SHA256=6e3106016ed5b19bfdef316441777a132cda19e167ad90015e053db423fb5dd6
+ENV GRADLE_VERSION="9.6.1"
+ARG GRADLE_DOWNLOAD_SHA256=9c0f7faeeb306cb14e4279a3e084ca6b596894089a0638e68a07c945a32c9e14
 RUN set -o errexit -o nounset \
     && echo "Downloading Gradle" \
     && wget --no-verbose --output-document=gradle.zip "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \

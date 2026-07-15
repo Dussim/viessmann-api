@@ -14,7 +14,7 @@
   "steps": [
     {
       "name": "jvmTest",
-      "image": "dussim/build-env:jdk26_gradle-9.6.0-rc3",
+      "image": "dussim/build-env:jdk26_gradle-9.6.1",
       "environment": {
         "CI": "true",
         "OPEN_API_PATH": "/mnt/viessmann-api/openApi",

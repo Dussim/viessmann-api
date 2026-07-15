@@ -1,8 +1,8 @@
 [versions]
-ksp = "2.3.9"
-kotest = "6.2.0"
+ksp = "2.3.10"
+kotest = "6.2.2"
 testBalloon = "1.0.1-K2.4.0"
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 ktlint = "1.8.0"
 slf4j = "2.0.18"
 
@@ -29,7 +29,7 @@ testBalloon-integration-kotest-assertions = { module = "de.infix.testBalloon:tes
 # Kotlin
 kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "kotlin" }
 kotlin-test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlin" }
-kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
+kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
 kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.8.0"
 swagger-parser = "io.swagger.parser.v3:swagger-parser:2.1.42"
