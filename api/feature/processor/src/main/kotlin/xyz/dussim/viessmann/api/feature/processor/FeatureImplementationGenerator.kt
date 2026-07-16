@@ -19,34 +19,13 @@ import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
 import xyz.dussim.viessmann.feature.api.GeneratedAccessException
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
+import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 
 private val REQUIRE_COMMAND = MemberName("xyz.dussim.viessmann.feature.api", "requireCommand")
-private val REQUIRE_PROPERTY_VALUE = MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValue")
-private val REQUIRE_PROPERTY_VALUE_OR_NULL_IF_MISSING =
-    MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValueOrNullIfMissing")
-private val FIND_PROPERTY_VALUE_OR_NULL = MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrNull")
-private val REQUIRE_NULLABLE_BOOLEAN_PROPERTY_VALUE =
-    MemberName("xyz.dussim.viessmann.feature.api", "requireNullableBooleanPropertyValue")
-private val REQUIRE_NULLABLE_DOUBLE_PROPERTY_VALUE =
-    MemberName("xyz.dussim.viessmann.feature.api", "requireNullableDoublePropertyValue")
-private val REQUIRE_NULLABLE_STRING_PROPERTY_VALUE =
-    MemberName("xyz.dussim.viessmann.feature.api", "requireNullableStringPropertyValue")
-private val FIND_NULLABLE_BOOLEAN_PROPERTY_VALUE_OR_NULL =
-    MemberName("xyz.dussim.viessmann.feature.api", "findNullableBooleanPropertyValueOrNull")
-private val FIND_NULLABLE_DOUBLE_PROPERTY_VALUE_OR_NULL =
-    MemberName("xyz.dussim.viessmann.feature.api", "findNullableDoublePropertyValueOrNull")
-private val FIND_NULLABLE_STRING_PROPERTY_VALUE_OR_NULL =
-    MemberName("xyz.dussim.viessmann.feature.api", "findNullableStringPropertyValueOrNull")
-private val REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
-    MemberName("xyz.dussim.viessmann.feature.api", "requirePropertyValueOrPromoteEmpty")
-private val FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
-    MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrPromoteEmpty")
 private val ZERO_PARAMETER_COMMAND_RULE = validationRule("zeroParameterCommandRule")
 private val OPTIONAL_ZERO_PARAMETER_COMMAND_RULE = validationRule("optionalZeroParameterCommandRule")
 private val OPTIONAL_COMMAND_RULE = validationRule("optionalCommandRule")
-private val NULLABLE_BOOLEAN_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableBooleanValue")
-private val NULLABLE_DOUBLE_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableDoubleValue")
-private val NULLABLE_STRING_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableStringValue")
+private val OPTIONAL_COMMAND_FAIL_FAST_RULE = validationRule("optionalCommandFailFastRule")
 private const val SOURCE_FEATURE = "sourceFeature"
 private const val FEATURE_TYPE = "featureType"
 private const val SOURCE_PROPERTIES = "sourceProperties"
@@ -114,34 +93,15 @@ internal fun CodeBlock.Builder.addDelegateAccessLocals(
 internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
     val name = property.name
     val type = property.type
-    val isListProperty = property.isListProperty
     val isEnumProperty = property.isEnumProperty
     val combined = propertyHash(name.hashCode(), name.length)
     val isNullable = property.isNullable
     val nonNullType = type.copy(nullable = false)
+    val adapter = property.typeAdapter()
+    val accessor = requireNotNull(if (isNullable) adapter.optionalAccessor else adapter.requiredAccessor)
     when {
-        nonNullType == NULLABLE_BOOLEAN_VALUE && isNullable -> {
-            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, FIND_NULLABLE_BOOLEAN_PROPERTY_VALUE_OR_NULL, name, combined)
-        }
-
-        nonNullType == NULLABLE_BOOLEAN_VALUE -> {
-            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, REQUIRE_NULLABLE_BOOLEAN_PROPERTY_VALUE, name, combined)
-        }
-
-        nonNullType == NULLABLE_DOUBLE_VALUE && isNullable -> {
-            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, FIND_NULLABLE_DOUBLE_PROPERTY_VALUE_OR_NULL, name, combined)
-        }
-
-        nonNullType == NULLABLE_DOUBLE_VALUE -> {
-            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, REQUIRE_NULLABLE_DOUBLE_PROPERTY_VALUE, name, combined)
-        }
-
-        nonNullType == NULLABLE_STRING_VALUE && isNullable -> {
-            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, FIND_NULLABLE_STRING_PROPERTY_VALUE_OR_NULL, name, combined)
-        }
-
-        nonNullType == NULLABLE_STRING_VALUE -> {
-            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, REQUIRE_NULLABLE_STRING_PROPERTY_VALUE, name, combined)
+        adapter.propertyAccessorStrategy == PropertyAccessorStrategy.NULLABLE_VALUE_WRAPPER -> {
+            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, accessor, name, combined)
         }
 
         isEnumProperty && isNullable -> {
@@ -149,7 +109,7 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
                 "this.%N = %N.%M<%T>(%S, %L)?.let { %T(it) }\n",
                 name,
                 SOURCE_PROPERTIES,
-                REQUIRE_PROPERTY_VALUE_OR_NULL_IF_MISSING,
+                accessor,
                 property.underlyingType,
                 name,
                 combined,
@@ -163,46 +123,22 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
                 name,
                 type,
                 SOURCE_PROPERTIES,
-                REQUIRE_PROPERTY_VALUE,
+                accessor,
                 property.underlyingType,
                 name,
                 combined,
             )
         }
 
-        isListProperty && isNullable -> {
+        adapter.propertyAccessorStrategy == PropertyAccessorStrategy.LIST_WITH_EMPTY_PROMOTION -> {
             add(
                 "this.%1N = %6N.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
                 name,
                 name,
                 combined,
-                type.copy(nullable = false),
-                FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT,
+                nonNullType,
+                accessor,
                 SOURCE_PROPERTIES,
-            )
-        }
-
-        isListProperty -> {
-            add(
-                "this.%1N = %6N.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
-                name,
-                name,
-                combined,
-                type,
-                REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT,
-                SOURCE_PROPERTIES,
-            )
-        }
-
-        isNullable -> {
-            add(
-                "this.%N = %N.%M<%T>(%S, %L)\n",
-                name,
-                SOURCE_PROPERTIES,
-                FIND_PROPERTY_VALUE_OR_NULL,
-                type.copy(nullable = false),
-                name,
-                combined,
             )
         }
 
@@ -211,8 +147,8 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
                 "this.%N = %N.%M<%T>(%S, %L)\n",
                 name,
                 SOURCE_PROPERTIES,
-                REQUIRE_PROPERTY_VALUE,
-                type,
+                accessor,
+                nonNullType,
                 name,
                 combined,
             )
@@ -256,47 +192,63 @@ private fun CodeBlock.Builder.addValidationException() {
 /**
  * Generates rule expressions for the feature.
  */
-private fun ruleExpressions(
-    context: SymbolContext,
-    isFailFast: Boolean = false,
-): List<CodeBlock> =
-    context
-        .parameterProperties
-        .map {
-            CodeBlock.of(
-                "%M",
-                context.ruleRegistry.register(
-                    it.validationFunction,
-                    listOf(it.name, !it.isNullable),
-                    FEATURE_VALIDATION_RULE_TYPE,
-                ),
-            )
-        } +
+private fun validationPlan(context: SymbolContext): ValidationPlan =
+    ValidationPlan(
         context
-            .commandProperties
+            .parameterProperties
             .map {
-                if (it.signature.parameters.isEmpty()) {
-                    CodeBlock.of(
-                        "%M",
-                        context.ruleRegistry.register(
-                            if (it.isNullable) OPTIONAL_ZERO_PARAMETER_COMMAND_RULE else ZERO_PARAMETER_COMMAND_RULE,
-                            listOf(it.apiName),
-                            FEATURE_VALIDATION_RULE_TYPE,
+                ValidationRulePlan(
+                    normalExpression =
+                        CodeBlock.of(
+                            "%M",
+                            context.ruleRegistry.register(
+                                it.validationFunction,
+                                listOf(it.name, !it.isNullable),
+                                FEATURE_VALIDATION_RULE_TYPE,
+                            ),
                         ),
-                    )
-                } else if (it.isNullable) {
-                    optionalCommandRuleExpression(it, isFailFast)
-                } else {
-                    commandRuleExpression(it, isFailFast)
-                }
-            }
+                )
+            } +
+            context
+                .commandProperties
+                .map {
+                    if (it.signature.parameters.isEmpty()) {
+                        ValidationRulePlan(
+                            normalExpression =
+                                CodeBlock.of(
+                                    "%M",
+                                    context.ruleRegistry.register(
+                                        if (it.isNullable) OPTIONAL_ZERO_PARAMETER_COMMAND_RULE else ZERO_PARAMETER_COMMAND_RULE,
+                                        listOf(it.apiName),
+                                        FEATURE_VALIDATION_RULE_TYPE,
+                                    ),
+                                ),
+                        )
+                    } else {
+                        ValidationRulePlan(
+                            normalExpression =
+                                if (it.isNullable) {
+                                    optionalCommandRuleExpression(it)
+                                } else {
+                                    commandRuleExpression(it)
+                                },
+                            failFastExpression =
+                                if (it.isNullable) {
+                                    optionalCommandRuleExpression(it, isFailFast = true)
+                                } else {
+                                    commandRuleExpression(it, isFailFast = true)
+                                },
+                        )
+                    }
+                },
+    )
 
 internal fun commandRuleExpression(
     property: CommandProperty,
     isFailFast: Boolean = false,
 ): CodeBlock =
     if (isFailFast) {
-        CodeBlock.of("%T.FailFast.rule", property.implType.copy(nullable = false))
+        CodeBlock.of("%T.failFastRule", property.implType.copy(nullable = false))
     } else {
         CodeBlock.of("%T.rule", property.implType.copy(nullable = false))
     }
@@ -306,7 +258,12 @@ internal fun optionalCommandRuleExpression(
     isFailFast: Boolean = false,
 ): CodeBlock =
     if (isFailFast) {
-        CodeBlock.of("%M(%S, %T.FailFast)", OPTIONAL_COMMAND_RULE, property.apiName, property.implType.copy(nullable = false))
+        CodeBlock.of(
+            "%M(%S, %T)",
+            OPTIONAL_COMMAND_FAIL_FAST_RULE,
+            property.apiName,
+            property.implType.copy(nullable = false),
+        )
     } else {
         CodeBlock.of("%M(%S, %T)", OPTIONAL_COMMAND_RULE, property.apiName, property.implType.copy(nullable = false))
     }
@@ -314,18 +271,25 @@ internal fun optionalCommandRuleExpression(
 /**
  * Generates companion object that implements validation rules for the feature.
  */
-fun companionObject(
+internal fun companionObject(
     context: SymbolContext,
-    implName: ClassName,
+    validationPlan: ValidationPlan,
 ): TypeSpec =
     TypeSpec
         .companionObjectBuilder()
-        .addSuperinterface(FEATURE_VALIDATION_RULE_TYPE)
+        .addSuperinterface(GENERATED_FEATURE_VALIDATION_RULE_TYPE)
         .addFunction(
             generateValidateFunction(
                 typeNameOf<Feature>(),
-                ruleExpressions(context),
+                validationPlan.normalExpressions,
                 useSingleErrorResultAggregation = context.hasOnlySingleErrorRules(),
+            ),
+        ).addFunction(
+            generateValidateFunction(
+                functionName = "validateFailFast",
+                targetType = typeNameOf<Feature>(),
+                ruleExpressions = validationPlan.failFastExpressions,
+                isFailFast = validationPlan.requiresSeparateFailFast,
             ),
         ).build()
 
@@ -333,21 +297,6 @@ private fun SymbolContext.hasOnlySingleErrorRules(): Boolean =
     commandProperties.none { command ->
         !command.isNullable && command.signature.parameters.isNotEmpty()
     }
-
-internal fun requiresDedicatedFailFastRule(ruleExpressions: List<CodeBlock>): Boolean = ruleExpressions.size > 1
-
-/**
- * Generates fail-fast validation object.
- */
-private fun failFastObject(
-    context: SymbolContext,
-    targetType: TypeName,
-): TypeSpec =
-    TypeSpec
-        .objectBuilder("FailFast")
-        .addSuperinterface(validationRuleType(targetType))
-        .addFunction(generateValidateFunction(targetType, ruleExpressions(context, isFailFast = true), isFailFast = true))
-        .build()
 
 /**
  * Generates extension properties for feature companion objects.
@@ -365,7 +314,6 @@ fun featureExtensions(
             .getter(
                 FunSpec
                     .getterBuilder()
-                    .addModifiers(KModifier.INLINE)
                     .addStatement("return %N", descriptorName)
                     .build(),
             ).build(),
@@ -387,23 +335,19 @@ fun generateSharedFeatureImplementation(
     val constructor = constructor(context)
     val properties = context.parameterPropertiesImpl + context.commandPropertiesImpl
     val initBlock = initBlock(context)
-    val ruleExpressions = ruleExpressions(context)
+    val validationPlan = validationPlan(context)
     val classImpl =
         TypeSpec
             .classBuilder(implName)
             .addModifiers(KModifier.INTERNAL)
-            .addAnnotation(PUBLISHED_API_ANNOTATION)
             .addAnnotation(VIESSMANN_API_INTERNAL_EXCEPTION_USAGE_OPT_IN)
             .primaryConstructor(constructor)
             .superclass(context.baseFeature.abstractClass)
             .addSuperclassConstructorParameter(SOURCE_FEATURE)
             .addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
-            .addType(companionObject(context, implName))
+            .addType(companionObject(context, validationPlan))
             .addProperties(properties)
             .apply {
-                if (requiresDedicatedFailFastRule(ruleExpressions)) {
-                    addType(failFastObject(context, typeNameOf<Feature>()))
-                }
                 if (initBlock.isNotEmpty()) {
                     addInitializerBlock(initBlock)
                 }
@@ -430,21 +374,20 @@ fun generateFeatureDescriptorAndExtensions(
     val descriptorName = generateDescriptorName(context.superInterface)
     val descriptorType = featureDescriptorType(context.superInterface, context.isIndexed)
     val descriptorFactory = if (context.isIndexed) INDEXED_FEATURE_DESCRIPTOR_FACTORY else STATIC_FEATURE_DESCRIPTOR_FACTORY
-    val requiresDedicatedFailFastRule = requiresDedicatedFailFastRule(ruleExpressions(context))
+    val validationPlan = validationPlan(context)
 
     val descriptorProperty =
         PropertySpec
             .builder(descriptorName, descriptorType)
             .addModifiers(KModifier.INTERNAL)
-            .addAnnotation(PUBLISHED_API_ANNOTATION)
             .initializer(
                 buildCodeBlock {
                     add("%M(\n", descriptorFactory)
                     indent()
                     add("wildcardName = %S,\n", context.featureName)
                     add("rule = %T,\n", implName)
-                    if (requiresDedicatedFailFastRule) {
-                        add("failFast = %T.FailFast,\n", implName)
+                    if (validationPlan.requiresSeparateFailFast) {
+                        add("failFast = %T(%T::validateFailFast),\n", ValidationRule::class, implName)
                     }
                     unindent()
                     add(") { feature ->\n")

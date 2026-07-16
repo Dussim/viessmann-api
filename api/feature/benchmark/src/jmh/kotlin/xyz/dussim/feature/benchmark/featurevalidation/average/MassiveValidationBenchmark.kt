@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("unused")
 open class MassiveValidationBenchmark {
     private lateinit var targets: List<ValidationTarget>
+    private lateinit var failFastTargets: List<ValidationTarget>
 
     @Setup
     fun setup() {
@@ -71,13 +72,32 @@ open class MassiveValidationBenchmark {
                     features = allFeatures,
                 )
             }
+
+        failFastTargets =
+            Descriptors.all.map { descriptor ->
+                ValidationTarget(
+                    validator = descriptor.failFastStructureValidator,
+                    features = allFeatures,
+                )
+            }
     }
 
     @Benchmark
     fun validateEverything(blackhole: Blackhole) {
-        val targets = this.targets
-        for (i in targets.indices) {
-            val target = targets[i]
+        for (i in this.targets.indices) {
+            val target = this.targets[i]
+            val validator = target.validator
+            val features = target.features
+            for (j in features.indices) {
+                blackhole.consume(validator.validate(features[j]))
+            }
+        }
+    }
+
+    @Benchmark
+    fun failFastValidateEverything(blackhole: Blackhole) {
+        for (i in failFastTargets.indices) {
+            val target = failFastTargets[i]
             val validator = target.validator
             val features = target.features
             for (j in features.indices) {

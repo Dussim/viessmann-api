@@ -1,6 +1,7 @@
 package xyz.dussim.viessmann.api.feature.processor
 
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.symbol.KSFile
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -15,7 +16,14 @@ import xyz.dussim.viessmann.feature.api.FeatureDescriptor
 
 internal class GeneratedFeatureFilesBuilder(
     private val descriptorsChunkSize: Int,
+    private val validationRulesChunkSize: Int,
 ) {
+    private data class GeneratedDescriptor(
+        val properties: List<PropertySpec>,
+        val name: String,
+        val originatingFile: KSFile,
+    )
+
     fun build(symbols: List<SymbolContext>): List<GeneratedFile> =
         symbols
             .groupBy { it.implName.packageName }
@@ -26,8 +34,7 @@ internal class GeneratedFeatureFilesBuilder(
     private fun buildPackage(symbols: List<SymbolContext>): List<GeneratedFile> {
         val sortedSymbols = symbols.sortedBy { it.superInterface.canonicalName }
         val generatedFiles = mutableListOf<GeneratedFile>()
-        val allDescriptorProperties = mutableListOf<List<PropertySpec>>()
-        val allDescriptorNames = mutableListOf<String>()
+        val descriptors = mutableListOf<GeneratedDescriptor>()
 
         sortedSymbols
             .groupBy { it.featureSignature }
@@ -43,22 +50,24 @@ internal class GeneratedFeatureFilesBuilder(
                 generatedFiles +=
                     GeneratedFile(
                         fileSpec = generateSharedFeatureImplementation(implName, superInterfaces, firstContext),
-                        dependencies = Dependencies(true),
+                        dependencies = dependenciesFor(group.map(SymbolContext::originatingFile)),
                     )
 
                 group.forEach { context ->
                     val generatedProps = generateFeatureDescriptorAndExtensions(context, implName)
-                    allDescriptorProperties += listOf(generatedProps)
-                    allDescriptorNames += generatedProps.first().name
+                    descriptors +=
+                        GeneratedDescriptor(
+                            properties = generatedProps,
+                            name = generatedProps.first().name,
+                            originatingFile = context.originatingFile,
+                        )
                 }
             }
 
         generatedFiles +=
             descriptorFiles(
                 descriptorPackage = sortedSymbols.first().implName.packageName,
-                descriptorProperties = allDescriptorProperties,
-                descriptorNames = allDescriptorNames,
-                dependencies = Dependencies(true),
+                descriptors = descriptors,
             )
 
         sortedSymbols
@@ -72,33 +81,36 @@ internal class GeneratedFeatureFilesBuilder(
                 generatedFiles +=
                     GeneratedFile(
                         fileSpec = generateCommandImplementation(implName, superInterfaces, firstCommand),
-                        dependencies = Dependencies(true),
+                        dependencies = dependenciesFor(group.map { it.parentContext.originatingFile }),
                     )
             }
 
         generatedFiles +=
-            GeneratedFile(
-                fileSpec = generateValidationRules(sortedSymbols.first().ruleRegistry),
-                dependencies = Dependencies(true),
-            )
+            generateValidationRuleFiles(
+                ruleRegistry = sortedSymbols.first().ruleRegistry,
+                chunkSize = validationRulesChunkSize,
+            ).map { fileSpec ->
+                GeneratedFile(
+                    fileSpec = fileSpec,
+                    dependencies = dependenciesFor(sortedSymbols.map(SymbolContext::originatingFile), forceAggregating = true),
+                )
+            }
 
         return generatedFiles
     }
 
     private fun descriptorFiles(
         descriptorPackage: String,
-        descriptorProperties: List<List<PropertySpec>>,
-        descriptorNames: List<String>,
-        dependencies: Dependencies,
+        descriptors: List<GeneratedDescriptor>,
     ): List<GeneratedFile> {
-        if (descriptorProperties.isEmpty()) return emptyList()
+        if (descriptors.isEmpty()) return emptyList()
 
-        val descriptorPropertyChunks = descriptorProperties.chunked(descriptorsChunkSize).map { it.flatten() }
-        val descriptorNameChunks = descriptorNames.chunkedByConfiguredSize()
+        val descriptorChunks = descriptors.chunked(descriptorsChunkSize)
+        val descriptorNameChunks = descriptorChunks.map { chunk -> chunk.map(GeneratedDescriptor::name) }
 
-        return descriptorPropertyChunks.mapIndexed { index, chunk ->
+        return descriptorChunks.mapIndexed { index, chunk ->
             val fileName =
-                if (descriptorPropertyChunks.size == 1) {
+                if (descriptorChunks.size == 1) {
                     "GeneratedDescriptors"
                 } else {
                     "GeneratedDescriptors${index + 1}"
@@ -108,9 +120,9 @@ internal class GeneratedFeatureFilesBuilder(
                     FileSpec
                         .builder(descriptorPackage, fileName)
                         .addAnnotation(FILE_DEPRECATION_SUPPRESSION)
-                        .addProperties(chunk)
+                        .addProperties(chunk.flatMap(GeneratedDescriptor::properties))
                         .build(),
-                dependencies = dependencies,
+                dependencies = dependenciesFor(chunk.map(GeneratedDescriptor::originatingFile)),
             )
         } +
             GeneratedFile(
@@ -120,23 +132,43 @@ internal class GeneratedFeatureFilesBuilder(
                         .addAnnotation(FILE_DEPRECATION_SUPPRESSION)
                         .addType(descriptorsObject(descriptorNameChunks))
                         .build(),
-                dependencies = dependencies,
+                dependencies =
+                    dependenciesFor(
+                        descriptors.map(GeneratedDescriptor::originatingFile),
+                        forceAggregating = true,
+                    ),
             )
     }
 
-    private fun <T> List<T>.chunkedByConfiguredSize(): List<List<T>> = chunked(descriptorsChunkSize)
+    private fun dependenciesFor(
+        files: List<KSFile>,
+        forceAggregating: Boolean = false,
+    ): Dependencies {
+        val distinctFiles = files.distinctBy { it.filePath }
+        return Dependencies(
+            aggregating = forceAggregating || distinctFiles.size != 1,
+            *distinctFiles.toTypedArray(),
+        )
+    }
 
     private fun descriptorsObject(descriptorNameChunks: List<List<String>>): TypeSpec =
         TypeSpec
             .objectBuilder("Descriptors")
-            .addProperty(allDescriptorsProperty(descriptorNameChunks))
-            .apply {
+            .addProperty(
+                allDescriptorsProperty(
+                    descriptorCount = descriptorNameChunks.sumOf { it.size },
+                    numberOfChunks = descriptorNameChunks.size,
+                ),
+            ).apply {
                 descriptorNameChunks.forEachIndexed { index, nameChunk ->
                     addFunction(descriptorChunkFunction(index + 1, nameChunk))
                 }
             }.build()
 
-    private fun allDescriptorsProperty(descriptorNameChunks: List<List<String>>): PropertySpec =
+    private fun allDescriptorsProperty(
+        descriptorCount: Int,
+        numberOfChunks: Int,
+    ): PropertySpec =
         PropertySpec
             .builder(
                 "all",
@@ -147,10 +179,10 @@ internal class GeneratedFeatureFilesBuilder(
             ).initializer(
                 CodeBlock
                     .builder()
-                    .beginControlFlow("buildSet")
+                    .beginControlFlow("buildSet(%L)", descriptorCount)
                     .apply {
-                        descriptorNameChunks.forEachIndexed { index, _ ->
-                            addStatement("addAll(chunk%L())", index + 1)
+                        repeat(numberOfChunks) { index ->
+                            addStatement("addChunk%L()", index + 1)
                         }
                     }.endControlFlow()
                     .build(),
@@ -161,22 +193,20 @@ internal class GeneratedFeatureFilesBuilder(
         descriptorNames: List<String>,
     ): FunSpec =
         FunSpec
-            .builder("chunk$number")
+            .builder("addChunk$number")
             .addModifiers(KModifier.PRIVATE)
-            .returns(
+            .receiver(
                 FeatureDescriptor::class
                     .asTypeName()
                     .parameterizedBy(STAR)
-                    .let { List::class.asTypeName().parameterizedBy(it) },
+                    .let { ClassName("kotlin.collections", "MutableSet").parameterizedBy(it) },
             ).addCode(
                 CodeBlock
                     .builder()
-                    .add("return listOf(\n")
                     .apply {
                         descriptorNames.forEach { name ->
-                            add("%L,\n", name)
+                            addStatement("add(%L)", name)
                         }
-                    }.add(")\n")
-                    .build(),
+                    }.build(),
             ).build()
 }

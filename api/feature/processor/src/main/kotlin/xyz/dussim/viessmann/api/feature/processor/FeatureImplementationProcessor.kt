@@ -13,6 +13,7 @@ class FeatureImplementationProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
     private val descriptorsChunkSize: Int,
+    private val validationRulesChunkSize: Int,
     private val formatGeneratedSources: Boolean = true,
     private val renderParallelism: Int = 1,
 ) : SymbolProcessor {
@@ -48,7 +49,11 @@ class FeatureImplementationProcessor(
     override fun finish() {
         if (hasErrors || contextsByQualifiedName.isEmpty()) return
 
-        val generatedFiles = GeneratedFeatureFilesBuilder(descriptorsChunkSize).build(contextsByQualifiedName.values.toList())
+        val generatedFiles =
+            GeneratedFeatureFilesBuilder(
+                descriptorsChunkSize = descriptorsChunkSize,
+                validationRulesChunkSize = validationRulesChunkSize,
+            ).build(contextsByQualifiedName.values.toList())
 
         GeneratedFileEmitter(
             codeGenerator = codeGenerator,

@@ -10,11 +10,14 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 class FeatureImplementationProcessorProvider : SymbolProcessorProvider {
     companion object {
         const val DESCRIPTORS_CHUNK_SIZE_OPTION = "descriptorsChunkSize"
+        const val VALIDATION_RULES_CHUNK_SIZE_OPTION = "validationRulesChunkSize"
         const val FORMAT_GENERATED_SOURCES_OPTION = "formatGeneratedSources"
         const val RENDER_PARALLELISM_OPTION = "renderParallelism"
 
-        internal const val DEFAULT_DESCRIPTORS_CHUNK_SIZE = 128
+        internal const val DEFAULT_DESCRIPTORS_CHUNK_SIZE = 64
         internal const val MAX_DESCRIPTORS_CHUNK_SIZE = 256
+        internal const val DEFAULT_VALIDATION_RULES_CHUNK_SIZE = 64
+        internal const val MAX_VALIDATION_RULES_CHUNK_SIZE = 128
         internal const val MAX_RENDER_PARALLELISM = 16
     }
 
@@ -27,6 +30,7 @@ class FeatureImplementationProcessorProvider : SymbolProcessorProvider {
             codeGenerator = environment.codeGenerator,
             logger = environment.logger,
             descriptorsChunkSize = options.descriptorsChunkSize,
+            validationRulesChunkSize = options.validationRulesChunkSize,
             formatGeneratedSources = options.formatGeneratedSources,
             renderParallelism = options.renderParallelism,
         )
@@ -36,6 +40,8 @@ class FeatureImplementationProcessorProvider : SymbolProcessorProvider {
 internal data class FeatureProcessorOptions(
     /** Maximum number of logical feature descriptors emitted in one generated descriptor source file. */
     val descriptorsChunkSize: Int,
+    /** Maximum number of generated validation-rule properties emitted in one source file. */
+    val validationRulesChunkSize: Int,
     val formatGeneratedSources: Boolean,
     val renderParallelism: Int,
 ) {
@@ -60,6 +66,14 @@ internal data class FeatureProcessorOptions(
                     maximum = FeatureImplementationProcessorProvider.MAX_RENDER_PARALLELISM,
                     reportError = reportError,
                 )
+            val validationRulesChunkSize =
+                parseBoundedInt(
+                    options = options,
+                    name = FeatureImplementationProcessorProvider.VALIDATION_RULES_CHUNK_SIZE_OPTION,
+                    default = FeatureImplementationProcessorProvider.DEFAULT_VALIDATION_RULES_CHUNK_SIZE,
+                    maximum = FeatureImplementationProcessorProvider.MAX_VALIDATION_RULES_CHUNK_SIZE,
+                    reportError = reportError,
+                )
             val formatGeneratedSources =
                 options[FeatureImplementationProcessorProvider.FORMAT_GENERATED_SOURCES_OPTION]?.let { value ->
                     value.toBooleanStrictOrNull() ?: run {
@@ -71,7 +85,12 @@ internal data class FeatureProcessorOptions(
                     }
                 } ?: true
 
-            return FeatureProcessorOptions(descriptorsChunkSize, formatGeneratedSources, renderParallelism)
+            return FeatureProcessorOptions(
+                descriptorsChunkSize = descriptorsChunkSize,
+                validationRulesChunkSize = validationRulesChunkSize,
+                formatGeneratedSources = formatGeneratedSources,
+                renderParallelism = renderParallelism,
+            )
         }
 
         private fun parseBoundedInt(
