@@ -26,7 +26,7 @@ val GeneratorAccessPatternTest by testSuite {
             )
 
         code shouldContain "requirePropertyValue<xyz.dussim.viessmann.feature.api.DoubleValue>(\"temperature\""
-        code shouldContain "temperature = "
+        code shouldContain "this.temperature = "
         code shouldNotContain "!!"
     }
 
@@ -42,7 +42,7 @@ val GeneratorAccessPatternTest by testSuite {
             )
 
         code shouldContain "findPropertyValueOrNull<xyz.dussim.viessmann.feature.api.DoubleValue>(\"temperature\""
-        code shouldContain "temperature = "
+        code shouldContain "this.temperature = "
         code shouldNotContain "!!"
     }
 
@@ -59,7 +59,7 @@ val GeneratorAccessPatternTest by testSuite {
 
         code shouldContain
             "requirePropertyValueOrPromoteEmpty<xyz.dussim.viessmann.feature.api.ListStringValue>(\"supported\""
-        code shouldContain "supported = "
+        code shouldContain "this.supported = "
         code shouldContain "ListStringValue.EMPTY"
         code shouldNotContain "!!"
     }
@@ -77,7 +77,7 @@ val GeneratorAccessPatternTest by testSuite {
 
         code shouldContain
             "findPropertyValueOrPromoteEmpty<xyz.dussim.viessmann.feature.api.ListStringValue>(\"supported\""
-        code shouldContain "supported = "
+        code shouldContain "this.supported = "
         code shouldContain "ListStringValue.EMPTY"
         code shouldNotContain "!!"
     }
@@ -87,27 +87,29 @@ val GeneratorAccessPatternTest by testSuite {
             buildCommandInitCode(
                 CommandProperty(
                     name = "setValue",
+                    apiName = "set_value",
                     implType = ClassName("test.commands", "SetValueImpl"),
                     signature = CommandSignature(name = "SetValue", parameters = emptyList()),
-                    validationName = "setValue",
                     isNullable = false,
                 ),
             )
 
-        code shouldContain """requireCommand("setValue""""
-        code shouldContain "SetValueImpl(commands."
+        code shouldContain """requireCommand("set_value""""
+        code shouldContain "SetValueImpl(sourceCommands."
         code shouldNotContain "delegate.commands"
         code shouldNotContain "!!"
     }
 
     test("feature generator emits cached feature access locals when needed") {
-        buildDelegateAccessLocalsCode(hasProperties = true, hasCommands = false) shouldContain "val properties = properties"
-        buildDelegateAccessLocalsCode(hasProperties = false, hasCommands = true) shouldContain "val commands = `commands`"
+        buildDelegateAccessLocalsCode(hasProperties = true, hasCommands = false) shouldContain
+            "val sourceProperties = sourceFeature.properties"
+        buildDelegateAccessLocalsCode(hasProperties = false, hasCommands = true) shouldContain
+            "val sourceCommands = sourceFeature.commands"
 
         val code = buildDelegateAccessLocalsCode(hasProperties = true, hasCommands = true)
 
-        code shouldContain "val properties = properties"
-        code shouldContain "val commands = `commands`"
+        code shouldContain "val sourceProperties = sourceFeature.properties"
+        code shouldContain "val sourceCommands = sourceFeature.commands"
         code shouldNotContain "!!"
     }
 
@@ -115,13 +117,13 @@ val GeneratorAccessPatternTest by testSuite {
         val property =
             CommandProperty(
                 name = "setValue",
+                apiName = "setValue",
                 implType = ClassName("test.commands", "SetValueImpl"),
                 signature =
                     CommandSignature(
                         name = "SetValue",
                         parameters = listOf("value" to typeNameOf<NumberConstraints>()),
                     ),
-                validationName = "setValue",
                 isNullable = false,
             )
 
@@ -223,18 +225,61 @@ val GeneratorAccessPatternTest by testSuite {
                     ),
                 commands =
                     listOf(
-                        Triple(
-                            "setValue",
-                            CommandSignature(
-                                name = "SetValue",
-                                parameters = listOf("value" to typeNameOf<NumberConstraints>()),
-                            ),
-                            false,
+                        CommandFeatureSignature(
+                            propertyName = "setValue",
+                            apiName = "setValue",
+                            signature =
+                                CommandSignature(
+                                    name = "SetValue",
+                                    parameters = listOf("value" to typeNameOf<NumberConstraints>()),
+                                ),
+                            isNullable = false,
                         ),
                     ),
             )
 
-        signature.implName shouldBe "FeatFeatureActiveDoubleValueModeListStriGOB341Impl"
+        signature.implName shouldBe "FeatFeatureActiveDoubleValueModeListStri3C193C8175CA4D50Impl"
+    }
+
+    test("generated descriptor names distinguish equal simple names in different packages") {
+        val first = generateDescriptorName(ClassName("one.package", "SameFeature"))
+        val second = generateDescriptorName(ClassName("another.package", "SameFeature"))
+
+        (first == second) shouldBe false
+    }
+
+    test("rule names include the complete signature") {
+        val function = validationRule("stringPropertyRule")
+        val first = RuleSignature(function, listOf("a-b"), typeNameOf<Feature>()).generateName()
+        val second = RuleSignature(function, listOf("a_b"), typeNameOf<Feature>()).generateName()
+
+        (first == second) shouldBe false
+    }
+
+    test("processor options reject malformed and unsafe values") {
+        val errors = mutableListOf<String>()
+        val options =
+            FeatureProcessorOptions.from(
+                mapOf(
+                    FeatureImplementationProcessorProvider.DESCRIPTORS_CHUNK_SIZE_OPTION to "0",
+                    FeatureImplementationProcessorProvider.FORMAT_GENERATED_SOURCES_OPTION to "yes",
+                    FeatureImplementationProcessorProvider.RENDER_PARALLELISM_OPTION to "999999999999",
+                ),
+                errors::add,
+            )
+
+        options.descriptorsChunkSize shouldBe FeatureImplementationProcessorProvider.DEFAULT_DESCRIPTORS_CHUNK_SIZE
+        options.formatGeneratedSources shouldBe true
+        errors.size shouldBe 3
+    }
+
+    test("processor option descriptor chunk size is measured in logical descriptors") {
+        val options =
+            FeatureProcessorOptions.from(
+                mapOf(FeatureImplementationProcessorProvider.DESCRIPTORS_CHUNK_SIZE_OPTION to "64"),
+            )
+
+        options.descriptorsChunkSize shouldBe 64
     }
 }
 

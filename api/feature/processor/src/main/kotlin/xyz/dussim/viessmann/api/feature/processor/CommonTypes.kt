@@ -308,10 +308,10 @@ fun overrideProperty(
  * Example: "MyFeatureImpl" -> "myFeatureDescriptor"
  */
 fun generateDescriptorName(className: ClassName): String =
-    className.simpleName
-        .replace("_", "")
+    className.simpleNames
+        .joinToString("_")
         .replaceFirstChar { it.lowercase() }
-        .removeSuffix(IMPL_SUFFIX) + DESCRIPTOR_SUFFIX
+        .removeSuffix(IMPL_SUFFIX) + "_${stableHash(className.canonicalName)}" + DESCRIPTOR_SUFFIX
 
 data class CommandSignature(
     val name: String,
@@ -324,8 +324,7 @@ data class CommandSignature(
 /**
  * Generates a short, stable implementation class name for a command.
  *
- * **Normal format** (when the result fits within [MAX_IMPL_NAME_LENGTH] chars):
- * `{CapitalizedCommandName}{params}Impl`
+ * Format: `{ReadableCommandAndParameters}_{16 hex SHA-256 chars}Impl`.
  *
  * Each parameter contributes `{CapitalizedParamName}{typeAbbrev}`:
  *   - ParamName is the full camelCase parameter name with first letter uppercased.
@@ -345,15 +344,7 @@ data class CommandSignature(
  *       UnknownConstraints       → U
  *       (anything else)          → X
  *
- * **Hash fallback** (when the normal name would exceed [MAX_IMPL_NAME_LENGTH] = $MAX_IMPL_NAME_LENGTH chars):
- * `{CapitalizedCommandName}_{hash8hex}Impl`
- * where hash8hex is the first 8 hex characters of the SHA-256 of the full
- * (un-truncated) params part, ensuring uniqueness without length blow-up.
- *
- * Examples:
- *   - setTemperature(value: StringConstraints)                         → SetTemperatureValueSImpl
- *   - setCurve(shift: NumberConstraints, slope: NumberConstraints)     → SetCurveShiftNSlopeNImpl
- *   - setUnitSystemAndFormatters(unitSystem:S, dateFormat:S, ×8 …)    → SetUnitSystemAndFormatters_a3f9b2c1Impl
+ * The readable part is truncated to [MAX_IMPL_NAME_LENGTH]; the 64-bit suffix is derived from the complete signature.
  */
 private const val MAX_IMPL_NAME_LENGTH = 80
 
@@ -361,9 +352,7 @@ private fun buildImplName(
     name: String,
     parameters: List<Pair<String, TypeName>>,
 ): String {
-    val capitalizedName = name.replaceFirstChar { it.uppercase() }
-    if (parameters.isEmpty()) return "${capitalizedName}Impl"
-
+    val capitalizedName = name.toGeneratedIdentifier().replaceFirstChar { it.uppercase() }
     val typeAbbrevs =
         mapOf(
             "StringConstraints" to "S",
@@ -385,20 +374,12 @@ private fun buildImplName(
         parameters.joinToString("") { (pName, pType) ->
             val simpleName = pType.toString().substringAfterLast(".").removeSuffix("?")
             val typeAbbrev = typeAbbrevs[simpleName] ?: "X"
-            pName.replaceFirstChar { it.uppercase() } + typeAbbrev
+            pName.toGeneratedIdentifier().replaceFirstChar { it.uppercase() } + typeAbbrev
         }
 
-    val fullName = "${capitalizedName}${paramsPart}Impl"
-    if (fullName.length <= MAX_IMPL_NAME_LENGTH) return fullName
-
-    // Hash fallback: SHA-256 of paramsPart, take first 8 hex chars
-    val digest = java.security.MessageDigest.getInstance("SHA-256")
-    val hash =
-        digest
-            .digest(paramsPart.toByteArray())
-            .take(4)
-            .joinToString("") { "%02x".format(it) }
-    return "${capitalizedName}_${hash}Impl"
+    val hash = stableHash("$name;$paramsPart")
+    val readablePart = "${capitalizedName}$paramsPart".take(MAX_IMPL_NAME_LENGTH - hash.length - "_Impl".length)
+    return "${readablePart}_${hash}Impl"
 }
 
 data class RuleSignature(
@@ -423,8 +404,24 @@ data class RuleSignature(
                 "${argsPart}_$functionPart"
             }
         val sanitized = if (name.first().isDigit()) "rule_$name" else name
-        return sanitized.replaceFirstChar { it.lowercase() }.replace("__", "_")
+        val readable = sanitized.replaceFirstChar { it.lowercase() }.replace(Regex("_+"), "_").take(80)
+        return "${readable}_${stableHash(stableSignature())}"
     }
+
+    private fun stableSignature(): String =
+        buildString {
+            append(function.canonicalName)
+            append(';')
+            args.joinTo(this, separator = ";") { argument ->
+                when (argument) {
+                    is ClassName -> argument.canonicalName
+                    is MemberName -> argument.canonicalName
+                    else -> argument.toString()
+                }
+            }
+            append(';')
+            append(targetType)
+        }
 }
 
 class RuleRegistry(
@@ -456,14 +453,14 @@ enum class BaseFeature(
 data class FeatureSignature(
     val baseFeature: BaseFeature,
     val properties: List<Pair<String, TypeName>>,
-    val commands: List<Triple<String, CommandSignature, Boolean>>,
+    val commands: List<CommandFeatureSignature>,
 ) {
     val implName: String
         get() {
             val basePart = baseFeature.name
             val propsPart =
                 properties.joinToString("") { (name, type) ->
-                    name.replaceFirstChar { it.uppercase() } +
+                    name.toGeneratedIdentifier().replaceFirstChar { it.uppercase() } +
                         type
                             .toString()
                             .substringAfterLast(".")
@@ -471,10 +468,10 @@ data class FeatureSignature(
                             .replaceFirstChar { it.uppercase() }
                 }
             val cmdsPart =
-                commands.joinToString("") { (name, sig, isNullable) ->
-                    name.replaceFirstChar { it.uppercase() } +
-                        sig.implName.removeSuffix("Impl") +
-                        if (isNullable) "Opt" else ""
+                commands.joinToString("") { command ->
+                    command.propertyName.toGeneratedIdentifier().replaceFirstChar { it.uppercase() } +
+                        command.signature.implName.removeSuffix("Impl") +
+                        if (command.isNullable) "Opt" else ""
                 }
             val rawName = "Feat${basePart}${propsPart}$cmdsPart"
             return "${rawName.take(40)}${stableHashSuffix()}Impl"
@@ -490,16 +487,11 @@ data class FeatureSignature(
                     "$name:${type.stableSignatureName()}"
                 }
                 append(";commands=")
-                commands.joinTo(this, separator = ",") { (name, signature, isNullable) ->
-                    "$name:${signature.stableSignatureName()}:nullable=$isNullable"
+                commands.joinTo(this, separator = ",") { command ->
+                    "${command.propertyName}:${command.signature.stableSignatureName()}:nullable=${command.isNullable}"
                 }
             }
-        val digest = MessageDigest.getInstance("SHA-256").digest(signature.encodeToByteArray())
-        val value =
-            digest
-                .take(4)
-                .fold(0U) { acc, byte -> (acc shl 8) or byte.toUByte().toUInt() }
-        return value.toString(36).uppercase(Locale.ROOT)
+        return stableHash(signature).uppercase(Locale.ROOT)
     }
 
     private fun TypeName.stableSignatureName(): String = toString()
@@ -514,3 +506,23 @@ data class FeatureSignature(
             append(")")
         }
 }
+
+data class CommandFeatureSignature(
+    val propertyName: String,
+    val apiName: String,
+    val signature: CommandSignature,
+    val isNullable: Boolean,
+)
+
+private fun String.toGeneratedIdentifier(): String {
+    val sanitized = replace(Regex("[^A-Za-z0-9_]"), "_")
+    val nonEmpty = sanitized.ifEmpty { "Generated" }
+    return if (nonEmpty.first().isDigit()) "_$nonEmpty" else nonEmpty
+}
+
+private fun stableHash(value: String): String =
+    MessageDigest
+        .getInstance("SHA-256")
+        .digest(value.encodeToByteArray())
+        .take(8)
+        .joinToString("") { byte -> "%02x".format(byte) }
