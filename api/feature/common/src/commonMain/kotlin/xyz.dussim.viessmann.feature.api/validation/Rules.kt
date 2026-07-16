@@ -502,6 +502,21 @@ fun commandRule(
 }
 
 /**
+ * Validates a required command with the generated fail-fast command path.
+ */
+fun commandFailFastRule(
+    commandName: String,
+    innerRule: GeneratedValidationRule<Command, ValidationError>,
+): ValidationRule<Feature, ValidationError> {
+    val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        innerRule.validateFailFast(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
+    }
+}
+
+/**
  * Validates an optional command. An absent command is valid; a present command is checked by [innerRule].
  */
 fun optionalCommandRule(
@@ -513,6 +528,22 @@ fun optionalCommandRule(
     return ValidationRule { feature ->
         feature.commands[commandName, precomputedHash]
             ?.let(innerRule::validate)
+            ?: ValidationResult.Valid
+    }
+}
+
+/**
+ * Validates an optional command with the generated fail-fast command path.
+ */
+fun optionalCommandFailFastRule(
+    commandName: String,
+    innerRule: GeneratedValidationRule<Command, ValidationError>,
+): ValidationRule<Feature, ValidationError> {
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        feature.commands[commandName, precomputedHash]
+            ?.let(innerRule::validateFailFast)
             ?: ValidationResult.Valid
     }
 }

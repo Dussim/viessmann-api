@@ -20,7 +20,6 @@ val GeneratorAccessPatternTest by testSuite {
                 ParameterProperty(
                     name = "temperature",
                     type = typeNameOf<DoubleValue>(),
-                    isListProperty = false,
                     isEnumProperty = false,
                 ),
             )
@@ -36,7 +35,6 @@ val GeneratorAccessPatternTest by testSuite {
                 ParameterProperty(
                     name = "temperature",
                     type = typeNameOf<DoubleValue?>(),
-                    isListProperty = false,
                     isEnumProperty = false,
                 ),
             )
@@ -52,7 +50,6 @@ val GeneratorAccessPatternTest by testSuite {
                 ParameterProperty(
                     name = "supported",
                     type = typeNameOf<ListStringValue>(),
-                    isListProperty = true,
                     isEnumProperty = false,
                 ),
             )
@@ -70,7 +67,6 @@ val GeneratorAccessPatternTest by testSuite {
                 ParameterProperty(
                     name = "supported",
                     type = typeNameOf<ListStringValue?>(),
-                    isListProperty = true,
                     isEnumProperty = false,
                 ),
             )
@@ -128,7 +124,7 @@ val GeneratorAccessPatternTest by testSuite {
             )
 
         commandRuleExpression(property).toString() shouldContain "test.commands.SetValueImpl.rule"
-        commandRuleExpression(property, isFailFast = true).toString() shouldContain "test.commands.SetValueImpl.FailFast.rule"
+        commandRuleExpression(property, isFailFast = true).toString() shouldContain "test.commands.SetValueImpl.failFastRule"
     }
 
     test("command generator emits requireParam + requireConstraints for non-array constraints") {
@@ -200,18 +196,29 @@ val GeneratorAccessPatternTest by testSuite {
         code shouldNotContain "of("
     }
 
-    test("feature generator reuses companion validation when fail-fast body would be identical") {
-        requiresDedicatedFailFastRule(emptyList()) shouldBe false
-        requiresDedicatedFailFastRule(listOf(CodeBlock.of("singleRule"))) shouldBe false
+    test("validation plan reuses normal rule when fail-fast behavior is identical") {
+        ValidationPlan(emptyList()).requiresSeparateFailFast shouldBe false
+        ValidationPlan(listOf(ValidationRulePlan(CodeBlock.of("singleRule")))).requiresSeparateFailFast shouldBe false
     }
 
-    test("feature generator keeps dedicated fail-fast validation for aggregated rules") {
-        requiresDedicatedFailFastRule(
+    test("validation plan keeps separate fail-fast control flow for aggregated rules") {
+        ValidationPlan(
             listOf(
-                CodeBlock.of("firstRule"),
-                CodeBlock.of("secondRule"),
+                ValidationRulePlan(CodeBlock.of("firstRule")),
+                ValidationRulePlan(CodeBlock.of("secondRule")),
             ),
-        ) shouldBe true
+        ).requiresSeparateFailFast shouldBe true
+    }
+
+    test("validation plan keeps separate fail-fast rule for a sole parameterized command") {
+        ValidationPlan(
+            listOf(
+                ValidationRulePlan(
+                    normalExpression = CodeBlock.of("CommandImpl.rule"),
+                    failFastExpression = CodeBlock.of("CommandImpl.failFastRule"),
+                ),
+            ),
+        ).requiresSeparateFailFast shouldBe true
     }
 
     test("feature signature implementation name is stable") {
@@ -280,6 +287,52 @@ val GeneratorAccessPatternTest by testSuite {
             )
 
         options.descriptorsChunkSize shouldBe 64
+    }
+
+    test("processor option validation rule chunk size is measured in logical rules") {
+        val options =
+            FeatureProcessorOptions.from(
+                mapOf(FeatureImplementationProcessorProvider.VALIDATION_RULES_CHUNK_SIZE_OPTION to "32"),
+            )
+
+        options.validationRulesChunkSize shouldBe 32
+    }
+
+    test("validation rules are split at the configured boundary") {
+        fun generatedFiles(ruleCount: Int) =
+            generateValidationRuleFiles(
+                ruleRegistry =
+                    RuleRegistry("test.rules").apply {
+                        repeat(ruleCount) { index ->
+                            register(
+                                function = validationRule("booleanPropertyRule"),
+                                args = listOf("property$index", true),
+                                targetType = FEATURE_VALIDATION_RULE_TYPE,
+                            )
+                        }
+                    },
+                chunkSize = 64,
+            )
+
+        generatedFiles(1).single().name shouldBe "ValidationRules"
+        Regex("internal val ").findAll(generatedFiles(64).single().toString()).count() shouldBe 64
+
+        val filesAtBoundary = generatedFiles(65)
+        filesAtBoundary.map { it.name } shouldBe listOf("ValidationRules1", "ValidationRules2")
+        Regex("internal val ").findAll(filesAtBoundary.first().toString()).count() shouldBe 64
+        Regex("internal val ").findAll(filesAtBoundary.last().toString()).count() shouldBe 1
+    }
+
+    test("one type adapter supplies validation access conversion and naming metadata") {
+        val propertyAdapter = PROPERTY_TYPE_ADAPTERS.getValue(typeNameOf<DoubleValue>())
+        propertyAdapter.validationRule.simpleName shouldBe "doublePropertyRule"
+        propertyAdapter.requiredAccessor?.simpleName shouldBe "requirePropertyValue"
+        propertyAdapter.optionalAccessor?.simpleName shouldBe "findPropertyValueOrNull"
+
+        val constraintAdapter = CONSTRAINT_TYPE_ADAPTERS.getValue(typeNameOf<ArrayStringConstraints>())
+        constraintAdapter.validationRule.simpleName shouldBe "arrayStringConstraintsRule"
+        constraintAdapter.constraintConverter?.simpleName shouldBe "toArrayStringConstraintsOrThrow"
+        constraintAdapter.abbreviation shouldBe "AS"
     }
 }
 

@@ -5,6 +5,7 @@ import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
@@ -34,7 +35,6 @@ import xyz.dussim.viessmann.feature.api.ListLogBookEntryValue
 import xyz.dussim.viessmann.feature.api.ListOnboardUpdaterLastErrorCodeValue
 import xyz.dussim.viessmann.feature.api.ListOperatingDataCellsDetailValue
 import xyz.dussim.viessmann.feature.api.ListPowerBalanceEntryValue
-import xyz.dussim.viessmann.feature.api.ListPropertyValue
 import xyz.dussim.viessmann.feature.api.ListRoomActorValue
 import xyz.dussim.viessmann.feature.api.ListSensorValue
 import xyz.dussim.viessmann.feature.api.ListSolarlogDeviceValue
@@ -55,46 +55,60 @@ import xyz.dussim.viessmann.feature.api.ScheduleValue
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.TestResultValue
 
-val PROPERTY_VALIDATION_FUNCTIONS =
-    mapOf(
-        typeNameOf<StringValue>() to validationRule("stringPropertyRule"),
-        typeNameOf<BooleanValue>() to validationRule("booleanPropertyRule"),
-        typeNameOf<DoubleValue>() to validationRule("doublePropertyRule"),
-        typeNameOf<NullableStringValue>() to validationRule("nullableStringPropertyRule"),
-        typeNameOf<NullableBooleanValue>() to validationRule("nullableBooleanPropertyRule"),
-        typeNameOf<NullableDoubleValue>() to validationRule("nullableDoublePropertyRule"),
-        typeNameOf<ListDoubleValue>() to validationRule("listDoublePropertyRule"),
-        typeNameOf<ListStringValue>() to validationRule("listStringPropertyRule"),
-        typeNameOf<ListDeviceErrorValue>() to validationRule("listDeviceErrorPropertyRule"),
-        typeNameOf<ListZigbeeDeviceStatusValue>() to validationRule("listZigbeeDeviceStatusPropertyRule"),
-        typeNameOf<ListRoomActorValue>() to validationRule("listRoomActorPropertyRule"),
-        typeNameOf<ListDeviceValue>() to validationRule("listDevicePropertyRule"),
-        typeNameOf<ObjectOtherRoomConfigurationValue>() to validationRule("objectOtherRoomConfigurationPropertyRule"),
-        typeNameOf<ScheduleValue>() to validationRule("schedulePropertyRule"),
-        typeNameOf<ListBusTypeValue>() to validationRule("listBusTypePropertyRule"),
-        typeNameOf<EnergyMatrixValue>() to validationRule("energyMatrixPropertyRule"),
-        typeNameOf<LogsValue>() to validationRule("logsPropertyRule"),
-        typeNameOf<ListLogBookEntryValue>() to validationRule("listLogBookEntryPropertyRule"),
-        typeNameOf<ListOnboardUpdaterLastErrorCodeValue>() to validationRule("listOnboardUpdaterLastErrorCodePropertyRule"),
-        typeNameOf<ProductInfoValue>() to validationRule("productInfoPropertyRule"),
-        typeNameOf<FactoryResetInfoValue>() to validationRule("factoryResetInfoPropertyRule"),
-        typeNameOf<ListEebusDeviceValue>() to validationRule("listEebusDevicePropertyRule"),
-        typeNameOf<ListEebusDevicesPairedValue>() to validationRule("listEebusDevicesPairedPropertyRule"),
-        typeNameOf<ListEebusServicePartnerValue>() to validationRule("listEebusServicePartnerPropertyRule"),
-        typeNameOf<ListElectricalEnergyMatrixValue>() to validationRule("listElectricalEnergyMatrixPropertyRule"),
-        typeNameOf<ListOperatingDataCellsDetailValue>() to validationRule("listOperatingDataCellsDetailPropertyRule"),
-        typeNameOf<ListEnergyChargedDeviceValue>() to validationRule("listEnergyChargedDevicePropertyRule"),
-        typeNameOf<ListDeviceInformationValue>() to validationRule("listDeviceInformationPropertyRule"),
-        typeNameOf<ListSensorValue>() to validationRule("listSensorPropertyRule"),
-        typeNameOf<ListPowerBalanceEntryValue>() to validationRule("listPowerBalanceEntryPropertyRule"),
-        typeNameOf<ListFuelCellErrorValue>() to validationRule("listFuelCellErrorPropertyRule"),
-        typeNameOf<ListWifiNetworkValue>() to validationRule("listWifiNetworkPropertyRule"),
-        typeNameOf<ListVentilationMessageValue>() to validationRule("listVentilationMessagePropertyRule"),
-        typeNameOf<ListSystemMessageEntryValue>() to validationRule("listSystemMessageEntryPropertyRule"),
-        typeNameOf<ListSolarlogDeviceValue>() to validationRule("listSolarlogDevicePropertyRule"),
-        typeNameOf<ListSolarlogDevicesPairedValue>() to validationRule("listSolarlogDevicesPairedPropertyRule"),
-        typeNameOf<TestResultValue>() to validationRule("testResultPropertyRule"),
-    )
+internal val PROPERTY_TYPE_ADAPTERS: Map<TypeName, TypeAdapterSpec> =
+    listOf(
+        standardPropertyAdapter<StringValue>("stringPropertyRule"),
+        standardPropertyAdapter<BooleanValue>("booleanPropertyRule"),
+        standardPropertyAdapter<DoubleValue>("doublePropertyRule"),
+        nullableValuePropertyAdapter<NullableStringValue>(
+            "nullableStringPropertyRule",
+            "requireNullableStringPropertyValue",
+            "findNullableStringPropertyValueOrNull",
+        ),
+        nullableValuePropertyAdapter<NullableBooleanValue>(
+            "nullableBooleanPropertyRule",
+            "requireNullableBooleanPropertyValue",
+            "findNullableBooleanPropertyValueOrNull",
+        ),
+        nullableValuePropertyAdapter<NullableDoubleValue>(
+            "nullableDoublePropertyRule",
+            "requireNullableDoublePropertyValue",
+            "findNullableDoublePropertyValueOrNull",
+        ),
+        listPropertyAdapter<ListDoubleValue>("listDoublePropertyRule"),
+        listPropertyAdapter<ListStringValue>("listStringPropertyRule"),
+        listPropertyAdapter<ListDeviceErrorValue>("listDeviceErrorPropertyRule"),
+        listPropertyAdapter<ListZigbeeDeviceStatusValue>("listZigbeeDeviceStatusPropertyRule"),
+        listPropertyAdapter<ListRoomActorValue>("listRoomActorPropertyRule"),
+        listPropertyAdapter<ListDeviceValue>("listDevicePropertyRule"),
+        standardPropertyAdapter<ObjectOtherRoomConfigurationValue>("objectOtherRoomConfigurationPropertyRule"),
+        standardPropertyAdapter<ScheduleValue>("schedulePropertyRule"),
+        listPropertyAdapter<ListBusTypeValue>("listBusTypePropertyRule"),
+        standardPropertyAdapter<EnergyMatrixValue>("energyMatrixPropertyRule"),
+        standardPropertyAdapter<LogsValue>("logsPropertyRule"),
+        listPropertyAdapter<ListLogBookEntryValue>("listLogBookEntryPropertyRule"),
+        listPropertyAdapter<ListOnboardUpdaterLastErrorCodeValue>("listOnboardUpdaterLastErrorCodePropertyRule"),
+        standardPropertyAdapter<ProductInfoValue>("productInfoPropertyRule"),
+        standardPropertyAdapter<FactoryResetInfoValue>("factoryResetInfoPropertyRule"),
+        listPropertyAdapter<ListEebusDeviceValue>("listEebusDevicePropertyRule"),
+        listPropertyAdapter<ListEebusDevicesPairedValue>("listEebusDevicesPairedPropertyRule"),
+        listPropertyAdapter<ListEebusServicePartnerValue>("listEebusServicePartnerPropertyRule"),
+        listPropertyAdapter<ListElectricalEnergyMatrixValue>("listElectricalEnergyMatrixPropertyRule"),
+        listPropertyAdapter<ListOperatingDataCellsDetailValue>("listOperatingDataCellsDetailPropertyRule"),
+        listPropertyAdapter<ListEnergyChargedDeviceValue>("listEnergyChargedDevicePropertyRule"),
+        listPropertyAdapter<ListDeviceInformationValue>("listDeviceInformationPropertyRule"),
+        listPropertyAdapter<ListSensorValue>("listSensorPropertyRule"),
+        listPropertyAdapter<ListPowerBalanceEntryValue>("listPowerBalanceEntryPropertyRule"),
+        listPropertyAdapter<ListFuelCellErrorValue>("listFuelCellErrorPropertyRule"),
+        listPropertyAdapter<ListWifiNetworkValue>("listWifiNetworkPropertyRule"),
+        listPropertyAdapter<ListVentilationMessageValue>("listVentilationMessagePropertyRule"),
+        listPropertyAdapter<ListSystemMessageEntryValue>("listSystemMessageEntryPropertyRule"),
+        listPropertyAdapter<ListSolarlogDeviceValue>("listSolarlogDevicePropertyRule"),
+        listPropertyAdapter<ListSolarlogDevicesPairedValue>("listSolarlogDevicesPairedPropertyRule"),
+        standardPropertyAdapter<TestResultValue>("testResultPropertyRule"),
+    ).associateBy(TypeAdapterSpec::runtimeType)
+
+val PROPERTY_VALIDATION_FUNCTIONS = PROPERTY_TYPE_ADAPTERS.mapValues { it.value.validationRule }
 
 /**
  * Marker interface for types that can be converted to KotlinPoet PropertySpec.
@@ -109,16 +123,14 @@ interface ConvertibleToPropertySpec {
  *
  * @property name Property name
  * @property type Property type (may be enum or value type)
- * @property isListProperty True if this is a list property
  * @property isEnumProperty True if this is an enum property
  */
 data class ParameterProperty(
     val name: String,
     val type: TypeName,
-    val isListProperty: Boolean,
     val isEnumProperty: Boolean,
     val underlyingType: TypeName = type.copy(nullable = false),
-    val validationFunction: MemberName = PROPERTY_VALIDATION_FUNCTIONS.getValue(type.copy(nullable = false)),
+    val validationFunction: MemberName = PROPERTY_TYPE_ADAPTERS.getValue(type.copy(nullable = false)).validationRule,
 ) : ConvertibleToPropertySpec {
     companion object {
         fun from(
@@ -133,7 +145,6 @@ data class ParameterProperty(
             return ParameterProperty(
                 name = property.simpleName.asString(),
                 type = type,
-                isListProperty = property.type.implementsInterface(ListPropertyValue::class),
                 isEnumProperty = isEnumProperty,
                 underlyingType = if (isEnumProperty) enumValueRegistry.valueType(nonNullType) else nonNullType,
                 validationFunction =
@@ -199,6 +210,11 @@ class SymbolContext(
     val ruleRegistry: RuleRegistry,
     val enumValueRegistry: EnumValueRegistry,
 ) {
+    val originatingFile: KSFile =
+        requireNotNull(symbol.containingFile) {
+            "Generated feature ${symbol.qualifiedName?.asString()} must originate from a source file"
+        }
+
     @OptIn(KspExperimental::class)
     val featureName = symbol.getAnnotationsByType(GenerateFeatureImplementation::class).first().featureName
     val superInterface = symbol.toClassName()

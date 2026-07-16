@@ -18,6 +18,7 @@ import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
+import xyz.dussim.viessmann.feature.api.validation.GeneratedValidationRule
 import xyz.dussim.viessmann.feature.api.validation.SingleErrorValidationResultApi
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
@@ -48,6 +49,7 @@ val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexe
 
 val FEATURE_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Feature>())
 val COMMAND_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Command>())
+val GENERATED_FEATURE_VALIDATION_RULE_TYPE = generatedValidationRuleType(typeNameOf<Feature>())
 
 /**
  * Creates a validation rule type for a given target type.
@@ -59,6 +61,32 @@ fun validationRuleType(targetType: TypeName): TypeName =
             targetType,
             typeNameOf<ValidationError>(),
         )
+
+fun generatedValidationRuleType(targetType: TypeName): TypeName =
+    GeneratedValidationRule::class
+        .asClassName()
+        .parameterizedBy(
+            targetType,
+            typeNameOf<ValidationError>(),
+        )
+
+internal data class ValidationRulePlan(
+    val normalExpression: CodeBlock,
+    val failFastExpression: CodeBlock = normalExpression,
+)
+
+internal data class ValidationPlan(
+    val rules: List<ValidationRulePlan>,
+) {
+    val normalExpressions: List<CodeBlock> get() = rules.map(ValidationRulePlan::normalExpression)
+
+    val failFastExpressions: List<CodeBlock> get() = rules.map(ValidationRulePlan::failFastExpression)
+
+    val requiresSeparateFailFast: Boolean
+        get() =
+            rules.size > 1 ||
+                rules.any { it.normalExpression.toString() != it.failFastExpression.toString() }
+}
 
 /**
  * Creates a feature factory type for a given interface type.
@@ -194,6 +222,7 @@ fun varArgFunctionCall(
 fun generateValidateFunction(
     targetType: TypeName,
     ruleExpressions: List<CodeBlock>,
+    functionName: String = "validate",
     isFailFast: Boolean = false,
     useSingleErrorResultAggregation: Boolean = false,
 ): FunSpec {
@@ -201,7 +230,7 @@ fun generateValidateFunction(
         useSingleErrorResultAggregation && !isFailFast && ruleExpressions.size in 2..3
 
     return FunSpec
-        .builder("validate")
+        .builder(functionName)
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(ParameterSpec.builder("value", targetType).build())
         .returns(
@@ -353,27 +382,9 @@ private fun buildImplName(
     parameters: List<Pair<String, TypeName>>,
 ): String {
     val capitalizedName = name.toGeneratedIdentifier().replaceFirstChar { it.uppercase() }
-    val typeAbbrevs =
-        mapOf(
-            "StringConstraints" to "S",
-            "NumberConstraints" to "N",
-            "BooleanConstraints" to "B",
-            "ArrayStringConstraints" to "AS",
-            "ArrayNumberConstraints" to "AN",
-            "ArrayBooleanConstraints" to "AB",
-            "ArrayObjectConstraints" to "AO",
-            "ArrayUnknownConstraints" to "AU",
-            "ArrayEmptyConstraints" to "AE",
-            "ScheduleConstraints" to "SC",
-            "EnergyMatrixConstraints" to "EM",
-            "ObjectConstraints" to "O",
-            "UnknownConstraints" to "U",
-        )
-
     val paramsPart =
         parameters.joinToString("") { (pName, pType) ->
-            val simpleName = pType.toString().substringAfterLast(".").removeSuffix("?")
-            val typeAbbrev = typeAbbrevs[simpleName] ?: "X"
+            val typeAbbrev = CONSTRAINT_TYPE_ADAPTERS[pType.copy(nullable = false)]?.abbreviation ?: "X"
             pName.toGeneratedIdentifier().replaceFirstChar { it.uppercase() } + typeAbbrev
         }
 

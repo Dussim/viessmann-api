@@ -50,7 +50,9 @@ dependencies {
 }
 
 ksp {
+    arg("descriptorsChunkSize", "64")
     arg("formatGeneratedSources", "false")
+    arg("validationRulesChunkSize", "64")
 }
 
 generateFeatureJsonTests {
