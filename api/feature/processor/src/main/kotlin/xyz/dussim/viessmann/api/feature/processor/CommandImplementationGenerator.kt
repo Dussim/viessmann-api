@@ -42,7 +42,7 @@ private val ARRAY_CONSTRAINT_CAST_FUNCTIONS: Map<TypeName, MemberName> =
         typeNameOf<ArrayUnknownConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayUnknownConstraintsOrThrow"),
     )
 
-private val CONSTRAINTS_VALIDATION_FUNCTIONS =
+internal val CONSTRAINTS_VALIDATION_FUNCTIONS =
     mapOf(
         typeNameOf<StringConstraints>() to validationRule("stringConstraintsRule"),
         typeNameOf<NumberConstraints>() to validationRule("numberConstraintsRule"),
@@ -132,7 +132,7 @@ private fun ruleExpressions(context: CommandSymbolContext): List<CodeBlock> =
                 "%M",
                 context.parentContext.ruleRegistry.register(
                     NUMBER_OF_PARAMETERS_RULE,
-                    listOf(context.constraintsProperties.size, context.lowerCaseName.replace("_", "")),
+                    listOf(context.constraintsProperties.size, context.apiName),
                     COMMAND_VALIDATION_RULE_TYPE,
                 ),
             ),
@@ -159,7 +159,7 @@ private fun commandRuleProperty(context: CommandSymbolContext): PropertySpec =
     overrideProperty(
         "rule",
         FEATURE_VALIDATION_RULE_TYPE,
-        CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.lowerCaseName.replace("_", "")),
+        CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.apiName),
     )
 
 /**

@@ -11,7 +11,7 @@ import com.squareup.kotlinpoet.buildCodeBlock
 fun generateValidationRules(ruleRegistry: RuleRegistry): FileSpec {
     val fileSpec = FileSpec.builder(ruleRegistry.rulesPackage, "ValidationRules")
 
-    ruleRegistry.getAllRules().forEach { (signature, memberName) ->
+    ruleRegistry.getAllRules().entries.sortedBy { it.value.simpleName }.forEach { (signature, memberName) ->
         val property =
             PropertySpec
                 .builder(memberName.simpleName, signature.targetType)

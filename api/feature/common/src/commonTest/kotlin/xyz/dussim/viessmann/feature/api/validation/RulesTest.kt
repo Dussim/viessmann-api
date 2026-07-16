@@ -460,6 +460,37 @@ val RulesTest by testSuite {
         }
     }
 
+    testSuite("optionalZeroParameterCommandRule") {
+        test("returns Valid when command is absent") {
+            optionalZeroParameterCommandRule("execute").validate(createFeature()).isInvalid shouldBe false
+        }
+
+        test("returns Valid when present command has no parameters") {
+            val feature = createFeature(commands = mapOf("execute" to createCommand()))
+            optionalZeroParameterCommandRule("execute").validate(feature).isInvalid shouldBe false
+        }
+
+        test("returns Invalid when present command has parameters") {
+            val feature = createFeature(commands = mapOf("execute" to createCommand(mapOf("value" to Parameter.of(NumberConstraints())))))
+            optionalZeroParameterCommandRule("execute").validate(feature).isInvalid shouldBe true
+        }
+    }
+
+    testSuite("optionalCommandRule") {
+        test("returns Valid when command is absent") {
+            optionalCommandRule("set_value", numberOfParametersRule(1, "set_value")).validate(createFeature()).isInvalid shouldBe false
+        }
+
+        test("uses the exact API key and validates a present command") {
+            val valid = createFeature(commands = mapOf("set_value" to createCommand(mapOf("value" to Parameter.of(NumberConstraints())))))
+            val malformed = createFeature(commands = mapOf("set_value" to createCommand()))
+            val rule = optionalCommandRule("set_value", numberOfParametersRule(1, "set_value"))
+
+            rule.validate(valid).isInvalid shouldBe false
+            rule.validate(malformed).isInvalid shouldBe true
+        }
+    }
+
     testSuite("propertyHash") {
         test("combines hashCode and length into Long") {
             val hash = propertyHash(12345, 5)

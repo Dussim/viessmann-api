@@ -42,9 +42,15 @@ private val REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
 private val FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT =
     MemberName("xyz.dussim.viessmann.feature.api", "findPropertyValueOrPromoteEmpty")
 private val ZERO_PARAMETER_COMMAND_RULE = validationRule("zeroParameterCommandRule")
+private val OPTIONAL_ZERO_PARAMETER_COMMAND_RULE = validationRule("optionalZeroParameterCommandRule")
+private val OPTIONAL_COMMAND_RULE = validationRule("optionalCommandRule")
 private val NULLABLE_BOOLEAN_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableBooleanValue")
 private val NULLABLE_DOUBLE_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableDoubleValue")
 private val NULLABLE_STRING_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "NullableStringValue")
+private const val SOURCE_FEATURE = "sourceFeature"
+private const val FEATURE_TYPE = "featureType"
+private const val SOURCE_PROPERTIES = "sourceProperties"
+private const val SOURCE_COMMANDS = "sourceCommands"
 
 /**
  * Generates constructor accepting a delegate feature.
@@ -56,18 +62,16 @@ fun constructor(context: SymbolContext): FunSpec =
         .constructorBuilder()
         .addParameter(
             ParameterSpec
-                .builder(DELEGATE, context.baseFeature.delegate)
+                .builder(SOURCE_FEATURE, context.baseFeature.delegate)
                 .build(),
-        ).build()
+        ).addParameter(FEATURE_TYPE, String::class)
+        .build()
 
 /**
  * Generates initialization block that validates and assigns properties and commands.
  * Throws FeatureValidationException if validation fails.
  */
-fun initBlock(
-    context: SymbolContext,
-    implName: ClassName,
-): CodeBlock {
+fun initBlock(context: SymbolContext): CodeBlock {
     if (context.parameterProperties.isEmpty() && context.commandProperties.isEmpty()) {
         return CodeBlock.of("")
     }
@@ -87,7 +91,7 @@ fun initBlock(
                 addCommandInitialization(property)
             }
             nextControlFlow("catch (_: %T)", GeneratedAccessException::class.asTypeName())
-            addValidationException(context, implName)
+            addValidationException()
             endControlFlow()
         }.build()
 }
@@ -97,10 +101,10 @@ internal fun CodeBlock.Builder.addDelegateAccessLocals(
     hasCommands: Boolean,
 ) {
     if (hasProperties) {
-        addStatement("val properties = properties")
+        addStatement("val %N = %N.properties", SOURCE_PROPERTIES, SOURCE_FEATURE)
     }
     if (hasCommands) {
-        addStatement("val commands = `commands`")
+        addStatement("val %N = %N.commands", SOURCE_COMMANDS, SOURCE_FEATURE)
     }
 }
 
@@ -117,33 +121,34 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
     val nonNullType = type.copy(nullable = false)
     when {
         nonNullType == NULLABLE_BOOLEAN_VALUE && isNullable -> {
-            add("%N = properties.%M(%S, %L)\n", name, FIND_NULLABLE_BOOLEAN_PROPERTY_VALUE_OR_NULL, name, combined)
+            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, FIND_NULLABLE_BOOLEAN_PROPERTY_VALUE_OR_NULL, name, combined)
         }
 
         nonNullType == NULLABLE_BOOLEAN_VALUE -> {
-            add("%N = properties.%M(%S, %L)\n", name, REQUIRE_NULLABLE_BOOLEAN_PROPERTY_VALUE, name, combined)
+            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, REQUIRE_NULLABLE_BOOLEAN_PROPERTY_VALUE, name, combined)
         }
 
         nonNullType == NULLABLE_DOUBLE_VALUE && isNullable -> {
-            add("%N = properties.%M(%S, %L)\n", name, FIND_NULLABLE_DOUBLE_PROPERTY_VALUE_OR_NULL, name, combined)
+            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, FIND_NULLABLE_DOUBLE_PROPERTY_VALUE_OR_NULL, name, combined)
         }
 
         nonNullType == NULLABLE_DOUBLE_VALUE -> {
-            add("%N = properties.%M(%S, %L)\n", name, REQUIRE_NULLABLE_DOUBLE_PROPERTY_VALUE, name, combined)
+            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, REQUIRE_NULLABLE_DOUBLE_PROPERTY_VALUE, name, combined)
         }
 
         nonNullType == NULLABLE_STRING_VALUE && isNullable -> {
-            add("%N = properties.%M(%S, %L)\n", name, FIND_NULLABLE_STRING_PROPERTY_VALUE_OR_NULL, name, combined)
+            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, FIND_NULLABLE_STRING_PROPERTY_VALUE_OR_NULL, name, combined)
         }
 
         nonNullType == NULLABLE_STRING_VALUE -> {
-            add("%N = properties.%M(%S, %L)\n", name, REQUIRE_NULLABLE_STRING_PROPERTY_VALUE, name, combined)
+            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, REQUIRE_NULLABLE_STRING_PROPERTY_VALUE, name, combined)
         }
 
         isEnumProperty && isNullable -> {
             add(
-                "%N = properties.%M<%T>(%S, %L)?.let { %T(it) }\n",
+                "this.%N = %N.%M<%T>(%S, %L)?.let { %T(it) }\n",
                 name,
+                SOURCE_PROPERTIES,
                 REQUIRE_PROPERTY_VALUE_OR_NULL_IF_MISSING,
                 property.underlyingType,
                 name,
@@ -154,9 +159,10 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
 
         isEnumProperty -> {
             add(
-                "%N = %T(properties.%M<%T>(%S, %L))\n",
+                "this.%N = %T(%N.%M<%T>(%S, %L))\n",
                 name,
                 type,
+                SOURCE_PROPERTIES,
                 REQUIRE_PROPERTY_VALUE,
                 property.underlyingType,
                 name,
@@ -166,30 +172,33 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
 
         isListProperty && isNullable -> {
             add(
-                "%1N = properties.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
+                "this.%1N = %6N.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
                 name,
                 name,
                 combined,
                 type.copy(nullable = false),
                 FIND_PROPERTY_VALUE_OR_DEFAULT_COMPAT,
+                SOURCE_PROPERTIES,
             )
         }
 
         isListProperty -> {
             add(
-                "%1N = properties.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
+                "this.%1N = %6N.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
                 name,
                 name,
                 combined,
                 type,
                 REQUIRE_PROPERTY_VALUE_OR_DEFAULT_COMPAT,
+                SOURCE_PROPERTIES,
             )
         }
 
         isNullable -> {
             add(
-                "%N = properties.%M<%T>(%S, %L)\n",
+                "this.%N = %N.%M<%T>(%S, %L)\n",
                 name,
+                SOURCE_PROPERTIES,
                 FIND_PROPERTY_VALUE_OR_NULL,
                 type.copy(nullable = false),
                 name,
@@ -199,8 +208,9 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
 
         else -> {
             add(
-                "%N = properties.%M<%T>(%S, %L)\n",
+                "this.%N = %N.%M<%T>(%S, %L)\n",
                 name,
+                SOURCE_PROPERTIES,
                 REQUIRE_PROPERTY_VALUE,
                 type,
                 name,
@@ -215,31 +225,31 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
  */
 internal fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty) {
     val name = property.name
-    val propertyHash = propertyHash(name.hashCode(), name.length)
+    val apiName = property.apiName
+    val propertyHash = propertyHash(apiName.hashCode(), apiName.length)
     if (property.isNullable) {
         add(
-            "%N = commands[%S, %L]?.let { %T(it) }\n",
+            "this.%N = %N[%S, %L]?.let { %T(it) }\n",
             name,
-            name,
+            SOURCE_COMMANDS,
+            apiName,
             propertyHash,
             property.implType.copy(nullable = false),
         )
     } else {
-        add("%N = %T(commands.%M(%S, %L))\n", name, property.implType, REQUIRE_COMMAND, name, propertyHash)
+        add("this.%N = %T(%N.%M(%S, %L))\n", name, property.implType, SOURCE_COMMANDS, REQUIRE_COMMAND, apiName, propertyHash)
     }
 }
 
 /**
  * Adds FeatureValidationException throw statement.
  */
-private fun CodeBlock.Builder.addValidationException(
-    context: SymbolContext,
-    implName: ClassName,
-) {
+private fun CodeBlock.Builder.addValidationException() {
     add(
-        "throw %T(%S, $DELEGATE, Companion)\n",
+        "throw %T(%N, %N, Companion)\n",
         FeatureValidationException::class.asTypeName(),
-        implName.simpleName.replace("_", "").removeSuffix("Impl"),
+        FEATURE_TYPE,
+        SOURCE_FEATURE,
     )
 }
 
@@ -264,17 +274,18 @@ private fun ruleExpressions(
         } +
         context
             .commandProperties
-            .filter { !it.isNullable }
             .map {
                 if (it.signature.parameters.isEmpty()) {
                     CodeBlock.of(
                         "%M",
                         context.ruleRegistry.register(
-                            ZERO_PARAMETER_COMMAND_RULE,
-                            listOf(it.validationName),
+                            if (it.isNullable) OPTIONAL_ZERO_PARAMETER_COMMAND_RULE else ZERO_PARAMETER_COMMAND_RULE,
+                            listOf(it.apiName),
                             FEATURE_VALIDATION_RULE_TYPE,
                         ),
                     )
+                } else if (it.isNullable) {
+                    optionalCommandRuleExpression(it, isFailFast)
                 } else {
                     commandRuleExpression(it, isFailFast)
                 }
@@ -288,6 +299,16 @@ internal fun commandRuleExpression(
         CodeBlock.of("%T.FailFast.rule", property.implType.copy(nullable = false))
     } else {
         CodeBlock.of("%T.rule", property.implType.copy(nullable = false))
+    }
+
+internal fun optionalCommandRuleExpression(
+    property: CommandProperty,
+    isFailFast: Boolean = false,
+): CodeBlock =
+    if (isFailFast) {
+        CodeBlock.of("%M(%S, %T.FailFast)", OPTIONAL_COMMAND_RULE, property.apiName, property.implType.copy(nullable = false))
+    } else {
+        CodeBlock.of("%M(%S, %T)", OPTIONAL_COMMAND_RULE, property.apiName, property.implType.copy(nullable = false))
     }
 
 /**
@@ -365,7 +386,7 @@ fun generateSharedFeatureImplementation(
 ): FileSpec {
     val constructor = constructor(context)
     val properties = context.parameterPropertiesImpl + context.commandPropertiesImpl
-    val initBlock = initBlock(context, implName)
+    val initBlock = initBlock(context)
     val ruleExpressions = ruleExpressions(context)
     val classImpl =
         TypeSpec
@@ -375,7 +396,7 @@ fun generateSharedFeatureImplementation(
             .addAnnotation(VIESSMANN_API_INTERNAL_EXCEPTION_USAGE_OPT_IN)
             .primaryConstructor(constructor)
             .superclass(context.baseFeature.abstractClass)
-            .addSuperclassConstructorParameter(DELEGATE)
+            .addSuperclassConstructorParameter(SOURCE_FEATURE)
             .addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
             .addType(companionObject(context, implName))
             .addProperties(properties)
@@ -428,7 +449,7 @@ fun generateFeatureDescriptorAndExtensions(
                     unindent()
                     add(") { feature ->\n")
                     indent()
-                    add("feature as? %T ?: %T(feature)\n", context.superInterface, implName)
+                    add("feature as? %T ?: %T(feature, %S)\n", context.superInterface, implName, context.superInterface.canonicalName)
                     unindent()
                     add("}")
                 },

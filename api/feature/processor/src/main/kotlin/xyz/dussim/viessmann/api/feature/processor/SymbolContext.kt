@@ -123,13 +123,13 @@ data class ParameterProperty(
     companion object {
         fun from(
             property: KSPropertyDeclaration,
-            nestedEnums: List<EnumSymbolContext>,
+            nestedEnumTypes: Set<ClassName>,
             enumValueRegistry: EnumValueRegistry,
         ): ParameterProperty {
             val type = property.type.resolve().toTypeName()
             val propertyDeclaration = property.type.resolve().declaration as KSClassDeclaration
             val nonNullType = type.copy(nullable = false)
-            val isEnumProperty = nestedEnums.any { it.symbol == propertyDeclaration }
+            val isEnumProperty = propertyDeclaration.toClassName() in nestedEnumTypes
             return ParameterProperty(
                 name = property.simpleName.asString(),
                 type = type,
@@ -157,9 +157,9 @@ data class ParameterProperty(
  */
 data class CommandProperty(
     val name: String,
+    val apiName: String,
     val implType: TypeName,
     val signature: CommandSignature,
-    val validationName: String,
     val isNullable: Boolean,
     val commandContext: CommandSymbolContext? = null,
 ) : ConvertibleToPropertySpec {
@@ -171,16 +171,16 @@ data class CommandProperty(
             val resolvedType = property.type.resolve()
             val isNullable = resolvedType.isMarkedNullable
             val declaration = resolvedType.makeNotNullable().declaration as KSClassDeclaration
-            val commandContext = CommandSymbolContext(context, declaration)
+            val commandContext = CommandSymbolContext.from(context, declaration)
 
             val signature = commandContext.signature
             val implType = commandContext.implType
 
             return CommandProperty(
                 name = property.simpleName.asString(),
+                apiName = commandContext.apiName,
                 implType = if (isNullable) implType.copy(nullable = true) else implType,
                 signature = signature,
-                validationName = commandContext.lowerCaseName.replace("_", ""),
                 isNullable = isNullable,
                 commandContext = commandContext,
             )
@@ -194,8 +194,8 @@ data class CommandProperty(
  * Context containing all information needed to generate a feature implementation.
  * Manages properties, commands, enums, and validation rules.
  */
-data class SymbolContext(
-    val symbol: KSClassDeclaration,
+class SymbolContext(
+    symbol: KSClassDeclaration,
     val ruleRegistry: RuleRegistry,
     val enumValueRegistry: EnumValueRegistry,
 ) {
@@ -213,56 +213,40 @@ data class SymbolContext(
     val baseFeature = BaseFeature.Feature
 
     @OptIn(KspExperimental::class)
-    val nestedEnums =
+    private val nestedEnumTypes =
         symbol
             .declarations
             .filterIsInstance<KSClassDeclaration>()
             .filter { it.isAnnotationPresent(FeatureEnum::class) }
-            .map { EnumSymbolContext(this, it) }
-            .toList()
+            .map { it.toClassName() }
+            .toSet()
 
-    val parameterProperties = parameterProperties(this, nestedEnums, enumValueRegistry)
-    val commandProperties = commandProperties(this)
+    val parameterProperties =
+        symbol
+            .getDeclaredProperties()
+            .filterNot { it.type.implementsInterface(OfCommand::class) }
+            .map { ParameterProperty.from(it, nestedEnumTypes, enumValueRegistry) }
+            .toList()
+    val commandProperties =
+        symbol
+            .getDeclaredProperties()
+            .filter { it.type.implementsInterface(OfCommand::class) }
+            .map { CommandProperty.from(this, it) }
+            .toList()
     val featureSignature =
         FeatureSignature(
             baseFeature = baseFeature,
             properties = parameterProperties.map { it.name to it.type }.sortedBy { it.first },
-            commands = commandProperties.map { Triple(it.name, it.signature, it.isNullable) }.sortedBy { it.first },
+            commands =
+                commandProperties
+                    .map { CommandFeatureSignature(it.name, it.apiName, it.signature, it.isNullable) }
+                    .sortedBy { it.propertyName },
         )
 
     val parameterPropertiesImpl = parameterProperties.map { it.asPropertySpec() }
     val commandPropertiesImpl = commandProperties.map { it.asPropertySpec() }
     val nestedCommands = nestedCommands(this)
 }
-
-/**
- * Context for feature enum types.
- * Feature enums are custom enum types used as property values.
- */
-data class EnumSymbolContext(
-    val parentContext: SymbolContext,
-    val symbol: KSClassDeclaration,
-)
-
-fun parameterProperties(
-    context: SymbolContext,
-    nestedEnums: List<EnumSymbolContext>,
-    enumValueRegistry: EnumValueRegistry,
-): List<ParameterProperty> =
-    context
-        .symbol
-        .getDeclaredProperties()
-        .filterNot { it.type.implementsInterface(OfCommand::class) }
-        .map { ParameterProperty.from(it, nestedEnums, enumValueRegistry) }
-        .toList()
-
-fun commandProperties(context: SymbolContext): List<CommandProperty> =
-    context
-        .symbol
-        .getDeclaredProperties()
-        .filter { it.type.implementsInterface(OfCommand::class) }
-        .map { CommandProperty.from(context, it) }
-        .toList()
 
 fun nestedCommands(context: SymbolContext): List<CommandSymbolContext> =
     context.commandProperties.map { commandProperty ->

@@ -6,6 +6,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.validate
 import xyz.dussim.viessmann.api.feature.annotations.GenerateFeatureImplementation
 
 class FeatureImplementationProcessor(
@@ -19,28 +20,40 @@ class FeatureImplementationProcessor(
         private val ANNOTATION_NAME = GenerateFeatureImplementation::class.qualifiedName!!
     }
 
+    private val enumValueRegistry = EnumValueRegistry()
+    private val contextsByQualifiedName = linkedMapOf<String, SymbolContext>()
+    private val ruleRegistriesByPackage = mutableMapOf<String, RuleRegistry>()
+    private var hasErrors = false
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val enumValueRegistry = EnumValueRegistry()
-        val ksSymbols = resolver.annotatedFeatureSymbols()
-        if (ksSymbols.isEmpty()) return emptyList()
+        val annotatedSymbols = resolver.getSymbolsWithAnnotation(ANNOTATION_NAME).toList()
+        val deferredSymbols = annotatedSymbols.filterNot(KSAnnotated::validate)
+        val featureSymbols = annotatedSymbols.filter(KSAnnotated::validate).filterIsInstance<KSClassDeclaration>()
+        if (featureSymbols.isEmpty()) return deferredSymbols
 
-        FeatureSymbolValidator(logger).validate(resolver, ksSymbols, enumValueRegistry)
+        if (!FeatureSymbolValidator(logger).validate(resolver, featureSymbols, enumValueRegistry)) {
+            hasErrors = true
+            return deferredSymbols
+        }
 
-        val ruleRegistry = RuleRegistry("${ksSymbols.first().packageName.asString()}.components.rules")
-        val symbolContexts = ksSymbols.map { SymbolContext(it, ruleRegistry, enumValueRegistry) }
-        val generatedFiles = GeneratedFeatureFilesBuilder(descriptorsChunkSize).build(ksSymbols, symbolContexts)
+        featureSymbols.forEach { symbol ->
+            val packageName = symbol.packageName.asString()
+            val registry = ruleRegistriesByPackage.getOrPut(packageName) { RuleRegistry("$packageName.components.rules") }
+            contextsByQualifiedName.putIfAbsent(symbol.qualifiedName!!.asString(), SymbolContext(symbol, registry, enumValueRegistry))
+        }
+
+        return deferredSymbols
+    }
+
+    override fun finish() {
+        if (hasErrors || contextsByQualifiedName.isEmpty()) return
+
+        val generatedFiles = GeneratedFeatureFilesBuilder(descriptorsChunkSize).build(contextsByQualifiedName.values.toList())
 
         GeneratedFileEmitter(
             codeGenerator = codeGenerator,
             formatGeneratedSources = formatGeneratedSources,
             renderParallelism = renderParallelism,
         ).emit(generatedFiles)
-
-        return emptyList()
     }
-
-    private fun Resolver.annotatedFeatureSymbols(): List<KSClassDeclaration> =
-        getSymbolsWithAnnotation(ANNOTATION_NAME)
-            .filterIsInstance<KSClassDeclaration>()
-            .toList()
 }

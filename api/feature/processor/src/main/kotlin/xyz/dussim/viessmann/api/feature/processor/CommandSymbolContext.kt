@@ -52,7 +52,7 @@ data class ConstraintProperty(
             ).getter(
                 FunSpec
                     .getterBuilder()
-                    .addCode("return $name")
+                    .addCode("return %N", name)
                     .build(),
             ).build()
 }
@@ -66,27 +66,13 @@ data class ConstraintProperty(
  */
 data class CommandSymbolContext(
     val parentContext: SymbolContext,
-    val command: KSClassDeclaration,
+    val apiName: String,
+    val superInterface: ClassName,
+    val constraintsProperties: List<ConstraintProperty>,
 ) {
-    @OptIn(com.google.devtools.ksp.KspExperimental::class)
-    val realName =
-        command.getAnnotationsByType(CommandName::class).firstOrNull()?.name
-            ?: command.simpleName.asString().replaceFirstChar(Char::lowercaseChar)
-
-    val lowerCaseName = realName
-
-    val superInterface = command.toClassName()
-
-    val constraintsProperties =
-        command
-            .getDeclaredProperties()
-            .filterNot { it.simpleName.asString() in DEFAULT_CONSTRAINTS }
-            .map(ConstraintProperty::from)
-            .toList()
-
     val signature =
         CommandSignature(
-            name = realName.replaceFirstChar { it.uppercase() },
+            name = apiName.replaceFirstChar { it.uppercase() },
             parameters = constraintsProperties.map { it.name to it.type },
         )
 
@@ -96,4 +82,23 @@ data class CommandSymbolContext(
     val inheritedConstraintsProperties =
         constraintsProperties
             .mapIndexed { index, property -> property.asConstraintPropertySpec(index) }
+
+    companion object {
+        @OptIn(com.google.devtools.ksp.KspExperimental::class)
+        fun from(
+            parentContext: SymbolContext,
+            command: KSClassDeclaration,
+        ): CommandSymbolContext {
+            val apiName =
+                command.getAnnotationsByType(CommandName::class).firstOrNull()?.name
+                    ?: command.simpleName.asString().replaceFirstChar(Char::lowercaseChar)
+
+            return CommandSymbolContext(
+                parentContext = parentContext,
+                apiName = apiName,
+                superInterface = command.toClassName(),
+                constraintsProperties = command.getDeclaredProperties().map(ConstraintProperty::from).toList(),
+            )
+        }
+    }
 }

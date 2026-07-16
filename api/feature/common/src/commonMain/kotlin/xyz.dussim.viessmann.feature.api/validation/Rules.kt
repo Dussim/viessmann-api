@@ -471,6 +471,24 @@ fun zeroParameterCommandRule(commandName: String): ValidationRule<Feature, Valid
     }
 }
 
+/**
+ * Validates an optional zero-parameter command. An absent command is valid; a present command must not declare
+ * parameters.
+ */
+fun optionalZeroParameterCommandRule(commandName: String): ValidationRule<Feature, ValidationError> {
+    val expectedData = Expected(commandName, 0)
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        val command = feature.commands[commandName, precomputedHash] ?: return@ValidationRule ValidationResult.Valid
+        if (command.params.size == 0) {
+            ValidationResult.Valid
+        } else {
+            Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+        }
+    }
+}
+
 fun commandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,
@@ -480,5 +498,21 @@ fun commandRule(
 
     return ValidationRule { feature ->
         innerRule.validate(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
+    }
+}
+
+/**
+ * Validates an optional command. An absent command is valid; a present command is checked by [innerRule].
+ */
+fun optionalCommandRule(
+    commandName: String,
+    innerRule: ValidationRule<Command, ValidationError>,
+): ValidationRule<Feature, ValidationError> {
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        feature.commands[commandName, precomputedHash]
+            ?.let(innerRule::validate)
+            ?: ValidationResult.Valid
     }
 }
