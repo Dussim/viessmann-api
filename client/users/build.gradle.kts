@@ -4,9 +4,9 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        implementation(project(":client:client-core"))
-        implementation(project(":api:users"))
-        implementation(project(":api:errors"))
+        implementation(projects.client.clientCore)
+        implementation(projects.api.apiUsers)
+        implementation(projects.api.apiErrors)
         implementation(libs.kotlinx.serialization.json)
     }
     sourceSets.commonTest.dependencies {

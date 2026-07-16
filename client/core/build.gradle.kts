@@ -4,7 +4,7 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(project(":api:errors"))
+        api(projects.api.apiErrors)
         api(ktorLibs.client.contentNegotiation)
         api(ktorLibs.client.core)
         api(ktorLibs.serialization.kotlinx.json)

@@ -1,0 +1,23 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Profile KSP processor (JS)" type="GradleRunConfiguration" factoryName="Gradle">
+    <ExternalSystemSettings>
+      <option name="executionName" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$" />
+      <option name="externalSystemIdString" value="GRADLE" />
+      <option name="scriptParameters" value="-Dorg.gradle.daemon=false &quot;-Dorg.gradle.jvmargs=-Xmx3g -Xms2g -XX:+UseCompactObjectHeaders -XX:+UnlockExperimentalVMOptions -XX:+TrustFinalNonStaticFields -agentpath:$PROJECT_DIR$/.tools/async-profiler/amd64/libasyncProfiler.dll=start,event=wall,interval=1ms,jfrsync=profile,file=$PROJECT_DIR$/.run/ksp-processor-js.jfr&quot; --init-script $PROJECT_DIR$/.tools/finish-async-profiler.gradle.kts --no-configuration-cache --no-build-cache --rerun-tasks --project-prop kotlin.compiler.execution.strategy=in-process" />
+      <option name="taskDescriptions">
+        <list />
+      </option>
+      <option name="taskNames">
+        <list>
+          <option value=":api:feature:api-feature-implementations:kspKotlinJs" />
+        </list>
+      </option>
+      <option name="vmOptions" value="-Xmx3g -Xms2g -XX:+UseCompactObjectHeaders -XX:+UnlockExperimentalVMOptions -XX:+TrustFinalNonStaticFields" />
+    </ExternalSystemSettings>
+    <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+    <DebugAllEnabled>false</DebugAllEnabled>
+    <method v="2" />
+  </configuration>
+</component>

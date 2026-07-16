@@ -1,38 +1,37 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class GatewayStateTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                GatewayState.Produced,
-                GatewayState.Registered,
-            ) {
-                GatewayState.entries shouldContain it
+val GatewayStateTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            GatewayState.Produced,
+            GatewayState.Registered,
+        ).forEach { item ->
+            test(item.name) {
+                GatewayState.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "Produced" to GatewayState.Produced,
-                "Registered" to GatewayState.Registered,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "Produced" to GatewayState.Produced,
+            "Registered" to GatewayState.Registered,
+        ).forEach { (name, expected) ->
+            test(name) {
                 GatewayState.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                GatewayState.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        GatewayState.entries.forEach { entry ->
+            test(entry.name) {
                 GatewayState.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

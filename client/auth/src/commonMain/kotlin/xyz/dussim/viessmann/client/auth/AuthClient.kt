@@ -5,7 +5,6 @@ import io.ktor.client.request.header
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import kotlinx.serialization.Serializable
 import xyz.dussim.viessmann.api.auth.CsrfJwksResponse
 import xyz.dussim.viessmann.api.auth.CsrfTokenRequest
@@ -13,10 +12,11 @@ import xyz.dussim.viessmann.api.auth.CsrfTokenResponse
 import xyz.dussim.viessmann.api.auth.ValidateResponse
 import xyz.dussim.viessmann.client.core.RawViessmannResponse
 import xyz.dussim.viessmann.client.core.ViessmannClientConfig
-import xyz.dussim.viessmann.client.core.ViessmannService
 import xyz.dussim.viessmann.client.core.appendIfNotNull
-import xyz.dussim.viessmann.client.core.viessmannRawRequest
-import xyz.dussim.viessmann.client.core.viessmannRequest
+import xyz.dussim.viessmann.client.core.viessmannApiGet
+import xyz.dussim.viessmann.client.core.viessmannApiPost
+import xyz.dussim.viessmann.client.core.viessmannApiRawGet
+import xyz.dussim.viessmann.client.core.viessmannApiRawPost
 
 @Serializable
 data class RoutePolicyValidationRequest(
@@ -83,34 +83,26 @@ class DefaultAuthClient(
     private val config: ViessmannClientConfig = ViessmannClientConfig(),
 ) : AuthClient {
     override suspend fun validate(): ValidateResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/auth/v1/validate",
         )
 
     override suspend fun validateSession(): ValidateResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/auth/v1/validate-session",
         )
 
     override suspend fun validateSessionForDotnet(): ValidateResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/auth/v1/validate-session-for-dotnet",
         )
 
     override suspend fun validateWithRouteBasedPolicies(request: RoutePolicyValidationRequest): ValidateResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/auth/v1/validate-with-route-based-policies",
             authenticated = false,
         ) {
@@ -121,10 +113,8 @@ class DefaultAuthClient(
         }
 
     override suspend fun getCsrfJwks(): CsrfJwksResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/auth/v1/saml/csrf/jwks.json",
             authenticated = false,
         )
@@ -133,10 +123,8 @@ class DefaultAuthClient(
         referer: String,
         request: CsrfTokenRequest,
     ): CsrfTokenResponse =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiPost(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path = "/auth/v1/saml/csrf",
             authenticated = false,
         ) {
@@ -145,10 +133,8 @@ class DefaultAuthClient(
         }
 
     override suspend fun getSamlSsoRequest(request: SamlSsoRequest): RawViessmannResponse =
-        httpClient.viessmannRawRequest(
+        httpClient.viessmannApiRawGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/auth/v1/saml/sso/request",
             authenticated = false,
         ) {
@@ -164,10 +150,8 @@ class DefaultAuthClient(
         }
 
     override suspend fun validateSamlResponseGet(request: SamlValidationRequest): RawViessmannResponse =
-        httpClient.viessmannRawRequest(
+        httpClient.viessmannApiRawGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/auth/v1/saml/sso/validate",
             authenticated = false,
         ) {
@@ -179,10 +163,8 @@ class DefaultAuthClient(
         body: String,
         contentType: ContentType,
     ): RawViessmannResponse =
-        httpClient.viessmannRawRequest(
+        httpClient.viessmannApiRawPost(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path = "/auth/v1/saml/sso/validate",
             authenticated = false,
         ) {
@@ -192,10 +174,8 @@ class DefaultAuthClient(
         }
 
     override suspend fun logout(request: LogoutRequest): RawViessmannResponse =
-        httpClient.viessmannRawRequest(
+        httpClient.viessmannApiRawPost(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Post,
             path = "/auth/v1/saml/logout",
             authenticated = false,
         ) {

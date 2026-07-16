@@ -1,38 +1,37 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class InstallationTypeTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                InstallationType.Residential,
-                InstallationType.Commercial,
-            ) {
-                InstallationType.entries shouldContain it
+val InstallationTypeTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            InstallationType.Residential,
+            InstallationType.Commercial,
+        ).forEach { item ->
+            test(item.name) {
+                InstallationType.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "Residential" to InstallationType.Residential,
-                "Commercial" to InstallationType.Commercial,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "Residential" to InstallationType.Residential,
+            "Commercial" to InstallationType.Commercial,
+        ).forEach { (name, expected) ->
+            test(name) {
                 InstallationType.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                InstallationType.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        InstallationType.entries.forEach { entry ->
+            test(entry.name) {
                 InstallationType.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

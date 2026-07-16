@@ -30,33 +30,47 @@ import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.CommandValidationRule
 
 private val NUMBER_OF_PARAMETERS_RULE = validationRule("numberOfParametersRule")
+private val COMMAND_FAIL_FAST_RULE = validationRule("commandFailFastRule")
 private val REQUIRE_PARAM = MemberName("xyz.dussim.viessmann.feature.api", "requireParam")
 private val REQUIRE_CONSTRAINTS = MemberName("xyz.dussim.viessmann.feature.api", "requireConstraints")
 
-private val ARRAY_CONSTRAINT_CAST_FUNCTIONS: Map<TypeName, MemberName> =
-    mapOf(
-        typeNameOf<ArrayNumberConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayNumberConstraintsOrThrow"),
-        typeNameOf<ArrayStringConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayStringConstraintsOrThrow"),
-        typeNameOf<ArrayBooleanConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayBooleanConstraintsOrThrow"),
-        typeNameOf<ArrayObjectConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayObjectConstraintsOrThrow"),
-        typeNameOf<ArrayUnknownConstraints>() to MemberName("xyz.dussim.viessmann.feature.api", "toArrayUnknownConstraintsOrThrow"),
-    )
+internal val CONSTRAINT_TYPE_ADAPTERS: Map<TypeName, TypeAdapterSpec> =
+    listOf(
+        constraintAdapter<StringConstraints>("stringConstraintsRule", "S"),
+        constraintAdapter<NumberConstraints>("numberConstraintsRule", "N"),
+        constraintAdapter<BooleanConstraints>("booleanConstraintsRule", "B"),
+        constraintAdapter<ArrayNumberConstraints>(
+            "arrayNumberConstraintsRule",
+            "AN",
+            "toArrayNumberConstraintsOrThrow",
+        ),
+        constraintAdapter<ArrayStringConstraints>(
+            "arrayStringConstraintsRule",
+            "AS",
+            "toArrayStringConstraintsOrThrow",
+        ),
+        constraintAdapter<ArrayBooleanConstraints>(
+            "arrayBooleanConstraintsRule",
+            "AB",
+            "toArrayBooleanConstraintsOrThrow",
+        ),
+        constraintAdapter<ArrayObjectConstraints>(
+            "arrayObjectConstraintsRule",
+            "AO",
+            "toArrayObjectConstraintsOrThrow",
+        ),
+        constraintAdapter<ArrayUnknownConstraints>(
+            "arrayUnknownConstraintsRule",
+            "AU",
+            "toArrayUnknownConstraintsOrThrow",
+        ),
+        constraintAdapter<ObjectConstraints>("objectConstraintsRule", "O"),
+        constraintAdapter<ScheduleConstraints>("scheduleConstraintsRule", "SC"),
+        constraintAdapter<EnergyMatrixConstraints>("energyMatrixConstraintsRule", "EM"),
+        constraintAdapter<UnknownConstraints>("unknownConstraintsRule", "U"),
+    ).associateBy(TypeAdapterSpec::runtimeType)
 
-private val CONSTRAINTS_VALIDATION_FUNCTIONS =
-    mapOf(
-        typeNameOf<StringConstraints>() to validationRule("stringConstraintsRule"),
-        typeNameOf<NumberConstraints>() to validationRule("numberConstraintsRule"),
-        typeNameOf<BooleanConstraints>() to validationRule("booleanConstraintsRule"),
-        typeNameOf<ArrayNumberConstraints>() to validationRule("arrayNumberConstraintsRule"),
-        typeNameOf<ArrayStringConstraints>() to validationRule("arrayStringConstraintsRule"),
-        typeNameOf<ArrayBooleanConstraints>() to validationRule("arrayBooleanConstraintsRule"),
-        typeNameOf<ArrayObjectConstraints>() to validationRule("arrayObjectConstraintsRule"),
-        typeNameOf<ArrayUnknownConstraints>() to validationRule("arrayUnknownConstraintsRule"),
-        typeNameOf<ObjectConstraints>() to validationRule("objectConstraintsRule"),
-        typeNameOf<ScheduleConstraints>() to validationRule("scheduleConstraintsRule"),
-        typeNameOf<EnergyMatrixConstraints>() to validationRule("energyMatrixConstraintsRule"),
-        typeNameOf<UnknownConstraints>() to validationRule("unknownConstraintsRule"),
-    )
+internal val CONSTRAINTS_VALIDATION_FUNCTIONS = CONSTRAINT_TYPE_ADAPTERS.mapValues { it.value.validationRule }
 
 /**
  * Generates constructor for command implementation.
@@ -81,7 +95,7 @@ fun constructorProperty(context: CommandSymbolContext) = overrideProperty(COMMAN
  */
 internal fun constraintPropertyInitializer(property: ConstraintProperty): CodeBlock {
     val combined = propertyHash(property.name.hashCode(), property.name.length)
-    val arrayTypeCastFunction = ARRAY_CONSTRAINT_CAST_FUNCTIONS[property.type]
+    val arrayTypeCastFunction = CONSTRAINT_TYPE_ADAPTERS.getValue(property.type).constraintConverter
 
     return if (arrayTypeCastFunction != null) {
         CodeBlock.of(
@@ -115,43 +129,62 @@ private fun constraintPropertiesImpl(context: CommandSymbolContext): List<Proper
 /**
  * Generates rule expressions for the command.
  */
-private fun ruleExpressions(context: CommandSymbolContext): List<CodeBlock> =
-    context
-        .constraintsProperties
-        .map {
-            CodeBlock.of(
-                "%M",
-                context.parentContext.ruleRegistry.register(
-                    CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type),
-                    listOf(it.name),
-                    COMMAND_VALIDATION_RULE_TYPE,
-                ),
-            )
-        }.plus(
-            CodeBlock.of(
-                "%M",
-                context.parentContext.ruleRegistry.register(
-                    NUMBER_OF_PARAMETERS_RULE,
-                    listOf(context.constraintsProperties.size, context.lowerCaseName.replace("_", "")),
-                    COMMAND_VALIDATION_RULE_TYPE,
+private fun validationPlan(context: CommandSymbolContext): ValidationPlan =
+    ValidationPlan(
+        context
+            .constraintsProperties
+            .map {
+                ValidationRulePlan(
+                    normalExpression =
+                        CodeBlock.of(
+                            "%M",
+                            context.parentContext.ruleRegistry.register(
+                                CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type),
+                                listOf(it.name),
+                                COMMAND_VALIDATION_RULE_TYPE,
+                            ),
+                        ),
+                )
+            }.plus(
+                ValidationRulePlan(
+                    normalExpression =
+                        CodeBlock.of(
+                            "%M",
+                            context.parentContext.ruleRegistry.register(
+                                NUMBER_OF_PARAMETERS_RULE,
+                                listOf(context.constraintsProperties.size, context.apiName),
+                                COMMAND_VALIDATION_RULE_TYPE,
+                            ),
+                        ),
                 ),
             ),
-        )
+    )
 
 /**
  * Generates companion object with validation rules for command constraints.
  */
-fun companionObject(context: CommandSymbolContext): TypeSpec =
+internal fun companionObject(
+    context: CommandSymbolContext,
+    validationPlan: ValidationPlan,
+): TypeSpec =
     TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(typeNameOf<CommandValidationRule>())
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
         .addProperty(commandRuleProperty(context))
+        .addProperty(commandFailFastRuleProperty(context))
         .addFunction(
             generateValidateFunction(
                 typeNameOf<Command>(),
-                ruleExpressions(context),
+                validationPlan.normalExpressions,
                 useSingleErrorResultAggregation = true,
+            ),
+        ).addFunction(
+            generateValidateFunction(
+                functionName = "validateFailFast",
+                targetType = typeNameOf<Command>(),
+                ruleExpressions = validationPlan.failFastExpressions,
+                isFailFast = validationPlan.requiresSeparateFailFast,
             ),
         ).build()
 
@@ -159,22 +192,15 @@ private fun commandRuleProperty(context: CommandSymbolContext): PropertySpec =
     overrideProperty(
         "rule",
         FEATURE_VALIDATION_RULE_TYPE,
-        CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.lowerCaseName.replace("_", "")),
+        CodeBlock.of("%M(%S, this)", COMMAND_RULE, context.apiName),
     )
 
-/**
- * Generates fail-fast validation object.
- */
-fun failFastObject(
-    context: CommandSymbolContext,
-    targetType: TypeName,
-): TypeSpec =
-    TypeSpec
-        .objectBuilder("FailFast")
-        .addSuperinterface(typeNameOf<CommandValidationRule>())
-        .addProperty(commandRuleProperty(context))
-        .addFunction(generateValidateFunction(targetType, ruleExpressions(context), isFailFast = true))
-        .build()
+private fun commandFailFastRuleProperty(context: CommandSymbolContext): PropertySpec =
+    overrideProperty(
+        "failFastRule",
+        FEATURE_VALIDATION_RULE_TYPE,
+        CodeBlock.of("%M(%S, this)", COMMAND_FAIL_FAST_RULE, context.apiName),
+    )
 
 /**
  * Generates complete command implementation class in a separate file.
@@ -190,7 +216,7 @@ fun generateCommandImplementation(
     superInterfaces: List<TypeName>,
     context: CommandSymbolContext,
 ): FileSpec {
-    val ruleExpressions = ruleExpressions(context)
+    val validationPlan = validationPlan(context)
     val typeSpec =
         TypeSpec
             .classBuilder(implName)
@@ -202,12 +228,8 @@ fun generateCommandImplementation(
             .addProperty(constructorProperty(context))
             .addProperties(context.inheritedConstraintsProperties)
             .addProperties(constraintPropertiesImpl(context))
-            .addType(companionObject(context))
-            .apply {
-                if (requiresDedicatedFailFastRule(ruleExpressions)) {
-                    addType(failFastObject(context, typeNameOf<Command>()))
-                }
-            }.build()
+            .addType(companionObject(context, validationPlan))
+            .build()
 
     return FileSpec
         .builder(implName.packageName, implName.simpleName)

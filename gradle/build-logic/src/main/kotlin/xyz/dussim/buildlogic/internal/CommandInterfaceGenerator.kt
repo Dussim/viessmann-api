@@ -2,8 +2,6 @@ package xyz.dussim.buildlogic.internal
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -20,20 +18,17 @@ object CommandInterfaceGenerator {
     ): TypeSpec {
         val commandClassName =
             when (params.size) {
-                0 -> ClassName("xyz.dussim.viessmann.feature.api", "Command0")
-                1 -> ClassName("xyz.dussim.viessmann.feature.api", "Command1")
-                2 -> ClassName("xyz.dussim.viessmann.feature.api", "Command2")
-                3 -> ClassName("xyz.dussim.viessmann.feature.api", "Command3")
-                4 -> ClassName("xyz.dussim.viessmann.feature.api", "Command4")
-                5 -> ClassName("xyz.dussim.viessmann.feature.api", "Command5")
-                6 -> ClassName("xyz.dussim.viessmann.feature.api", "Command6")
-                7 -> ClassName("xyz.dussim.viessmann.feature.api", "Command7")
-                8 -> ClassName("xyz.dussim.viessmann.feature.api", "Command8")
-                else -> error(
-                    "Too many parameters (${params.size}) for command '$commandName'" +
-                        (if (featureName.isNotEmpty()) " in feature '$featureName'" else "") +
-                        ". Max supported: 8. Params: ${params.map { it.name }}",
-                )
+                in 0..8 -> {
+                    ClassName("xyz.dussim.viessmann.feature.api", "Command${params.size}")
+                }
+
+                else -> {
+                    error(
+                        "Too many parameters (${params.size}) for command '$commandName'" +
+                            (if (featureName.isNotEmpty()) " in feature '$featureName'" else "") +
+                            ". Max supported: 8. Params: ${params.map { it.name }}",
+                    )
+                }
             }
 
         val typeSpec =
@@ -113,7 +108,9 @@ object CommandInterfaceGenerator {
                 ClassName("kotlinx.serialization.json", "JsonObject")
             }
 
-            else -> error("Unknown parameter type: $type")
+            else -> {
+                error("Unknown parameter type: $type")
+            }
         }
 
     private fun mapParameterTypeToConstraintsTypeName(type: String): TypeName =

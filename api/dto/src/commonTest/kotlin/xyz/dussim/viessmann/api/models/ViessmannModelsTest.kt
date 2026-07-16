@@ -1,51 +1,55 @@
 package xyz.dussim.viessmann.api.models
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import xyz.dussim.viessmann.api.testing.readFilesContentsIn
 import xyz.dussim.viessmann.api.utils.json
 
-class ViessmannModelsTest :
-    FunSpec({
-        context("parses installations") {
-            withData(readFilesContentsIn("models/installation")) { (_, content) ->
+val ViessmannModelsTest by testSuite {
+    testSuite("parses installations") {
+        readFilesContentsIn("models/installation").forEach { (fileName, content) ->
+            testSuite(fileName) {
                 val installations = json.decodeFromString<ResponseData<JsonObject>>(content).data
 
-                withData(
-                    nameFn = { (it["id"] as JsonPrimitive).content },
-                    ts = installations,
-                ) {
-                    json.decodeFromJsonElement<Installation>(it)
+                installations.forEach { item ->
+                    val id = (item["id"] as JsonPrimitive).content
+                    test(id) {
+                        json.decodeFromJsonElement<Installation>(item)
+                    }
                 }
             }
         }
+    }
 
-        context("parses gateways") {
-            withData(readFilesContentsIn("models/gateway")) { (_, content) ->
+    testSuite("parses gateways") {
+        readFilesContentsIn("models/gateway").forEach { (fileName, content) ->
+            testSuite(fileName) {
                 val gateways = json.decodeFromString<ResponseData<JsonObject>>(content).data
 
-                withData(
-                    nameFn = { (it["serial"] as JsonPrimitive).content },
-                    ts = gateways,
-                ) {
-                    json.decodeFromJsonElement<Gateway>(it)
+                gateways.forEach { item ->
+                    val serial = (item["serial"] as JsonPrimitive).content
+                    test(serial) {
+                        json.decodeFromJsonElement<Gateway>(item)
+                    }
                 }
             }
         }
+    }
 
-        context("parses devices") {
-            withData(readFilesContentsIn("models/device")) { (_, content) ->
+    testSuite("parses devices") {
+        readFilesContentsIn("models/device").forEach { (fileName, content) ->
+            testSuite(fileName) {
                 val devices = json.decodeFromString<ResponseData<JsonObject>>(content).data
 
-                withData(
-                    nameFn = { (it["id"] as JsonPrimitive).content },
-                    ts = devices,
-                ) {
-                    json.decodeFromJsonElement<Device>(it)
+                devices.forEach { item ->
+                    val id = (item["id"] as JsonPrimitive).content
+                    test(id) {
+                        json.decodeFromJsonElement<Device>(item)
+                    }
                 }
             }
         }
-    })
+    }
+}

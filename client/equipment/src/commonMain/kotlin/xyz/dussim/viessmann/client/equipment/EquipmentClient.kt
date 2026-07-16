@@ -1,7 +1,6 @@
 package xyz.dussim.viessmann.client.equipment
 
 import io.ktor.client.HttpClient
-import io.ktor.http.HttpMethod
 import xyz.dussim.viessmann.api.equipment.GatewayStatus
 import xyz.dussim.viessmann.api.equipment.InstallationStatus
 import xyz.dussim.viessmann.api.models.Device
@@ -10,10 +9,9 @@ import xyz.dussim.viessmann.api.models.GatewaysSummary
 import xyz.dussim.viessmann.api.models.Installation
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.client.core.ViessmannClientConfig
-import xyz.dussim.viessmann.client.core.ViessmannService
 import xyz.dussim.viessmann.client.core.appendIfNotNull
-import xyz.dussim.viessmann.client.core.viessmannRequest
-import xyz.dussim.viessmann.client.core.viessmannRequestData
+import xyz.dussim.viessmann.client.core.viessmannApiGet
+import xyz.dussim.viessmann.client.core.viessmannApiGetData
 
 data class InstallationsQuery(
     val accessLevel: String? = null,
@@ -100,26 +98,26 @@ class DefaultEquipmentClient(
     private val config: ViessmannClientConfig = ViessmannClientConfig(),
 ) : EquipmentClient {
     override suspend fun getInstallations(query: InstallationsQuery): ResponseData<Installation> =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations",
         ) {
             url.parameters.apply {
-                appendIfNotNull("accessLevel", query.accessLevel)
-                appendIfNotNull("cursor", query.cursor)
-                appendIfNotNull("deviceBmuSerial", query.deviceBmuSerial)
-                appendIfNotNull("deviceBoilerSerial", query.deviceBoilerSerial)
-                appendIfNotNull("gatewaySerial", query.gatewaySerial)
-                appendIfNotNull("includeAccessList", query.includeAccessList)
-                appendIfNotNull("includeGateways", query.includeGateways)
-                appendIfNotNull("limit", query.limit)
-                appendIfNotNull("onlyWithLockedDevices", query.onlyWithLockedDevices)
-                appendIfNotNull("onlyWithRemoteDiagnosticsSupport", query.onlyWithRemoteDiagnosticsSupport)
-                appendIfNotNull("ownedByMaintainer", query.ownedByMaintainer)
-                appendIfNotNull("serial", query.serial)
-                appendIfNotNull("withoutViCareUser", query.withoutViCareUser)
+                appendIfNotNull(
+                    "accessLevel" to query.accessLevel,
+                    "cursor" to query.cursor,
+                    "deviceBmuSerial" to query.deviceBmuSerial,
+                    "deviceBoilerSerial" to query.deviceBoilerSerial,
+                    "gatewaySerial" to query.gatewaySerial,
+                    "includeAccessList" to query.includeAccessList,
+                    "includeGateways" to query.includeGateways,
+                    "limit" to query.limit,
+                    "onlyWithLockedDevices" to query.onlyWithLockedDevices,
+                    "onlyWithRemoteDiagnosticsSupport" to query.onlyWithRemoteDiagnosticsSupport,
+                    "ownedByMaintainer" to query.ownedByMaintainer,
+                    "serial" to query.serial,
+                    "withoutViCareUser" to query.withoutViCareUser,
+                )
             }
         }
 
@@ -128,56 +126,52 @@ class DefaultEquipmentClient(
         includeAccessList: Boolean?,
         includeGateways: Boolean?,
     ): Installation =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations/$installationId",
         ) {
             url.parameters.apply {
-                appendIfNotNull("includeAccessList", includeAccessList)
-                appendIfNotNull("includeGateways", includeGateways)
+                appendIfNotNull(
+                    "includeAccessList" to includeAccessList,
+                    "includeGateways" to includeGateways,
+                )
             }
         }
 
     override suspend fun getInstallationsSummary(): GatewaysSummary =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations/summary",
         )
 
     override suspend fun getInstallationStatus(installationId: String): InstallationStatus =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations/$installationId/status",
         )
 
     override suspend fun getGateways(query: GatewaysQuery): ResponseData<Gateway> =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/gateways",
         ) {
             url.parameters.apply {
-                appendIfNotNull("bmuSerial", query.bmuSerial)
-                appendIfNotNull("boilerSerial", query.boilerSerial)
-                appendIfNotNull("cursor", query.cursor)
-                appendIfNotNull("deviceRoles", query.deviceRoles)
-                appendIfNotNull("gatewayType", query.gatewayType)
-                appendIfNotNull("includeBorders", query.includeBorders)
-                appendIfNotNull("includeDevices", query.includeDevices)
-                appendIfNotNull("includeNbiotGateways", query.includeNbiotGateways)
-                appendIfNotNull("limit", query.limit)
-                appendIfNotNull("maxVersion", query.maxVersion)
-                appendIfNotNull("minVersion", query.minVersion)
-                appendIfNotNull("onlyRegistered", query.onlyRegistered)
-                appendIfNotNull("ownedByMaintainer", query.ownedByMaintainer)
-                appendIfNotNull("serial", query.serial)
+                appendIfNotNull(
+                    "bmuSerial" to query.bmuSerial,
+                    "boilerSerial" to query.boilerSerial,
+                    "cursor" to query.cursor,
+                    "deviceRoles" to query.deviceRoles,
+                    "gatewayType" to query.gatewayType,
+                    "includeBorders" to query.includeBorders,
+                    "includeDevices" to query.includeDevices,
+                    "includeNbiotGateways" to query.includeNbiotGateways,
+                    "limit" to query.limit,
+                    "maxVersion" to query.maxVersion,
+                    "minVersion" to query.minVersion,
+                    "onlyRegistered" to query.onlyRegistered,
+                    "ownedByMaintainer" to query.ownedByMaintainer,
+                    "serial" to query.serial,
+                )
             }
         }
 
@@ -185,10 +179,8 @@ class DefaultEquipmentClient(
         gatewaySerial: String,
         includeDevices: Boolean?,
     ): Gateway =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/gateways/$gatewaySerial",
         ) {
             url.parameters.apply {
@@ -197,18 +189,14 @@ class DefaultEquipmentClient(
         }
 
     override suspend fun getGatewaysSummary(): GatewaysSummary =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/gateways/summary",
         )
 
     override suspend fun getGatewayStatus(gatewaySerial: String): GatewayStatus =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/gateways/$gatewaySerial/status",
         )
 
@@ -218,16 +206,16 @@ class DefaultEquipmentClient(
         includeDevices: Boolean?,
         limit: Int?,
     ): ResponseData<Gateway> =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations/$installationId/gateways",
         ) {
             url.parameters.apply {
-                appendIfNotNull("cursor", cursor)
-                appendIfNotNull("includeDevices", includeDevices)
-                appendIfNotNull("limit", limit)
+                appendIfNotNull(
+                    "cursor" to cursor,
+                    "includeDevices" to includeDevices,
+                    "limit" to limit,
+                )
             }
         }
 
@@ -235,10 +223,8 @@ class DefaultEquipmentClient(
         installationId: String,
         gatewaySerial: String,
     ): Gateway =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations/$installationId/gateways/$gatewaySerial",
         )
 
@@ -246,10 +232,8 @@ class DefaultEquipmentClient(
         installationId: String,
         gatewaySerial: String,
     ): GatewayStatus =
-        httpClient.viessmannRequestData(
+        httpClient.viessmannApiGetData(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations/$installationId/gateways/$gatewaySerial/status",
         )
 
@@ -257,10 +241,8 @@ class DefaultEquipmentClient(
         installationId: String,
         gatewaySerial: String,
     ): ResponseData<Device> =
-        httpClient.viessmannRequest(
+        httpClient.viessmannApiGet(
             config = config,
-            service = ViessmannService.Api,
-            method = HttpMethod.Get,
             path = "/iot/v2/equipment/installations/$installationId/gateways/$gatewaySerial/devices",
         )
 }

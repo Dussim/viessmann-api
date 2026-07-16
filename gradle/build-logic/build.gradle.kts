@@ -1,7 +1,9 @@
+import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     `kotlin-dsl`
+    kotlin("plugin.serialization") version embeddedKotlinVersion
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.ben.manes.versions)
 }
@@ -9,7 +11,7 @@ plugins {
 dependencies {
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 
-    implementation(libs.plugins.kotest)
+    implementation(libs.plugins.testBalloon)
     implementation(libs.plugins.kotlinter)
     implementation(libs.plugins.dokka)
     implementation(libs.plugins.kotlin.jvm)
@@ -20,6 +22,10 @@ dependencies {
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.swagger.parser)
+
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.testBalloon.framework.core)
+    testImplementation(libs.testBalloon.integration.kotest.assertions)
 }
 
 gradlePlugin {
@@ -36,17 +42,9 @@ gradlePlugin {
             id = "xyz.dussim.kotlin.client"
             implementationClass = "xyz.dussim.buildlogic.KotlinClientPlugin"
         }
-        register("anonymizeJson") {
-            id = "xyz.dussim.anonymize.json"
-            implementationClass = "xyz.dussim.buildlogic.AnonymizeJsonPlugin"
-        }
         register("generateFeatureInterfaces") {
             id = "xyz.dussim.generate.features"
             implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromParsedFeaturePlugin"
-        }
-        register("generateFeatureInterfacesFromYaml") {
-            id = "xyz.dussim.generate.features.yaml"
-            implementationClass = "xyz.dussim.buildlogic.GenerateFeatureInterfacesFromYamlPlugin"
         }
         register("generateFeatureJsonsFromYaml") {
             id = "xyz.dussim.generate.features.json"
@@ -65,7 +63,7 @@ gradlePlugin {
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
+        jvmTarget = JvmTarget.JVM_25
         freeCompilerArgs.addAll(
             "-Xskip-prerelease-check",
         )
@@ -73,8 +71,12 @@ kotlin {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 kotlinter {

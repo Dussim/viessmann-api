@@ -81,33 +81,8 @@ fun <F : Feature> FeatureFactory(
  */
 inline fun <reified F : Feature> FeatureFactory(noinline getOrThrow: (Feature) -> F): FeatureFactory<F> = FeatureFactory(F::class, getOrThrow)
 
-@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
-expect class IdentityHashMap<K, V>() : MutableMap<K, V> {
-    override fun clear()
-
-    override fun put(
-        key: K,
-        value: V,
-    ): V?
-
-    override fun putAll(from: Map<out K, V>)
-
-    override fun remove(key: K): V?
-
-    override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
-    override val keys: MutableSet<K>
-    override val values: MutableCollection<V>
-
-    override fun containsKey(key: K): Boolean
-
-    override fun containsValue(value: V): Boolean
-
-    override fun get(key: K): V?
-
-    override fun isEmpty(): Boolean
-
-    override val size: Int
-}
+@Suppress("FunctionName")
+expect fun <K, V> IdentityHashMap(): MutableMap<K, V>
 
 internal enum class FeatureMatcherNameIndexKind {
     EXACT,

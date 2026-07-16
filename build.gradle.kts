@@ -1,5 +1,8 @@
 plugins {
     alias(libs.plugins.ben.manes.versions)
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 tasks.wrapper {

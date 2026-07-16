@@ -4,11 +4,12 @@ plugins {
 }
 
 dependencies {
-    api(projects.api.feature.annotations)
+    api(projects.api.feature.apiFeatureAnnotations)
 
-    implementation(projects.api.feature.common)
+    implementation(projects.api.feature.apiFeatureCommon)
 
     implementation(libs.ksp.symbol.processing.api)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.auto.service.annotations)
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.ktlint.rule.engine)

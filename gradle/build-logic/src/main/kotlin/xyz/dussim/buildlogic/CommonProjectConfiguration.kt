@@ -18,7 +18,7 @@ fun Project.configureCommonPlugins() {
         apply(libs.plugins.dokka)
         apply(libs.plugins.kotlinter)
         apply(libs.plugins.ksp)
-        apply(libs.plugins.kotest)
+        apply(libs.plugins.testBalloon)
     }
 }
 
@@ -72,15 +72,36 @@ fun Project.configureGroupAndVersion() {
 fun Project.configurePublishing() {
     pluginManager.apply("maven-publish")
 
-    extensions.configure<PublishingExtension> {
-        repositories {
-            maven {
-                name = "reposiliteRepositorySnapshots"
-                url = uri("https://maven.dussim.xyz/snapshots")
+    val repoUsername =
+        providers
+            .gradleProperty("repoUsername")
+            .orElse(providers.environmentVariable("REPO_USERNAME"))
 
-                credentials {
-                    username = providers.gradleProperty("repoUsername").get()
-                    password = providers.gradleProperty("repoPassword").get()
+    val repoPassword =
+        providers
+            .gradleProperty("repoPassword")
+            .orElse(providers.environmentVariable("REPO_PASSWORD"))
+
+    val hasRepositoryCredentials = repoUsername.isPresent && repoPassword.isPresent
+
+    if (!hasRepositoryCredentials) {
+        logger.info(
+            "Skipping Maven publishing repository configuration because repoUsername/repoPassword properties " +
+                "or REPO_USERNAME/REPO_PASSWORD environment variables are not configured.",
+        )
+    }
+
+    extensions.configure<PublishingExtension> {
+        if (hasRepositoryCredentials) {
+            repositories {
+                maven {
+                    name = "reposiliteRepositorySnapshots"
+                    url = uri("https://maven.dussim.xyz/snapshots")
+
+                    credentials {
+                        username = repoUsername.get()
+                        password = repoPassword.get()
+                    }
                 }
             }
         }

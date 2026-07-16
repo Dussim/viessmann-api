@@ -76,7 +76,7 @@ internal inline fun propertyHash(
 internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
     propertyName: String,
     expectedIndex: Int,
-    required: Boolean = true,
+    required: Boolean,
 ): ValidationRule<Feature, ValidationError> {
     val missingResult =
         if (required) {
@@ -101,7 +101,7 @@ internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
 internal inline fun <reified T : PropertyValue<*>, reified NonNullT : PropertyValue<*>> typedNullablePropertyRule(
     propertyName: String,
     expectedIndex: Int,
-    required: Boolean = true,
+    required: Boolean,
 ): ValidationRule<Feature, ValidationError> {
     val missingResult =
         if (required) {
@@ -126,7 +126,7 @@ internal inline fun <reified T : PropertyValue<*>, reified NonNullT : PropertyVa
 internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
     propertyName: String,
     expectedIndex: Int,
-    required: Boolean = true,
+    required: Boolean,
 ): ValidationRule<Feature, ValidationError> {
     val missingResult =
         if (required) {
@@ -471,6 +471,24 @@ fun zeroParameterCommandRule(commandName: String): ValidationRule<Feature, Valid
     }
 }
 
+/**
+ * Validates an optional zero-parameter command. An absent command is valid; a present command must not declare
+ * parameters.
+ */
+fun optionalZeroParameterCommandRule(commandName: String): ValidationRule<Feature, ValidationError> {
+    val expectedData = Expected(commandName, 0)
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        val command = feature.commands[commandName, precomputedHash] ?: return@ValidationRule ValidationResult.Valid
+        if (command.params.size == 0) {
+            ValidationResult.Valid
+        } else {
+            Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+        }
+    }
+}
+
 fun commandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,
@@ -480,5 +498,52 @@ fun commandRule(
 
     return ValidationRule { feature ->
         innerRule.validate(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
+    }
+}
+
+/**
+ * Validates a required command with the generated fail-fast command path.
+ */
+fun commandFailFastRule(
+    commandName: String,
+    innerRule: GeneratedValidationRule<Command, ValidationError>,
+): ValidationRule<Feature, ValidationError> {
+    val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        innerRule.validateFailFast(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
+    }
+}
+
+/**
+ * Validates an optional command. An absent command is valid; a present command is checked by [innerRule].
+ */
+fun optionalCommandRule(
+    commandName: String,
+    innerRule: ValidationRule<Command, ValidationError>,
+): ValidationRule<Feature, ValidationError> {
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        feature.commands[commandName, precomputedHash]
+            ?.let(innerRule::validate)
+            ?: ValidationResult.Valid
+    }
+}
+
+/**
+ * Validates an optional command with the generated fail-fast command path.
+ */
+fun optionalCommandFailFastRule(
+    commandName: String,
+    innerRule: GeneratedValidationRule<Command, ValidationError>,
+): ValidationRule<Feature, ValidationError> {
+    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+
+    return ValidationRule { feature ->
+        feature.commands[commandName, precomputedHash]
+            ?.let(innerRule::validateFailFast)
+            ?: ValidationResult.Valid
     }
 }

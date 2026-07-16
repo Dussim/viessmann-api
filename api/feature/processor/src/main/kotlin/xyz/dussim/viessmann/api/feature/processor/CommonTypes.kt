@@ -15,17 +15,17 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Command
-import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
-import xyz.dussim.viessmann.feature.api.Property
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
+import xyz.dussim.viessmann.feature.api.validation.GeneratedValidationRule
 import xyz.dussim.viessmann.feature.api.validation.SingleErrorValidationResultApi
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
-import kotlin.time.Instant
+import java.security.MessageDigest
+import java.util.Locale
 
 const val VALIDATION_PACKAGE = "xyz.dussim.viessmann.feature.api.validation"
 private const val FEATURE_API_PACKAGE = "xyz.dussim.viessmann.feature.api"
@@ -49,6 +49,7 @@ val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexe
 
 val FEATURE_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Feature>())
 val COMMAND_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Command>())
+val GENERATED_FEATURE_VALIDATION_RULE_TYPE = generatedValidationRuleType(typeNameOf<Feature>())
 
 /**
  * Creates a validation rule type for a given target type.
@@ -60,6 +61,32 @@ fun validationRuleType(targetType: TypeName): TypeName =
             targetType,
             typeNameOf<ValidationError>(),
         )
+
+fun generatedValidationRuleType(targetType: TypeName): TypeName =
+    GeneratedValidationRule::class
+        .asClassName()
+        .parameterizedBy(
+            targetType,
+            typeNameOf<ValidationError>(),
+        )
+
+internal data class ValidationRulePlan(
+    val normalExpression: CodeBlock,
+    val failFastExpression: CodeBlock = normalExpression,
+)
+
+internal data class ValidationPlan(
+    val rules: List<ValidationRulePlan>,
+) {
+    val normalExpressions: List<CodeBlock> get() = rules.map(ValidationRulePlan::normalExpression)
+
+    val failFastExpressions: List<CodeBlock> get() = rules.map(ValidationRulePlan::failFastExpression)
+
+    val requiresSeparateFailFast: Boolean
+        get() =
+            rules.size > 1 ||
+                rules.any { it.normalExpression.toString() != it.failFastExpression.toString() }
+}
 
 /**
  * Creates a feature factory type for a given interface type.
@@ -104,6 +131,13 @@ val SINGLE_ERROR_VALIDATION_RESULT_API_OPT_IN: AnnotationSpec =
     AnnotationSpec
         .builder(ClassName("kotlin", "OptIn"))
         .addMember("%T::class", SingleErrorValidationResultApi::class.asTypeName())
+        .build()
+
+val FILE_DEPRECATION_SUPPRESSION: AnnotationSpec =
+    AnnotationSpec
+        .builder(Suppress::class)
+        .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+        .addMember("%S", "DEPRECATION")
         .build()
 
 val DEFAULT_CONSTRAINTS =
@@ -188,6 +222,7 @@ fun varArgFunctionCall(
 fun generateValidateFunction(
     targetType: TypeName,
     ruleExpressions: List<CodeBlock>,
+    functionName: String = "validate",
     isFailFast: Boolean = false,
     useSingleErrorResultAggregation: Boolean = false,
 ): FunSpec {
@@ -195,7 +230,7 @@ fun generateValidateFunction(
         useSingleErrorResultAggregation && !isFailFast && ruleExpressions.size in 2..3
 
     return FunSpec
-        .builder("validate")
+        .builder(functionName)
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(ParameterSpec.builder("value", targetType).build())
         .returns(
@@ -302,10 +337,10 @@ fun overrideProperty(
  * Example: "MyFeatureImpl" -> "myFeatureDescriptor"
  */
 fun generateDescriptorName(className: ClassName): String =
-    className.simpleName
-        .replace("_", "")
+    className.simpleNames
+        .joinToString("_")
         .replaceFirstChar { it.lowercase() }
-        .removeSuffix(IMPL_SUFFIX) + DESCRIPTOR_SUFFIX
+        .removeSuffix(IMPL_SUFFIX) + "_${stableHash(className.canonicalName)}" + DESCRIPTOR_SUFFIX
 
 data class CommandSignature(
     val name: String,
@@ -318,8 +353,7 @@ data class CommandSignature(
 /**
  * Generates a short, stable implementation class name for a command.
  *
- * **Normal format** (when the result fits within [MAX_IMPL_NAME_LENGTH] chars):
- * `{CapitalizedCommandName}{params}Impl`
+ * Format: `{ReadableCommandAndParameters}_{16 hex SHA-256 chars}Impl`.
  *
  * Each parameter contributes `{CapitalizedParamName}{typeAbbrev}`:
  *   - ParamName is the full camelCase parameter name with first letter uppercased.
@@ -339,15 +373,7 @@ data class CommandSignature(
  *       UnknownConstraints       → U
  *       (anything else)          → X
  *
- * **Hash fallback** (when the normal name would exceed [MAX_IMPL_NAME_LENGTH] = $MAX_IMPL_NAME_LENGTH chars):
- * `{CapitalizedCommandName}_{hash8hex}Impl`
- * where hash8hex is the first 8 hex characters of the SHA-256 of the full
- * (un-truncated) params part, ensuring uniqueness without length blow-up.
- *
- * Examples:
- *   - setTemperature(value: StringConstraints)                         → SetTemperatureValueSImpl
- *   - setCurve(shift: NumberConstraints, slope: NumberConstraints)     → SetCurveShiftNSlopeNImpl
- *   - setUnitSystemAndFormatters(unitSystem:S, dateFormat:S, ×8 …)    → SetUnitSystemAndFormatters_a3f9b2c1Impl
+ * The readable part is truncated to [MAX_IMPL_NAME_LENGTH]; the 64-bit suffix is derived from the complete signature.
  */
 private const val MAX_IMPL_NAME_LENGTH = 80
 
@@ -355,44 +381,16 @@ private fun buildImplName(
     name: String,
     parameters: List<Pair<String, TypeName>>,
 ): String {
-    val capitalizedName = name.replaceFirstChar { it.uppercase() }
-    if (parameters.isEmpty()) return "${capitalizedName}Impl"
-
-    val typeAbbrevs =
-        mapOf(
-            "StringConstraints" to "S",
-            "NumberConstraints" to "N",
-            "BooleanConstraints" to "B",
-            "ArrayStringConstraints" to "AS",
-            "ArrayNumberConstraints" to "AN",
-            "ArrayBooleanConstraints" to "AB",
-            "ArrayObjectConstraints" to "AO",
-            "ArrayUnknownConstraints" to "AU",
-            "ArrayEmptyConstraints" to "AE",
-            "ScheduleConstraints" to "SC",
-            "EnergyMatrixConstraints" to "EM",
-            "ObjectConstraints" to "O",
-            "UnknownConstraints" to "U",
-        )
-
+    val capitalizedName = name.toGeneratedIdentifier().replaceFirstChar { it.uppercase() }
     val paramsPart =
         parameters.joinToString("") { (pName, pType) ->
-            val simpleName = pType.toString().substringAfterLast(".").removeSuffix("?")
-            val typeAbbrev = typeAbbrevs[simpleName] ?: "X"
-            pName.replaceFirstChar { it.uppercase() } + typeAbbrev
+            val typeAbbrev = CONSTRAINT_TYPE_ADAPTERS[pType.copy(nullable = false)]?.abbreviation ?: "X"
+            pName.toGeneratedIdentifier().replaceFirstChar { it.uppercase() } + typeAbbrev
         }
 
-    val fullName = "${capitalizedName}${paramsPart}Impl"
-    if (fullName.length <= MAX_IMPL_NAME_LENGTH) return fullName
-
-    // Hash fallback: SHA-256 of paramsPart, take first 8 hex chars
-    val digest = java.security.MessageDigest.getInstance("SHA-256")
-    val hash =
-        digest
-            .digest(paramsPart.toByteArray())
-            .take(4)
-            .joinToString("") { "%02x".format(it) }
-    return "${capitalizedName}_${hash}Impl"
+    val hash = stableHash("$name;$paramsPart")
+    val readablePart = "${capitalizedName}$paramsPart".take(MAX_IMPL_NAME_LENGTH - hash.length - "_Impl".length)
+    return "${readablePart}_${hash}Impl"
 }
 
 data class RuleSignature(
@@ -417,8 +415,24 @@ data class RuleSignature(
                 "${argsPart}_$functionPart"
             }
         val sanitized = if (name.first().isDigit()) "rule_$name" else name
-        return sanitized.replaceFirstChar { it.lowercase() }.replace("__", "_")
+        val readable = sanitized.replaceFirstChar { it.lowercase() }.replace(Regex("_+"), "_").take(80)
+        return "${readable}_${stableHash(stableSignature())}"
     }
+
+    private fun stableSignature(): String =
+        buildString {
+            append(function.canonicalName)
+            append(';')
+            args.joinTo(this, separator = ";") { argument ->
+                when (argument) {
+                    is ClassName -> argument.canonicalName
+                    is MemberName -> argument.canonicalName
+                    else -> argument.toString()
+                }
+            }
+            append(';')
+            append(targetType)
+        }
 }
 
 class RuleRegistry(
@@ -440,41 +454,24 @@ class RuleRegistry(
     fun getAllRules(): Map<RuleSignature, MemberName> = rules
 }
 
-private val SUPERINTERFACE_PROPERTIES =
-    mapOf(
-        "feature" to typeNameOf<String>(),
-        "wildcardFeature" to typeNameOf<String>(),
-        "isEnabled" to typeNameOf<Boolean>(),
-        "isReady" to typeNameOf<Boolean>(),
-        "apiVersion" to typeNameOf<Int>(),
-        "timestamp" to typeNameOf<Instant>(),
-        "uri" to typeNameOf<String>(),
-        "properties" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Property>()),
-        "commands" to EfficientStringKeyMap::class.asClassName().parameterizedBy(typeNameOf<Command>()),
-        "deviceId" to typeNameOf<String?>(),
-        "gatewayId" to typeNameOf<String?>(),
-        "isActive" to typeNameOf<Boolean?>(),
-    )
-
 enum class BaseFeature(
-    val superInterfaceProperties: Map<String, TypeName>,
     val delegate: TypeName,
     val abstractClass: ClassName,
 ) {
-    Feature(SUPERINTERFACE_PROPERTIES, typeNameOf<Feature>(), BASE_FEATURE),
+    Feature(typeNameOf<Feature>(), BASE_FEATURE),
 }
 
 data class FeatureSignature(
     val baseFeature: BaseFeature,
     val properties: List<Pair<String, TypeName>>,
-    val commands: List<Triple<String, CommandSignature, Boolean>>,
+    val commands: List<CommandFeatureSignature>,
 ) {
     val implName: String
         get() {
             val basePart = baseFeature.name
             val propsPart =
                 properties.joinToString("") { (name, type) ->
-                    name.replaceFirstChar { it.uppercase() } +
+                    name.toGeneratedIdentifier().replaceFirstChar { it.uppercase() } +
                         type
                             .toString()
                             .substringAfterLast(".")
@@ -482,18 +479,61 @@ data class FeatureSignature(
                             .replaceFirstChar { it.uppercase() }
                 }
             val cmdsPart =
-                commands.joinToString("") { (name, sig, isNullable) ->
-                    name.replaceFirstChar { it.uppercase() } +
-                        sig.implName.removeSuffix("Impl") +
-                        if (isNullable) "Opt" else ""
+                commands.joinToString("") { command ->
+                    command.propertyName.toGeneratedIdentifier().replaceFirstChar { it.uppercase() } +
+                        command.signature.implName.removeSuffix("Impl") +
+                        if (command.isNullable) "Opt" else ""
                 }
             val rawName = "Feat${basePart}${propsPart}$cmdsPart"
-            val hash =
-                this
-                    .hashCode()
-                    .toUInt()
-                    .toString(36)
-                    .uppercase()
-            return "${rawName.take(40)}${hash}Impl"
+            return "${rawName.take(40)}${stableHashSuffix()}Impl"
+        }
+
+    private fun stableHashSuffix(): String {
+        val signature =
+            buildString {
+                append("base=")
+                append(baseFeature.name)
+                append(";properties=")
+                properties.joinTo(this, separator = ",") { (name, type) ->
+                    "$name:${type.stableSignatureName()}"
+                }
+                append(";commands=")
+                commands.joinTo(this, separator = ",") { command ->
+                    "${command.propertyName}:${command.signature.stableSignatureName()}:nullable=${command.isNullable}"
+                }
+            }
+        return stableHash(signature).uppercase(Locale.ROOT)
+    }
+
+    private fun TypeName.stableSignatureName(): String = toString()
+
+    private fun CommandSignature.stableSignatureName(): String =
+        buildString {
+            append(name)
+            append("(")
+            parameters.joinTo(this, separator = ",") { (name, type) ->
+                "$name:${type.stableSignatureName()}"
+            }
+            append(")")
         }
 }
+
+data class CommandFeatureSignature(
+    val propertyName: String,
+    val apiName: String,
+    val signature: CommandSignature,
+    val isNullable: Boolean,
+)
+
+private fun String.toGeneratedIdentifier(): String {
+    val sanitized = replace(Regex("[^A-Za-z0-9_]"), "_")
+    val nonEmpty = sanitized.ifEmpty { "Generated" }
+    return if (nonEmpty.first().isDigit()) "_$nonEmpty" else nonEmpty
+}
+
+private fun stableHash(value: String): String =
+    MessageDigest
+        .getInstance("SHA-256")
+        .digest(value.encodeToByteArray())
+        .take(8)
+        .joinToString("") { byte -> "%02x".format(byte) }

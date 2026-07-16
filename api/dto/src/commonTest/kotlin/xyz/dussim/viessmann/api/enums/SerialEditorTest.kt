@@ -1,40 +1,39 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class SerialEditorTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                SerialEditor.User,
-                SerialEditor.DeviceCommunication,
-                SerialEditor.Supporter,
-            ) {
-                SerialEditor.entries shouldContain it
+val SerialEditorTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            SerialEditor.User,
+            SerialEditor.DeviceCommunication,
+            SerialEditor.Supporter,
+        ).forEach { item ->
+            test(item.name) {
+                SerialEditor.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "User" to SerialEditor.User,
-                "DeviceCommunication" to SerialEditor.DeviceCommunication,
-                "Supporter" to SerialEditor.Supporter,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "User" to SerialEditor.User,
+            "DeviceCommunication" to SerialEditor.DeviceCommunication,
+            "Supporter" to SerialEditor.Supporter,
+        ).forEach { (name, expected) ->
+            test(name) {
                 SerialEditor.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                SerialEditor.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        SerialEditor.entries.forEach { entry ->
+            test(entry.name) {
                 SerialEditor.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

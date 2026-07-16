@@ -4,10 +4,10 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(project(":client:client-core"))
-        api(project(":api:dto"))
-        api(project(":api:equipment"))
-        api(project(":api:errors"))
+        api(projects.client.clientCore)
+        api(projects.api.apiDto)
+        api(projects.api.apiEquipment)
+        api(projects.api.apiErrors)
     }
     sourceSets.commonTest.dependencies {
         implementation(ktorLibs.client.mock)

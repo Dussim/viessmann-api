@@ -1,7 +1,8 @@
 [versions]
-ksp = "2.3.9"
-kotest = "6.2.0"
-kotlin = "2.4.0"
+ksp = "2.3.10"
+kotest = "6.2.2"
+testBalloon = "1.0.1-K2.4.0"
+kotlin = "2.4.10"
 ktlint = "1.8.0"
 slf4j = "2.0.18"
 
@@ -21,17 +22,23 @@ kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 
+# TestBalloon
+testBalloon-framework-core = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "testBalloon" }
+testBalloon-integration-kotest-assertions = { module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "testBalloon" }
+
 # Kotlin
 kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "kotlin" }
 kotlin-test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlin" }
+kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
 kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
 kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.8.0"
-swagger-parser = "io.swagger.parser.v3:swagger-parser:2.1.37"
+swagger-parser = "io.swagger.parser.v3:swagger-parser:2.1.42"
 
 [plugins]
 ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.54.0" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotest = { id = "io.kotest", version.ref = "kotest" }
+testBalloon = { id = "de.infix.testBalloon", version.ref = "testBalloon" }
 dokka = { id = "org.jetbrains.dokka", version = "2.2.0" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

@@ -4,7 +4,7 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(projects.api.dto)
+        api(projects.api.apiDto)
         api(libs.kotlinx.serialization.json)
     }
 }

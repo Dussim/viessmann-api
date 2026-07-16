@@ -1,38 +1,37 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class NetworkStatusTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                NetworkStatus.Online,
-                NetworkStatus.Offline,
-            ) {
-                NetworkStatus.entries shouldContain it
+val NetworkStatusTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            NetworkStatus.Online,
+            NetworkStatus.Offline,
+        ).forEach { item ->
+            test(item.name) {
+                NetworkStatus.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "Online" to NetworkStatus.Online,
-                "Offline" to NetworkStatus.Offline,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "Online" to NetworkStatus.Online,
+            "Offline" to NetworkStatus.Offline,
+        ).forEach { (name, expected) ->
+            test(name) {
                 NetworkStatus.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                NetworkStatus.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        NetworkStatus.entries.forEach { entry ->
+            test(entry.name) {
                 NetworkStatus.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

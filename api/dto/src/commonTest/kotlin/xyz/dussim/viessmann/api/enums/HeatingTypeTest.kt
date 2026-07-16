@@ -1,44 +1,43 @@
 package xyz.dussim.viessmann.api.enums
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.datatest.withData
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 
-class HeatingTypeTest :
-    FunSpec({
-        context("EntryHolder contains all strict values") {
-            withData(
-                nameFn = { it.name },
-                HeatingType.None,
-                HeatingType.FloorHeating,
-                HeatingType.Radiators,
-                HeatingType.Both,
-                HeatingType.Undefined,
-            ) {
-                HeatingType.entries shouldContain it
+val HeatingTypeTest by testSuite {
+    testSuite("EntryHolder contains all strict values") {
+        listOf(
+            HeatingType.None,
+            HeatingType.FloorHeating,
+            HeatingType.Radiators,
+            HeatingType.Both,
+            HeatingType.Undefined,
+        ).forEach { item ->
+            test(item.name) {
+                HeatingType.entries shouldContain item
             }
         }
+    }
 
-        context("InstanceFactory produces correct values") {
-            withData(
-                nameFn = { (name, _) -> name },
-                "None" to HeatingType.None,
-                "FloorHeating" to HeatingType.FloorHeating,
-                "Radiators" to HeatingType.Radiators,
-                "Both" to HeatingType.Both,
-                "Undefined" to HeatingType.Undefined,
-            ) { (name, expected) ->
+    testSuite("InstanceFactory produces correct values") {
+        listOf(
+            "None" to HeatingType.None,
+            "FloorHeating" to HeatingType.FloorHeating,
+            "Radiators" to HeatingType.Radiators,
+            "Both" to HeatingType.Both,
+            "Undefined" to HeatingType.Undefined,
+        ).forEach { (name, expected) ->
+            test(name) {
                 HeatingType.valueOf(name) shouldBe expected
             }
         }
+    }
 
-        context("EntryHolder entries should all be reconstructed correctly") {
-            withData(
-                nameFn = { it.name },
-                HeatingType.entries,
-            ) { entry ->
+    testSuite("EntryHolder entries should all be reconstructed correctly") {
+        HeatingType.entries.forEach { entry ->
+            test(entry.name) {
                 HeatingType.valueOf(entry.name) shouldBe entry
             }
         }
-    })
+    }
+}

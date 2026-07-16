@@ -135,7 +135,7 @@ private fun allMatching(
 @Suppress("UNCHECKED_CAST")
 private fun <F : Feature> cachedFindOfHelper(
     features: List<Feature>,
-    implementations: List<IdentityHashMap<KClass<out Feature>, Any>>,
+    implementations: List<MutableMap<KClass<out Feature>, Any>>,
     range: IntRange,
     matcher: FeatureMatcher?,
     factory: FeatureFactory<F>,
@@ -160,7 +160,7 @@ private fun <F : Feature> cachedFindOfHelper(
 @Suppress("UNCHECKED_CAST")
 private fun <F : Feature> cachedFirstOfHelper(
     features: List<Feature>,
-    implementations: List<IdentityHashMap<KClass<out Feature>, Any>>,
+    implementations: List<MutableMap<KClass<out Feature>, Any>>,
     range: IntRange,
     matcher: FeatureMatcher?,
     factory: FeatureFactory<F>,
@@ -186,7 +186,7 @@ private fun <F : Feature> cachedFirstOfHelper(
 @Suppress("UNCHECKED_CAST")
 private fun <F : Feature> cachedAllOfHelper(
     features: List<Feature>,
-    implementations: List<IdentityHashMap<KClass<out Feature>, Any>>,
+    implementations: List<MutableMap<KClass<out Feature>, Any>>,
     range: IntRange,
     matcher: FeatureMatcher?,
     factory: FeatureFactory<F>,

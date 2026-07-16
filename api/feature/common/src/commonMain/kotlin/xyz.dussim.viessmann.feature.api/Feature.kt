@@ -62,5 +62,11 @@ fun Feature.equalsImpl(other: Any?): Boolean {
 
 private fun String.toWildcardFeature(): String =
     split(".").joinToString(".") { segment ->
-        if (segment.isNotEmpty() && segment.all { it.isDigit() }) "{N}" else segment
+        if (segment.isNotEmpty() && segment.all { it.isDigit() }) {
+            "{N}"
+        } else {
+            segment.replace(embeddedIndexPattern, "{N}")
+        }
     }
+
+private val embeddedIndexPattern = "(?<!_)\\d+(?=[A-Z])".toRegex()

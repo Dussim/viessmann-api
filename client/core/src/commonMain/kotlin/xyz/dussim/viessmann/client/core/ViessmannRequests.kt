@@ -61,6 +61,66 @@ suspend inline fun <reified T> HttpClient.viessmannRequestData(
     return decodeEnvelope(response, config)
 }
 
+suspend inline fun <reified T> HttpClient.viessmannApiGet(
+    config: ViessmannClientConfig,
+    path: String,
+    authenticated: Boolean = true,
+    noinline block: HttpRequestBuilder.() -> Unit = {},
+): T =
+    viessmannRequest(
+        config = config,
+        service = ViessmannService.Api,
+        method = HttpMethod.Get,
+        path = path,
+        authenticated = authenticated,
+        block = block,
+    )
+
+suspend inline fun <reified T> HttpClient.viessmannApiGetData(
+    config: ViessmannClientConfig,
+    path: String,
+    authenticated: Boolean = true,
+    noinline block: HttpRequestBuilder.() -> Unit = {},
+): T =
+    viessmannRequestData(
+        config = config,
+        service = ViessmannService.Api,
+        method = HttpMethod.Get,
+        path = path,
+        authenticated = authenticated,
+        block = block,
+    )
+
+suspend inline fun <reified T> HttpClient.viessmannApiPost(
+    config: ViessmannClientConfig,
+    path: String,
+    authenticated: Boolean = true,
+    noinline block: HttpRequestBuilder.() -> Unit = {},
+): T =
+    viessmannRequest(
+        config = config,
+        service = ViessmannService.Api,
+        method = HttpMethod.Post,
+        path = path,
+        authenticated = authenticated,
+        block = block,
+    )
+
+suspend inline fun <reified T> HttpClient.viessmannApiPostData(
+    config: ViessmannClientConfig,
+    path: String,
+    authenticated: Boolean = true,
+    noinline block: HttpRequestBuilder.() -> Unit = {},
+): T =
+    viessmannRequestData(
+        config = config,
+        service = ViessmannService.Api,
+        method = HttpMethod.Post,
+        path = path,
+        authenticated = authenticated,
+        block = block,
+    )
+
 suspend fun HttpClient.viessmannRawRequest(
     config: ViessmannClientConfig,
     service: ViessmannService,
@@ -82,6 +142,36 @@ suspend fun HttpClient.viessmannRawRequest(
     val body = response.bodyAsText()
     return RawViessmannResponse(response.status.value, response.headers.entries().associate { it.key to it.value }, body)
 }
+
+suspend fun HttpClient.viessmannApiRawGet(
+    config: ViessmannClientConfig,
+    path: String,
+    authenticated: Boolean = true,
+    block: HttpRequestBuilder.() -> Unit = {},
+): RawViessmannResponse =
+    viessmannRawRequest(
+        config = config,
+        service = ViessmannService.Api,
+        method = HttpMethod.Get,
+        path = path,
+        authenticated = authenticated,
+        block = block,
+    )
+
+suspend fun HttpClient.viessmannApiRawPost(
+    config: ViessmannClientConfig,
+    path: String,
+    authenticated: Boolean = true,
+    block: HttpRequestBuilder.() -> Unit = {},
+): RawViessmannResponse =
+    viessmannRawRequest(
+        config = config,
+        service = ViessmannService.Api,
+        method = HttpMethod.Post,
+        path = path,
+        authenticated = authenticated,
+        block = block,
+    )
 
 data class RawViessmannResponse(
     val statusCode: Int,
