@@ -3,8 +3,10 @@ package xyz.dussim.viessmann.feature.api
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import xyz.dussim.viessmann.feature.api.validation.ExpectedActualClass
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
+import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 import kotlin.time.Instant
 
@@ -74,6 +76,57 @@ val FeatureRegistryTest by testSuite {
 
         descriptor.validate(feature).isInvalid shouldBe false
         structureCalls shouldBe 1
+    }
+
+    test("descriptor getOrNull rejects invalid structure without invoking the throwing factory") {
+        var factoryCalls = 0
+        val invalidRule =
+            ValidationRule<Feature, ValidationError> {
+                ValidationResult.Invalid(
+                    ValidationError.MissingComponent("temperature", ExpectedActualClass.of(0)),
+                )
+            }
+        val descriptor =
+            staticFeatureDescriptor(
+                wildcardName = "rooms.temperature",
+                rule = invalidRule,
+                factory = { feature ->
+                    factoryCalls++
+                    RoomTemperatureFeature(feature)
+                },
+            )
+
+        descriptor.getOrNull(testFeature("rooms.temperature")) shouldBe null
+        factoryCalls shouldBe 0
+    }
+
+    test("descriptor getOrNull constructs valid features and passes through typed features") {
+        var matcherCalls = 0
+        var factoryCalls = 0
+        val validRule =
+            ValidationRule<Feature, ValidationError> {
+                matcherCalls++
+                Valid()
+            }
+        val descriptor =
+            staticFeatureDescriptor(
+                wildcardName = "rooms.temperature",
+                rule = validRule,
+                factory = { feature ->
+                    factoryCalls++
+                    RoomTemperatureFeature(feature)
+                },
+            )
+        val generic = testFeature("rooms.temperature")
+        val converted = descriptor.getOrNull(generic)
+
+        converted?.feature shouldBe generic.feature
+        matcherCalls shouldBe 1
+        factoryCalls shouldBe 1
+
+        descriptor.getOrNull(converted!!) shouldBe converted
+        matcherCalls shouldBe 1
+        factoryCalls shouldBe 1
     }
 }
 

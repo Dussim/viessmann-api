@@ -195,8 +195,18 @@ open class IncorrectFeatureConstructionBenchmark {
     }
 
     @Benchmark
+    fun constructFeatureOrNull(blackHole: Blackhole) {
+        blackHole.consume(factory.getOrNull(feature))
+    }
+
+    @Benchmark
     fun constructFeatureWrongPropertyType(blackHole: Blackhole) {
         blackHole.consume(constructFeatureCatching(wrongPropertyTypeFeature))
+    }
+
+    @Benchmark
+    fun constructFeatureWrongPropertyTypeOrNull(blackHole: Blackhole) {
+        blackHole.consume(factory.getOrNull(wrongPropertyTypeFeature))
     }
 
     @Benchmark
@@ -205,8 +215,18 @@ open class IncorrectFeatureConstructionBenchmark {
     }
 
     @Benchmark
+    fun constructFeatureMissingPropertyOrNull(blackHole: Blackhole) {
+        blackHole.consume(factory.getOrNull(missingPropertyFeature))
+    }
+
+    @Benchmark
     fun constructFeatureMissingCommand(blackHole: Blackhole) {
         blackHole.consume(constructFeatureCatching(missingCommandFeature))
+    }
+
+    @Benchmark
+    fun constructFeatureMissingCommandOrNull(blackHole: Blackhole) {
+        blackHole.consume(factory.getOrNull(missingCommandFeature))
     }
 
     @Benchmark
@@ -226,8 +246,14 @@ open class IncorrectFeatureConstructionBenchmark {
         blackHole.consume(constructFeatureCatching(wrongConstraintFeature))
     }
 
+    @Benchmark
+    fun constructFeatureWrongConstraintOrNull(blackHole: Blackhole) {
+        blackHole.consume(factory.getOrNull(wrongConstraintFeature))
+    }
+
     private fun ensureInvalid(feature: Feature) {
         check(constructFeatureCatching(feature) is FeatureValidationException)
+        check(factory.getOrNull(feature) == null)
     }
 
     private fun constructFeatureCatching(feature: Feature): Throwable? =

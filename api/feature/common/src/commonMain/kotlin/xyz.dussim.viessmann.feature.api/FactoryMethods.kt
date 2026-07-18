@@ -205,13 +205,15 @@ inline fun <reified F : Feature> indexedFeatureDescriptor(
 internal class FeatureDescriptorIndexedImpl<F : Feature>(
     override val featureClass: KClass<F>,
     override val wildcardName: String,
-    factory: FeatureFactory<F>,
-    matchers: FeatureMatchers.Indexed,
+    private val factory: FeatureFactory<F>,
+    private val matchers: FeatureMatchers.Indexed,
     rule: ValidationRule<Feature, ValidationError>,
 ) : FeatureDescriptor.Indexed<F>,
     FeatureFactory<F> by factory,
     FeatureMatchers.Indexed by matchers,
     ValidationRule<Feature, ValidationError> by rule {
+    override fun getOrNull(feature: Feature): F? = getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
+
     override fun toString(): String = "FeatureDescriptor.Indexed[$wildcardName](${featureClass.simpleName})"
 }
 
@@ -219,12 +221,28 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
 internal class FeatureDescriptorStaticImpl<F : Feature>(
     override val featureClass: KClass<F>,
     override val wildcardName: String,
-    factory: FeatureFactory<F>,
-    matchers: FeatureMatchers.Static,
+    private val factory: FeatureFactory<F>,
+    private val matchers: FeatureMatchers.Static,
     rule: ValidationRule<Feature, ValidationError>,
 ) : FeatureDescriptor.Static<F>,
     FeatureFactory<F> by factory,
     FeatureMatchers.Static by matchers,
     ValidationRule<Feature, ValidationError> by rule {
+    override fun getOrNull(feature: Feature): F? = getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
+
     override fun toString(): String = "FeatureDescriptor.Static[$wildcardName](${featureClass.simpleName})"
+}
+
+private fun <F : Feature> getOrNullWithoutValidationException(
+    feature: Feature,
+    featureClass: KClass<F>,
+    factory: FeatureFactory<F>,
+    structureMatcher: FeatureMatcher,
+): F? {
+    if (featureClass.isInstance(feature)) {
+        @Suppress("UNCHECKED_CAST")
+        return feature as F
+    }
+    if (!structureMatcher.matches(feature)) return null
+    return factory.getOrNull(feature)
 }
