@@ -45,7 +45,7 @@ val GeneratedAccessorsTest by testSuite {
         val properties = EfficientStringKeyMap(mapOf("temperature" to Property.of("high")))
         val exception =
             shouldThrow<GeneratedAccessException> {
-                properties.requirePropertyValue<DoubleValue>("temperature", hash("temperature"))
+                properties.requirePropertyValue("temperature", hash("temperature"), DoubleValue::class)
             }
 
         exception shouldBe GeneratedAccessException
@@ -53,10 +53,10 @@ val GeneratedAccessorsTest by testSuite {
 
     test("findPropertyValueOrNull returns null for missing and mismatch") {
         val missing = EfficientStringKeyMap<Property>(emptyMap())
-        missing.findPropertyValueOrNull<DoubleValue>("temperature", hash("temperature")).shouldBeNull()
+        missing.findPropertyValueOrNull("temperature", hash("temperature"), DoubleValue::class).shouldBeNull()
 
         val presentWrongType = EfficientStringKeyMap(mapOf("temperature" to Property.of("high")))
-        presentWrongType.findPropertyValueOrNull<DoubleValue>("temperature", hash("temperature")).shouldBeNull()
+        presentWrongType.findPropertyValueOrNull("temperature", hash("temperature"), DoubleValue::class).shouldBeNull()
     }
 
     test("nullable primitive accessors wrap scalar primitive values") {
@@ -86,16 +86,16 @@ val GeneratedAccessorsTest by testSuite {
         val default = ListStringValue.EMPTY
 
         val listEmptyValue = EfficientStringKeyMap(mapOf("values" to Property(ARRAY, ListEmptyValue)))
-        listEmptyValue.requirePropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+        listEmptyValue.requirePropertyValueOrPromoteEmpty("values", hash("values"), ListStringValue::class, default) shouldBe default
 
         val wrongType = EfficientStringKeyMap(mapOf("values" to Property.of("wrong")))
         shouldThrow<GeneratedAccessException> {
-            wrongType.requirePropertyValueOrPromoteEmpty("values", hash("values"), default)
+            wrongType.requirePropertyValueOrPromoteEmpty("values", hash("values"), ListStringValue::class, default)
         } shouldBe GeneratedAccessException
 
         val missing = EfficientStringKeyMap<Property>(emptyMap())
         shouldThrow<GeneratedAccessException> {
-            missing.requirePropertyValueOrPromoteEmpty("values", hash("values"), default)
+            missing.requirePropertyValueOrPromoteEmpty("values", hash("values"), ListStringValue::class, default)
         } shouldBe GeneratedAccessException
     }
 
@@ -103,19 +103,19 @@ val GeneratedAccessorsTest by testSuite {
         val default = ListStringValue.EMPTY
 
         val missing = EfficientStringKeyMap<Property>(emptyMap())
-        missing.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+        missing.findPropertyValueOrPromoteEmpty("values", hash("values"), ListStringValue::class, default) shouldBe default
 
         val wrongType = EfficientStringKeyMap(mapOf("values" to Property.of("wrong")))
-        wrongType.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+        wrongType.findPropertyValueOrPromoteEmpty("values", hash("values"), ListStringValue::class, default) shouldBe default
 
         val listEmptyValue = EfficientStringKeyMap(mapOf("values" to Property(ARRAY, ListEmptyValue)))
-        listEmptyValue.findPropertyValueOrPromoteEmpty("values", hash("values"), default) shouldBe default
+        listEmptyValue.findPropertyValueOrPromoteEmpty("values", hash("values"), ListStringValue::class, default) shouldBe default
     }
 
     test("requireConstraints throws GeneratedAccessException on mismatch") {
         val exception =
             shouldThrow<GeneratedAccessException> {
-                BooleanConstraints.requireConstraints<NumberConstraints>()
+                BooleanConstraints.requireConstraints(NumberConstraints::class)
             }
 
         exception shouldBe GeneratedAccessException
@@ -124,6 +124,7 @@ val GeneratedAccessorsTest by testSuite {
     test("requireArrayConstraintsOrPromoteEmpty promotes ArrayEmptyConstraints") {
         val promoted =
             ArrayEmptyConstraints(minLength = 1, maxLength = 3).requireArrayConstraintsOrPromoteEmpty(
+                expectedType = ArrayStringConstraints::class,
                 fromEmpty = ::ArrayStringConstraints,
             )
 

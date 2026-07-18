@@ -298,12 +298,17 @@ fun Parameter.Companion.of(
     required: Boolean = true,
 ): Parameter = Parameter(ENERGY_MATRIX, required, constraints)
 
-fun Constraints<*>.toArrayNumberConstraintsOrThrow(): ArrayNumberConstraints = requireArrayConstraintsOrPromoteEmpty(::ArrayNumberConstraints)
+fun Constraints<*>.toArrayNumberConstraintsOrThrow(): ArrayNumberConstraints =
+    requireArrayConstraintsOrPromoteEmpty(ArrayNumberConstraints::class, ::ArrayNumberConstraints)
 
-fun Constraints<*>.toArrayStringConstraintsOrThrow(): ArrayStringConstraints = requireArrayConstraintsOrPromoteEmpty(::ArrayStringConstraints)
+fun Constraints<*>.toArrayStringConstraintsOrThrow(): ArrayStringConstraints =
+    requireArrayConstraintsOrPromoteEmpty(ArrayStringConstraints::class, ::ArrayStringConstraints)
 
-fun Constraints<*>.toArrayBooleanConstraintsOrThrow(): ArrayBooleanConstraints = requireArrayConstraintsOrPromoteEmpty(::ArrayBooleanConstraints)
+fun Constraints<*>.toArrayBooleanConstraintsOrThrow(): ArrayBooleanConstraints =
+    requireArrayConstraintsOrPromoteEmpty(ArrayBooleanConstraints::class, ::ArrayBooleanConstraints)
 
-fun Constraints<*>.toArrayObjectConstraintsOrThrow(): ArrayObjectConstraints = requireArrayConstraintsOrPromoteEmpty(::ArrayObjectConstraints)
+fun Constraints<*>.toArrayObjectConstraintsOrThrow(): ArrayObjectConstraints =
+    requireArrayConstraintsOrPromoteEmpty(ArrayObjectConstraints::class, ::ArrayObjectConstraints)
 
-fun Constraints<*>.toArrayUnknownConstraintsOrThrow(): ArrayUnknownConstraints = requireArrayConstraintsOrPromoteEmpty(::ArrayUnknownConstraints)
+fun Constraints<*>.toArrayUnknownConstraintsOrThrow(): ArrayUnknownConstraints =
+    requireArrayConstraintsOrPromoteEmpty(ArrayUnknownConstraints::class, ::ArrayUnknownConstraints)
