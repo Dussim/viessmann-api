@@ -24,7 +24,8 @@ val GeneratorAccessPatternTest by testSuite {
                 ),
             )
 
-        code shouldContain "requirePropertyValue<xyz.dussim.viessmann.feature.api.DoubleValue>(\"temperature\""
+        code shouldContain "requirePropertyValue(\"temperature\""
+        code shouldContain "xyz.dussim.viessmann.feature.api.DoubleValue::class"
         code shouldContain "this.temperature = "
         code shouldNotContain "!!"
     }
@@ -39,7 +40,8 @@ val GeneratorAccessPatternTest by testSuite {
                 ),
             )
 
-        code shouldContain "findPropertyValueOrNull<xyz.dussim.viessmann.feature.api.DoubleValue>(\"temperature\""
+        code shouldContain "findPropertyValueOrNull(\"temperature\""
+        code shouldContain "xyz.dussim.viessmann.feature.api.DoubleValue::class"
         code shouldContain "this.temperature = "
         code shouldNotContain "!!"
     }
@@ -55,7 +57,7 @@ val GeneratorAccessPatternTest by testSuite {
             )
 
         code shouldContain
-            "requirePropertyValueOrPromoteEmpty<xyz.dussim.viessmann.feature.api.ListStringValue>(\"supported\""
+            "requirePropertyValueOrPromoteEmpty(\"supported\""
         code shouldContain "this.supported = "
         code shouldContain "ListStringValue.EMPTY"
         code shouldNotContain "!!"
@@ -72,7 +74,7 @@ val GeneratorAccessPatternTest by testSuite {
             )
 
         code shouldContain
-            "findPropertyValueOrPromoteEmpty<xyz.dussim.viessmann.feature.api.ListStringValue>(\"supported\""
+            "findPropertyValueOrPromoteEmpty(\"supported\""
         code shouldContain "this.supported = "
         code shouldContain "ListStringValue.EMPTY"
         code shouldNotContain "!!"
@@ -137,7 +139,7 @@ val GeneratorAccessPatternTest by testSuite {
             ).toString()
 
         code shouldContain """requireParam("value""""
-        code shouldContain """requireConstraints<xyz.dussim.viessmann.feature.api.NumberConstraints>()"""
+        code shouldContain """requireConstraints(xyz.dussim.viessmann.feature.api.NumberConstraints::class)"""
         code shouldNotContain "!!.constraints as"
     }
 

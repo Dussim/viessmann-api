@@ -106,33 +106,33 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
 
         isEnumProperty && isNullable -> {
             add(
-                "this.%N = %N.%M<%T>(%S, %L)?.let { %T(it) }\n",
+                "this.%N = %N.%M(%S, %L, %T::class)?.let { %T(it) }\n",
                 name,
                 SOURCE_PROPERTIES,
                 accessor,
-                property.underlyingType,
                 name,
                 combined,
+                property.underlyingType,
                 type.copy(nullable = false),
             )
         }
 
         isEnumProperty -> {
             add(
-                "this.%N = %T(%N.%M<%T>(%S, %L))\n",
+                "this.%N = %T(%N.%M(%S, %L, %T::class))\n",
                 name,
                 type,
                 SOURCE_PROPERTIES,
                 accessor,
-                property.underlyingType,
                 name,
                 combined,
+                property.underlyingType,
             )
         }
 
         adapter.propertyAccessorStrategy == PropertyAccessorStrategy.LIST_WITH_EMPTY_PROMOTION -> {
             add(
-                "this.%1N = %6N.%5M<%4T>(%2S, %3L, %4T.EMPTY)\n",
+                "this.%1N = %6N.%5M(%2S, %3L, %4T::class, %4T.EMPTY)\n",
                 name,
                 name,
                 combined,
@@ -144,13 +144,13 @@ internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProp
 
         else -> {
             add(
-                "this.%N = %N.%M<%T>(%S, %L)\n",
+                "this.%N = %N.%M(%S, %L, %T::class)\n",
                 name,
                 SOURCE_PROPERTIES,
                 accessor,
-                nonNullType,
                 name,
                 combined,
+                nonNullType,
             )
         }
     }

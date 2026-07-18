@@ -107,7 +107,7 @@ internal fun constraintPropertyInitializer(property: ConstraintProperty): CodeBl
         )
     } else {
         CodeBlock.of(
-            "command.params.%M(%S, %L).constraints.%M<%T>()",
+            "command.params.%M(%S, %L).constraints.%M(%T::class)",
             REQUIRE_PARAM,
             property.name,
             combined,
