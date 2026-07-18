@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit
 @OutputTimeUnit(TimeUnit.MINUTES)
 @Warmup(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 5, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 1)
+@Fork(value = 3)
 @Suppress("unused")
 open class MassiveValidationBenchmark {
     private lateinit var targets: List<ValidationTarget>
