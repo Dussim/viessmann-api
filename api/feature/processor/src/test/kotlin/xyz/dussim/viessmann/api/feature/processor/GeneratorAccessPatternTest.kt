@@ -158,6 +158,26 @@ val GeneratorAccessPatternTest by testSuite {
         code shouldNotContain "!!.constraints"
     }
 
+    test("command generator specializes one-parameter aggregate and fail-fast rules") {
+        val registry = RuleRegistry("test.rules")
+        val parameterRule =
+            registry.register(
+                function = validationRule("numberConstraintsRule"),
+                args = listOf("value"),
+                targetType = COMMAND_VALIDATION_RULE_TYPE,
+            )
+        val plan = oneParameterValidationRulePlan(registry, "setValue", parameterRule)
+        val generatedRules = generateValidationRuleFiles(registry, chunkSize = 64).single().toString()
+
+        generatedRules shouldContain "oneParameterCommandRule(\"setValue\""
+        generatedRules shouldContain "oneParameterCommandFailFastRule(\"setValue\""
+        generatedRules shouldNotContain "numberOfParametersRule"
+        val atomicRuleIndex = generatedRules.indexOf("numberConstraintsRule(\"value\")")
+        val compositeRuleIndex = generatedRules.indexOf("oneParameterCommandRule(\"setValue\"")
+        (atomicRuleIndex < compositeRuleIndex) shouldBe true
+        (plan.normalExpression.toString() == plan.failFastExpression.toString()) shouldBe false
+    }
+
     test("fail-fast generator directly returns single rule result") {
         val code =
             generateValidateFunction(

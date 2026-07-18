@@ -12,11 +12,10 @@ fun generateValidationRuleFiles(
     ruleRegistry: RuleRegistry,
     chunkSize: Int,
 ): List<FileSpec> {
+    val rules = ruleRegistry.getAllRules()
     val chunks =
-        ruleRegistry
-            .getAllRules()
-            .entries
-            .sortedBy { it.value.simpleName }
+        rules
+            .dependencyOrderedEntries()
             .chunked(chunkSize)
 
     return chunks.mapIndexed { index, rules ->
@@ -29,6 +28,39 @@ fun generateValidationRuleFiles(
                 }
             }.build()
     }
+}
+
+/**
+ * Emits referenced rules before the composite rules that use them. Kotlin rejects a top-level
+ * property initializer that reads a property declared later in the same file.
+ */
+private fun Map<RuleSignature, MemberName>.dependencyOrderedEntries(): List<Map.Entry<RuleSignature, MemberName>> {
+    val signatureByMember = entries.associate { (signature, member) -> member to signature }
+    val entryBySignature = entries.associateBy(Map.Entry<RuleSignature, MemberName>::key)
+    val visited = mutableSetOf<RuleSignature>()
+    val visiting = mutableSetOf<RuleSignature>()
+    val ordered = mutableListOf<Map.Entry<RuleSignature, MemberName>>()
+
+    fun visit(signature: RuleSignature) {
+        if (signature in visited) return
+        check(visiting.add(signature)) { "Cyclic generated validation-rule dependency: ${signature.generateName()}" }
+
+        signature.args
+            .filterIsInstance<MemberName>()
+            .mapNotNull(signatureByMember::get)
+            .sortedBy(RuleSignature::generateName)
+            .forEach(::visit)
+
+        visiting.remove(signature)
+        visited.add(signature)
+        ordered.add(entryBySignature.getValue(signature))
+    }
+
+    entries
+        .sortedBy { it.value.simpleName }
+        .forEach { visit(it.key) }
+
+    return ordered
 }
 
 private fun ruleProperty(
