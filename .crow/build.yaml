@@ -32,7 +32,8 @@
         }
       },
       "commands": [
-        "gradle jvmTest --scan"
+        "gradle jvmTest --scan",
+        "gradle jmh"
       ],
       "when": {
         "event": "push"
