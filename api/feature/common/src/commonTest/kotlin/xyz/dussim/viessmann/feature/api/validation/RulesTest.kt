@@ -264,6 +264,71 @@ val RulesTest by testSuite {
         }
     }
 
+    testSuite("oneParameterCommandRule") {
+        val parameterRule = numberConstraintsRule("value")
+        val aggregateRule = oneParameterCommandRule("setValue", parameterRule)
+        val failFastRule = oneParameterCommandFailFastRule("setValue", parameterRule)
+
+        test("returns Valid when the expected parameter is present") {
+            val command = createCommand(mapOf("value" to Parameter.of(NumberConstraints())))
+
+            aggregateRule.validate(command).isInvalid shouldBe false
+            failFastRule.validate(command).isInvalid shouldBe false
+        }
+
+        test("returns only the parameter error when count is one") {
+            val command = createCommand(mapOf("value" to Parameter.of(StringConstraints())))
+
+            val aggregateErrors = aggregateRule.validate(command).asIterable().toList()
+            val failFastErrors = failFastRule.validate(command).asIterable().toList()
+
+            aggregateErrors.size shouldBe 1
+            aggregateErrors.single().shouldBeInstanceOf<ValidationError.ComponentTypeMismatch>()
+            failFastErrors.size shouldBe 1
+            failFastErrors.single().shouldBeInstanceOf<ValidationError.ComponentTypeMismatch>()
+        }
+
+        test("returns only the count error when the expected parameter is valid but an extra parameter exists") {
+            val command =
+                createCommand(
+                    mapOf(
+                        "value" to Parameter.of(NumberConstraints()),
+                        "extra" to Parameter.of(BooleanConstraints),
+                    ),
+                )
+
+            val aggregateErrors = aggregateRule.validate(command).asIterable().toList()
+            val failFastErrors = failFastRule.validate(command).asIterable().toList()
+
+            aggregateErrors.size shouldBe 1
+            aggregateErrors.single().shouldBeInstanceOf<ValidationError.NumberOfParametersMismatch>()
+            failFastErrors.size shouldBe 1
+            failFastErrors.single().shouldBeInstanceOf<ValidationError.NumberOfParametersMismatch>()
+        }
+
+        test("aggregate retains parameter then count errors while fail-fast returns the parameter error") {
+            val command = createCommand()
+
+            val aggregateErrors = aggregateRule.validate(command).asIterable().toList()
+            val failFastErrors = failFastRule.validate(command).asIterable().toList()
+
+            aggregateErrors.size shouldBe 2
+            aggregateErrors[0].shouldBeInstanceOf<ValidationError.MissingComponent>()
+            aggregateErrors[1].shouldBeInstanceOf<ValidationError.NumberOfParametersMismatch>()
+            failFastErrors.size shouldBe 1
+            failFastErrors.single().shouldBeInstanceOf<ValidationError.MissingComponent>()
+        }
+
+        test("a different single parameter preserves the existing missing-component semantics") {
+            val command = createCommand(mapOf("other" to Parameter.of(NumberConstraints())))
+
+            val aggregateErrors = aggregateRule.validate(command).asIterable().toList()
+
+            aggregateErrors.size shouldBe 1
+            aggregateErrors.single().shouldBeInstanceOf<ValidationError.MissingComponent>()
+        }
+    }
+
     testSuite("stringConstraintsRule") {
         test("returns Valid when parameter has StringConstraints") {
             val command = createCommand(mapOf("mode" to Parameter.of(StringConstraints())))

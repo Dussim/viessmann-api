@@ -391,6 +391,51 @@ fun numberOfParametersRule(
     }
 }
 
+/**
+ * Combines the expected parameter constraint and the one-parameter count check.
+ *
+ * The aggregate path preserves the existing error order: the parameter error is reported before
+ * [NumberOfParametersMismatch], and both are retained when both checks fail.
+ */
+fun oneParameterCommandRule(
+    commandName: String,
+    parameterRule: ValidationRule<Command, ValidationError>,
+): ValidationRule<Command, ValidationError> {
+    val expectedData = Expected(commandName, 1)
+
+    return ValidationRule { command ->
+        val parameterResult = parameterRule.validate(command)
+        if (command.params.size == 1) return@ValidationRule parameterResult
+
+        val countResult = Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+        ValidationResult.of(parameterResult, countResult)
+    }
+}
+
+/**
+ * Fail-fast counterpart of [oneParameterCommandRule].
+ *
+ * Parameter validation remains first to preserve the generated command validator's observable
+ * first-error behaviour.
+ */
+fun oneParameterCommandFailFastRule(
+    commandName: String,
+    parameterRule: ValidationRule<Command, ValidationError>,
+): ValidationRule<Command, ValidationError> {
+    val expectedData = Expected(commandName, 1)
+
+    return ValidationRule { command ->
+        val parameterResult = parameterRule.validate(command)
+        if (parameterResult.isInvalid) return@ValidationRule parameterResult
+
+        if (command.params.size == 1) {
+            ValidationResult.Valid
+        } else {
+            Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+        }
+    }
+}
+
 fun stringConstraintsRule(parameterName: String) = typedCommandRule<StringConstraints>(parameterName, STRING_CONSTRAINTS_CLASS_INDEX)
 
 fun numberConstraintsRule(parameterName: String) = typedCommandRule<NumberConstraints>(parameterName, NUMBER_CONSTRAINTS_CLASS_INDEX)

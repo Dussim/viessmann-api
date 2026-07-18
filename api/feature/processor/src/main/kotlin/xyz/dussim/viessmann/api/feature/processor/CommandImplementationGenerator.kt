@@ -30,6 +30,8 @@ import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.CommandValidationRule
 
 private val NUMBER_OF_PARAMETERS_RULE = validationRule("numberOfParametersRule")
+private val ONE_PARAMETER_COMMAND_RULE = validationRule("oneParameterCommandRule")
+private val ONE_PARAMETER_COMMAND_FAIL_FAST_RULE = validationRule("oneParameterCommandFailFastRule")
 private val COMMAND_FAIL_FAST_RULE = validationRule("commandFailFastRule")
 private val REQUIRE_PARAM = MemberName("xyz.dussim.viessmann.feature.api", "requireParam")
 private val REQUIRE_CONSTRAINTS = MemberName("xyz.dussim.viessmann.feature.api", "requireConstraints")
@@ -129,23 +131,32 @@ private fun constraintPropertiesImpl(context: CommandSymbolContext): List<Proper
 /**
  * Generates rule expressions for the command.
  */
-private fun validationPlan(context: CommandSymbolContext): ValidationPlan =
-    ValidationPlan(
-        context
-            .constraintsProperties
-            .map {
-                ValidationRulePlan(
-                    normalExpression =
-                        CodeBlock.of(
-                            "%M",
-                            context.parentContext.ruleRegistry.register(
-                                CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type),
-                                listOf(it.name),
-                                COMMAND_VALIDATION_RULE_TYPE,
-                            ),
-                        ),
-                )
-            }.plus(
+private fun validationPlan(context: CommandSymbolContext): ValidationPlan {
+    val constraintRules =
+        context.constraintsProperties.map {
+            context.parentContext.ruleRegistry.register(
+                CONSTRAINTS_VALIDATION_FUNCTIONS.getValue(it.type),
+                listOf(it.name),
+                COMMAND_VALIDATION_RULE_TYPE,
+            )
+        }
+
+    if (constraintRules.size == 1) {
+        return ValidationPlan(
+            listOf(
+                oneParameterValidationRulePlan(
+                    ruleRegistry = context.parentContext.ruleRegistry,
+                    commandName = context.apiName,
+                    parameterRule = constraintRules.single(),
+                ),
+            ),
+        )
+    }
+
+    return ValidationPlan(
+        constraintRules
+            .map { ValidationRulePlan(normalExpression = CodeBlock.of("%M", it)) }
+            .plus(
                 ValidationRulePlan(
                     normalExpression =
                         CodeBlock.of(
@@ -156,6 +167,33 @@ private fun validationPlan(context: CommandSymbolContext): ValidationPlan =
                                 COMMAND_VALIDATION_RULE_TYPE,
                             ),
                         ),
+                ),
+            ),
+    )
+}
+
+internal fun oneParameterValidationRulePlan(
+    ruleRegistry: RuleRegistry,
+    commandName: String,
+    parameterRule: MemberName,
+): ValidationRulePlan =
+    ValidationRulePlan(
+        normalExpression =
+            CodeBlock.of(
+                "%M",
+                ruleRegistry.register(
+                    ONE_PARAMETER_COMMAND_RULE,
+                    listOf(commandName, parameterRule),
+                    COMMAND_VALIDATION_RULE_TYPE,
+                ),
+            ),
+        failFastExpression =
+            CodeBlock.of(
+                "%M",
+                ruleRegistry.register(
+                    ONE_PARAMETER_COMMAND_FAIL_FAST_RULE,
+                    listOf(commandName, parameterRule),
+                    COMMAND_VALIDATION_RULE_TYPE,
                 ),
             ),
     )
