@@ -16,7 +16,9 @@ import xyz.dussim.viessmann.api.features.generated.Descriptors
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ViessmannFeature
+import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * kotlinx-benchmark baseline for "validate every real feature through every real descriptor".
@@ -82,6 +84,7 @@ open class MassiveValidationBenchmark {
             }
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     @Benchmark
     fun validateEverything(blackhole: Blackhole) {
         for (i in this.targets.indices) {
@@ -92,6 +95,7 @@ open class MassiveValidationBenchmark {
                 blackhole.consume(validator.validate(features[j]))
             }
         }
+        println(NumberOfParametersMismatch.counter.load())
     }
 
     @Benchmark

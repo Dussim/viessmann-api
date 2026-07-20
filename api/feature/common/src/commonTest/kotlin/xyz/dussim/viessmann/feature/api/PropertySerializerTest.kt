@@ -37,6 +37,42 @@ val PropertySerializerTest by testSuite {
         property.value shouldBe ListEmptyValue
     }
 
+    test("empty list factories return ListEmptyValue") {
+        val properties =
+            listOf(
+                Property.of(emptyList<String>()),
+                Property.of(emptyList<Double>()),
+                Property.of(emptyList<DeviceError>()),
+                Property.of(emptyList<ZigbeeDeviceStatus>()),
+                Property.of(emptyList<RoomActor>()),
+                Property.of(emptyList<Device>()),
+                Property.of(emptyList<SolarlogDevice>()),
+                Property.of(emptyList<SolarlogDevicesPaired>()),
+                Property.of(emptyList<OnboardUpdaterLastErrorCode>()),
+                Property.of(emptyList<EebusDevicesPaired>()),
+            )
+
+        properties.forEach { it shouldBe Property.ofEmptyList() }
+    }
+
+    test("empty vararg factories return ListEmptyValue") {
+        val properties =
+            listOf(
+                Property.of(*emptyArray<String>()),
+                Property.of(*doubleArrayOf()),
+                Property.of(*emptyArray<DeviceError>()),
+                Property.of(*emptyArray<RoomActor>()),
+                Property.of(*emptyArray<Device>()),
+                Property.of(*emptyArray<Pair<String, List<Schedule>>>()),
+                Property.of(*emptyArray<SolarlogDevice>()),
+                Property.of(*emptyArray<SolarlogDevicesPaired>()),
+                Property.of(*emptyArray<OnboardUpdaterLastErrorCode>()),
+                Property.of(*emptyArray<EebusDevicesPaired>()),
+            )
+
+        properties.forEach { it shouldBe Property.ofEmptyList() }
+    }
+
     // endregion
 
     // region Nullable primitives
