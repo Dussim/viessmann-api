@@ -1,0 +1,528 @@
+{
+  "schemaVersion": 1,
+  "fixtureVersion": "stable-validation-v1",
+  "operationsPerInvocation": 1,
+  "entries": [
+    {
+      "size": "small",
+      "case": "valid",
+      "sha256": "7b9357fda020985064848cb6695692ab7ed8c31ad8c9267203eb259e15c171b0",
+      "expectedValid": true,
+      "expectedErrorCount": 0,
+      "expectedFirstError": null,
+      "expectedCategories": {},
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "invalid-first",
+      "sha256": "2ec3f783da4fd3d58fc901df224160783216bcf56e31770597179a2fcd5258af",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "invalid-middle",
+      "sha256": "e6c3d57fc138c00a944e739191832c7f9a295f805c7323fef0846132828a7fc9",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "invalid-last",
+      "sha256": "4f9bf6e2693d5b85cf8f03490f85dfebee2a85399b16bc715eaae691c7b4500b",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "invalid-all",
+      "sha256": "5a37da8d6eb4809be3996af1eb771be96a5972ebf856b8584b860f8aad1a64b1",
+      "expectedValid": false,
+      "expectedErrorCount": 8,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 8
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "missing-property",
+      "sha256": "e902bfcfdc6cfc1ad78f8adfc04f7cf1a8282e01303c5612a55f7145e4fc3c0f",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "missing-command",
+      "sha256": "3f16d3fa47b577d4821e5c73181c28fa8c1c1a4a96593d5e47529ff5ea16b4e3",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "missing-required-param",
+      "sha256": "86fd5134736431060a81be98f62185850402ada8bd20e047b19724ef699e1f32",
+      "expectedValid": false,
+      "expectedErrorCount": 2,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1,
+        "number-of-parameters-mismatch": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "wrong-param-constraint-type",
+      "sha256": "9f028b0444958ad7faf5e89f18e42b65cd8092764f5a63839d577082f85747a5",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "optional-command-absent",
+      "sha256": "b24c71ecfe4010b3ea015b74254bd8f9aade579883ec9fce344c24dddbd818c0",
+      "expectedValid": true,
+      "expectedErrorCount": 0,
+      "expectedFirstError": null,
+      "expectedCategories": {},
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "small",
+      "case": "optional-command-malformed",
+      "sha256": "7bf1ad033e27cdd568965570fafca063412f42974d866803070d7710299aa9c1",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 4,
+      "commandCount": 2,
+      "commandParameterCount": 4,
+      "outerRuleCount": 6,
+      "validationRuleCount": 10
+    },
+    {
+      "size": "medium",
+      "case": "valid",
+      "sha256": "06f49d32f29d59ceb7ab3303336b4dcb8e7aae21bfb43ded04a23079c066e148",
+      "expectedValid": true,
+      "expectedErrorCount": 0,
+      "expectedFirstError": null,
+      "expectedCategories": {},
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "invalid-first",
+      "sha256": "79f71d4bb18615aaf7d10a352ae8556fd76b311ac55eb360d0bcc3463eb01563",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "invalid-middle",
+      "sha256": "5583f49c02d1e4175fbdd521d57bb3082fc812ca140b07fa4b701eeaf9bfedfa",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "invalid-last",
+      "sha256": "e52b0f9be68c3dd763af27ea7811c327f6ae505923fad82b16c4f62787ed1e90",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "invalid-all",
+      "sha256": "86ceba4bb9f02c0a73887afcb560d5cec9442022fb6442b16d22f48cb0616646",
+      "expectedValid": false,
+      "expectedErrorCount": 49,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 48,
+        "number-of-parameters-mismatch": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "missing-property",
+      "sha256": "4824d14009d9282453385205ff72710ca5fd8ab33c9d6bd0f883abec8eb3790d",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "missing-command",
+      "sha256": "f5d06fcf34d8ac205fd2958cd471f8522fd7d92e175c12a8aa61ea04b73cc9ec",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "missing-required-param",
+      "sha256": "8769f889fa2aa99f93e8160c1094f2b3768f3a1019d8875fd0ccc5ce1936ae2f",
+      "expectedValid": false,
+      "expectedErrorCount": 2,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1,
+        "number-of-parameters-mismatch": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "wrong-param-constraint-type",
+      "sha256": "5bd5e7f6e03b94c5f26747e0f46694ddc1ba19d39aba8398f7269ed00480cb9e",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "optional-command-absent",
+      "sha256": "5ae4480e570ba1437ec276afc1ee83bd5176d7936f9a0ef609697c8459bfd8ed",
+      "expectedValid": true,
+      "expectedErrorCount": 0,
+      "expectedFirstError": null,
+      "expectedCategories": {},
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "medium",
+      "case": "optional-command-malformed",
+      "sha256": "894a204137e1339852c73f1ad0cf0b0f2a6237402e93766b8022e7e232b58f07",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 16,
+      "commandCount": 8,
+      "commandParameterCount": 32,
+      "outerRuleCount": 24,
+      "validationRuleCount": 56
+    },
+    {
+      "size": "large",
+      "case": "valid",
+      "sha256": "1824244df8b390fe54d96f9d0367af75a623414ab2223efd3fd083245e7b6041",
+      "expectedValid": true,
+      "expectedErrorCount": 0,
+      "expectedFirstError": null,
+      "expectedCategories": {},
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "invalid-first",
+      "sha256": "e292012129fba4794a02e5d63f0c0b9e1c40fecfed03f486366ecd6873897828",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "invalid-middle",
+      "sha256": "4b11e11f95613aef17320c2941173b011b411b15ff74f46684ffc71d8406f406",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "invalid-last",
+      "sha256": "b542ecb06a3cb12a9fa0db4e8b55f74b3cb8a363d7b1f978c5a7d4bbd3e6c05a",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "invalid-all",
+      "sha256": "0ccdb99b9646a1c3c887353ce5c84213aaada67c40d16f06d0f6cdc78738002c",
+      "expectedValid": false,
+      "expectedErrorCount": 193,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 192,
+        "number-of-parameters-mismatch": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "missing-property",
+      "sha256": "34f82d52fa9aca0de24e2666bb123e2b697bc50cbaaa2a89d023c247ba05f325",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "missing-command",
+      "sha256": "5f2c4bc7428ada98869792b8c5dcd6541c29968e4abaebdbf4781d556bd3a95c",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "missing-required-param",
+      "sha256": "ee9028d6ab7bbfbfa33ae7503ea4de4e02b025c309dc5262bec43b1df2380fe1",
+      "expectedValid": false,
+      "expectedErrorCount": 2,
+      "expectedFirstError": "missing-component",
+      "expectedCategories": {
+        "missing-component": 1,
+        "number-of-parameters-mismatch": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "wrong-param-constraint-type",
+      "sha256": "37abb7847819a085f698f7fe80d3cc9285db58bb283729f20683a515105b0a41",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "optional-command-absent",
+      "sha256": "c5bf421ca331c0d6a51f599e4da228f4e1a7b264bb9cf2ed4759c23bd77d0cf6",
+      "expectedValid": true,
+      "expectedErrorCount": 0,
+      "expectedFirstError": null,
+      "expectedCategories": {},
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    },
+    {
+      "size": "large",
+      "case": "optional-command-malformed",
+      "sha256": "8d115896ce6ae0b029bd77fca4308290d6fa01eab6dbd5a0b71a49d805b32e72",
+      "expectedValid": false,
+      "expectedErrorCount": 1,
+      "expectedFirstError": "component-type-mismatch",
+      "expectedCategories": {
+        "component-type-mismatch": 1
+      },
+      "propertyCount": 64,
+      "commandCount": 32,
+      "commandParameterCount": 128,
+      "outerRuleCount": 96,
+      "validationRuleCount": 224
+    }
+  ]
+}

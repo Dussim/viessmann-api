@@ -827,46 +827,60 @@ data class SystemMessageEntry(
 )
 
 @JvmName("ofBoolean")
-fun Property.Companion.ofBoolean(boolean: Boolean): Property = Property(BOOLEAN, BooleanValue(boolean))
+fun Property.Companion.of(boolean: Boolean): Property = Property(BOOLEAN, BooleanValue(boolean))
 
 @JvmName("ofDouble")
-fun Property.Companion.ofDouble(double: Double): Property = Property(NUMBER, DoubleValue(double))
+fun Property.Companion.of(double: Double): Property = Property(NUMBER, DoubleValue(double))
+
+@JvmName("ofNullableBoolean")
+fun Property.Companion.ofNullable(boolean: Boolean?): Property = Property(BOOLEAN, NullableBooleanValue(boolean))
+
+@JvmName("ofNullableDouble")
+fun Property.Companion.ofNullable(double: Double?): Property = Property(NUMBER, NullableDoubleValue(double))
+
+@JvmName("ofNullableString")
+fun Property.Companion.ofNullable(string: String?): Property = Property(STRING, NullableStringValue(string))
 
 @JvmName("ofString")
 fun Property.Companion.of(string: String): Property = Property(STRING, StringValue(string))
 
-@JvmName("ofStrings")
-fun Property.Companion.of(strings: List<String>): Property = Property(ARRAY, ListStringValue(strings))
+private inline fun <T> List<T>.toProperty(
+    type: String = ARRAY,
+    value: (List<T>) -> PropertyValue<*>,
+): Property = if (isEmpty()) Property.ofEmptyList() else Property(type, value(this))
 
 @JvmName("ofStrings")
-fun Property.Companion.of(vararg string: String): Property = Property(ARRAY, ListStringValue(string.toList()))
+fun Property.Companion.of(strings: List<String>): Property = strings.toProperty(value = ::ListStringValue)
+
+@JvmName("ofStrings")
+fun Property.Companion.of(vararg string: String): Property = Property.of(string.toList())
 
 @JvmName("ofDoubles")
-fun Property.Companion.of(list: List<Double>): Property = Property(ARRAY, ListDoubleValue(list))
+fun Property.Companion.of(list: List<Double>): Property = list.toProperty(value = ::ListDoubleValue)
 
 @JvmName("ofDoubles")
-fun Property.Companion.of(vararg double: Double): Property = Property(ARRAY, ListDoubleValue(double.toList()))
+fun Property.Companion.of(vararg double: Double): Property = Property.of(double.toList())
 
 @JvmName("ofDeviceErrors")
-fun Property.Companion.of(list: List<DeviceError>): Property = Property(ARRAY, ListDeviceErrorValue(list))
+fun Property.Companion.of(list: List<DeviceError>): Property = list.toProperty(value = ::ListDeviceErrorValue)
 
 @JvmName("ofDeviceErrors")
-fun Property.Companion.of(vararg deviceError: DeviceError): Property = Property(ARRAY, ListDeviceErrorValue(deviceError.toList()))
+fun Property.Companion.of(vararg deviceError: DeviceError): Property = Property.of(deviceError.toList())
 
 @JvmName("ofZigbeeDeviceStatuses")
-fun Property.Companion.of(list: List<ZigbeeDeviceStatus>): Property = Property(ARRAY, ListZigbeeDeviceStatusValue(list))
+fun Property.Companion.of(list: List<ZigbeeDeviceStatus>): Property = list.toProperty(value = ::ListZigbeeDeviceStatusValue)
 
 @JvmName("ofRoomActors")
-fun Property.Companion.of(list: List<RoomActor>): Property = Property(ARRAY, ListRoomActorValue(list))
+fun Property.Companion.of(list: List<RoomActor>): Property = list.toProperty(value = ::ListRoomActorValue)
 
 @JvmName("ofRoomActors")
-fun Property.Companion.of(vararg roomActor: RoomActor): Property = Property(ARRAY, ListRoomActorValue(roomActor.toList()))
+fun Property.Companion.of(vararg roomActor: RoomActor): Property = Property.of(roomActor.toList())
 
 @JvmName("ofDevices")
-fun Property.Companion.of(list: List<Device>): Property = Property(DEVICE_LIST, ListDeviceValue(list))
+fun Property.Companion.of(list: List<Device>): Property = list.toProperty(DEVICE_LIST, ::ListDeviceValue)
 
 @JvmName("ofDevices")
-fun Property.Companion.of(vararg device: Device): Property = Property(DEVICE_LIST, ListDeviceValue(device.toList()))
+fun Property.Companion.of(vararg device: Device): Property = Property.of(device.toList())
 
 @JvmName("ofOtherRoomConfiguration")
 fun Property.Companion.of(otherRoomConfiguration: OtherRoomConfiguration): Property = Property(OBJECT, ObjectOtherRoomConfigurationValue(otherRoomConfiguration))
@@ -875,31 +889,37 @@ fun Property.Companion.of(otherRoomConfiguration: OtherRoomConfiguration): Prope
 fun Property.Companion.of(scheduleMap: Map<String, List<Schedule>>): Property = Property(SCHEDULE, ScheduleValue(scheduleMap))
 
 @JvmName("ofSchedules")
-fun Property.Companion.of(vararg schedule: Pair<String, List<Schedule>>): Property = Property(SCHEDULE, ScheduleValue(schedule.toMap()))
+fun Property.Companion.of(vararg schedule: Pair<String, List<Schedule>>): Property =
+    if (schedule.isEmpty()) Property.ofEmptyList() else Property(SCHEDULE, ScheduleValue(schedule.toMap()))
+
+@JvmName("ofEnergyMatrix")
+fun Property.Companion.of(energyMatrix: EnergyMatrix): Property = Property(ENERGY_MATRIX, EnergyMatrixValue(energyMatrix))
 
 @JvmName("ofSolarlogDevices")
-fun Property.Companion.of(list: List<SolarlogDevice>): Property = Property(ARRAY, ListSolarlogDeviceValue(list))
+fun Property.Companion.of(list: List<SolarlogDevice>): Property = list.toProperty(value = ::ListSolarlogDeviceValue)
 
 @JvmName("ofSolarlogDevices")
-fun Property.Companion.of(vararg device: SolarlogDevice): Property = Property(ARRAY, ListSolarlogDeviceValue(device.toList()))
+fun Property.Companion.of(vararg device: SolarlogDevice): Property = Property.of(device.toList())
 
 @JvmName("ofSolarlogDevicesPaired")
-fun Property.Companion.of(list: List<SolarlogDevicesPaired>): Property = Property(ARRAY, ListSolarlogDevicesPairedValue(list))
+fun Property.Companion.of(list: List<SolarlogDevicesPaired>): Property = list.toProperty(value = ::ListSolarlogDevicesPairedValue)
 
 @JvmName("ofSolarlogDevicesPaired")
-fun Property.Companion.of(vararg device: SolarlogDevicesPaired): Property = Property(ARRAY, ListSolarlogDevicesPairedValue(device.toList()))
+fun Property.Companion.of(vararg device: SolarlogDevicesPaired): Property = Property.of(device.toList())
 
 @JvmName("ofOnboardUpdaterLastErrorCodes")
-fun Property.Companion.of(list: List<OnboardUpdaterLastErrorCode>): Property = Property(ARRAY, ListOnboardUpdaterLastErrorCodeValue(list))
+fun Property.Companion.of(list: List<OnboardUpdaterLastErrorCode>): Property = list.toProperty(value = ::ListOnboardUpdaterLastErrorCodeValue)
 
 @JvmName("ofOnboardUpdaterLastErrorCodes")
-fun Property.Companion.of(vararg lastErrorCode: OnboardUpdaterLastErrorCode): Property = Property(ARRAY, ListOnboardUpdaterLastErrorCodeValue(lastErrorCode.toList()))
+fun Property.Companion.of(vararg lastErrorCode: OnboardUpdaterLastErrorCode): Property = Property.of(lastErrorCode.toList())
 
 @JvmName("ofTestResult")
 fun Property.Companion.of(testResult: TestResult): Property = Property(TEST_RESULT, TestResultValue(testResult))
 
 @JvmName("ofEebusDevicesPaired")
-fun Property.Companion.of(list: List<EebusDevicesPaired>): Property = Property(ARRAY, ListEebusDevicesPairedValue(list))
+fun Property.Companion.of(list: List<EebusDevicesPaired>): Property = list.toProperty(value = ::ListEebusDevicesPairedValue)
 
 @JvmName("ofEebusDevicesPaired")
-fun Property.Companion.of(vararg device: EebusDevicesPaired): Property = Property(ARRAY, ListEebusDevicesPairedValue(device.toList()))
+fun Property.Companion.of(vararg device: EebusDevicesPaired): Property = Property.of(device.toList())
+
+fun Property.Companion.ofEmptyList(): Property = Property(ARRAY, ListEmptyValue)

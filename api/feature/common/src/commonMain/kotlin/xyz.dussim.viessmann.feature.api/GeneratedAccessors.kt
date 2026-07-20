@@ -155,8 +155,7 @@ fun <T : PropertyValue<*>> EfficientStringKeyMap<Property>.findPropertyValueOrPr
 /**
  * Type mismatch throws [GeneratedAccessException].
  */
-fun <T : Constraints<*>> Constraints<*>.requireConstraints(expectedType: KClass<T>): T =
-    expectedType.castOrNull(this) ?: throw GeneratedAccessException
+fun <T : Constraints<*>> Constraints<*>.requireConstraints(expectedType: KClass<T>): T = expectedType.castOrNull(this) ?: throw GeneratedAccessException
 
 /**
  * Type mismatch throws, except `ArrayEmptyConstraints` is promoted via [fromEmpty].

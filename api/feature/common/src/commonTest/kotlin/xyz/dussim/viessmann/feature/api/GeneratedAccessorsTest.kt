@@ -63,8 +63,8 @@ val GeneratedAccessorsTest by testSuite {
         val properties =
             EfficientStringKeyMap(
                 mapOf(
-                    "enabled" to Property.ofBoolean(true),
-                    "temperature" to Property.ofDouble(21.5),
+                    "enabled" to Property.of(true),
+                    "temperature" to Property.of(21.5),
                     "mode" to Property.of("auto"),
                 ),
             )
@@ -78,7 +78,7 @@ val GeneratedAccessorsTest by testSuite {
         val missing = EfficientStringKeyMap<Property>(emptyMap())
         missing.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
 
-        val presentWrongType = EfficientStringKeyMap(mapOf("mode" to Property.ofDouble(1.0)))
+        val presentWrongType = EfficientStringKeyMap(mapOf("mode" to Property.of(1.0)))
         presentWrongType.findNullableStringPropertyValueOrNull("mode", hash("mode")).shouldBeNull()
     }
 
