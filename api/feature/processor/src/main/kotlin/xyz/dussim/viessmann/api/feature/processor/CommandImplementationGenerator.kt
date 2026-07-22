@@ -28,6 +28,7 @@ import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.CommandValidationRule
+import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 private val NUMBER_OF_PARAMETERS_RULE = validationRule("numberOfParametersRule")
 private val ONE_PARAMETER_COMMAND_RULE = validationRule("oneParameterCommandRule")

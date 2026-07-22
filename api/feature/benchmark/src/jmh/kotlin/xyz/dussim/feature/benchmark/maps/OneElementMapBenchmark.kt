@@ -11,6 +11,7 @@ import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
+import xyz.dussim.viessmann.feature.api.validation.propertyHash
 import java.util.concurrent.TimeUnit
 
 @State(Scope.Benchmark)
@@ -22,8 +23,8 @@ import java.util.concurrent.TimeUnit
 @Suppress("unused")
 open class OneElementMapBenchmark {
     companion object {
-        val key1Combined = combineToLong("key1".hashCode(), "key1".length)
-        val nonexistentCombined = combineToLong("nonexistent".hashCode(), "nonexistent".length)
+        val key1Combined = propertyHash("key1".hashCode(), "key1".length)
+        val nonexistentCombined = propertyHash("nonexistent".hashCode(), "nonexistent".length)
     }
 
     private lateinit var standardMap: Map<String, String>
