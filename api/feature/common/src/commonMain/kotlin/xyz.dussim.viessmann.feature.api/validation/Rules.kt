@@ -66,8 +66,7 @@ import xyz.dussim.viessmann.feature.api.validation.ValidationResult.Companion.In
 
 val MISSING_COMMAND_EXPECTED_CLASS = ExpectedActualClass.of(COMMAND_CLASS_INDEX)
 
-@PublishedApi
-internal inline fun propertyHash(
+inline fun propertyHash(
     high: Int,
     low: Int,
 ): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)

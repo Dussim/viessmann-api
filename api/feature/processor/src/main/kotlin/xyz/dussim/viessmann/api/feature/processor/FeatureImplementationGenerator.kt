@@ -20,6 +20,7 @@ import xyz.dussim.viessmann.feature.api.FeatureValidationException
 import xyz.dussim.viessmann.feature.api.GeneratedAccessException
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
+import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 private val REQUIRE_COMMAND = MemberName("xyz.dussim.viessmann.feature.api", "requireCommand")
 private val ZERO_PARAMETER_COMMAND_RULE = validationRule("zeroParameterCommandRule")

@@ -153,15 +153,6 @@ val DEFAULT_CONSTRAINTS =
     )
 
 /**
- * Combines two integers into a single long value for efficient map lookups.
- * Used for property/command name hashing.
- */
-fun propertyHash(
-    high: Int,
-    low: Int,
-): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFFL)
-
-/**
  * Creates a validation rule member name.
  */
 fun validationRule(name: String) = MemberName(VALIDATION_PACKAGE, name)

@@ -11,6 +11,7 @@ import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
 import xyz.dussim.viessmann.feature.api.EfficientStringKeyMap
+import xyz.dussim.viessmann.feature.api.validation.propertyHash
 import java.util.concurrent.TimeUnit
 
 /**
@@ -31,16 +32,16 @@ import java.util.concurrent.TimeUnit
 open class NElementsMapBenchmark {
     companion object {
         // First entry in length-2 bucket
-        val bbCombined = combineToLong("bb".hashCode(), "bb".length)
+        val bbCombined = propertyHash("bb".hashCode(), "bb".length)
 
         // Second entry in length-2 bucket (worst-case hit: must scan past "bb")
-        val ccCombined = combineToLong("cc".hashCode(), "cc".length)
+        val ccCombined = propertyHash("cc".hashCode(), "cc".length)
 
         // Length 2, NOT in map — bitset passes, full loop scan
-        val xxCombined = combineToLong("xx".hashCode(), "xx".length)
+        val xxCombined = propertyHash("xx".hashCode(), "xx".length)
 
         // Length 7, NOT in map — bitset short-circuits immediately
-        val xxxxxxxCombined = combineToLong("xxxxxxx".hashCode(), "xxxxxxx".length)
+        val xxxxxxxCombined = propertyHash("xxxxxxx".hashCode(), "xxxxxxx".length)
     }
 
     private lateinit var standardMap: Map<String, String>
