@@ -95,7 +95,6 @@ open class MassiveValidationBenchmark {
                 blackhole.consume(validator.validate(features[j]))
             }
         }
-        println(NumberOfParametersMismatch.counter.load())
     }
 
     @Benchmark
