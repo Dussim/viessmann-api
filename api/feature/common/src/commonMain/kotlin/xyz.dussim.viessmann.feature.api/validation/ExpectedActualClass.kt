@@ -329,44 +329,114 @@ value class ExpectedActualClass internal constructor(
         }
 }
 
-// Cache common error types to avoid repeated allocations
-@Suppress("NOTHING_TO_INLINE")
 object PropertyValidationErrors {
-    fun interface MismatchPropertiesGetter {
-        operator fun invoke(actualIndex: Int): ValidationResult<ComponentTypeMismatch>
-    }
+    private val SIZE = CLASS_REGISTRY_SIZE
+    private val TABLE_SIZE = SIZE * SIZE
+    private val GETTER_OFFSET = TABLE_SIZE + 1
 
-    @PublishedApi
-    internal val mismatches =
-        Array(SIZE) { IntToObjectMap.of<ValidationResult<ComponentTypeMismatch>>() }
+    class Getter(
+        private val slots: Array<Any?>,
+        private val expectedIndex: Int,
+    ) {
+        operator fun invoke(actualIndex: Int): ValidationResult<ComponentTypeMismatch> {
+            val slot = expectedIndex * SIZE + actualIndex + 1
 
-    inline fun getMismatchProperties(
-        nameOfComponent: String,
-        expectedIndex: Int,
-    ): MismatchPropertiesGetter =
-        { actualIndex ->
-            val map = mismatches[expectedIndex]
-            val value = map[actualIndex]
+            @Suppress("UNCHECKED_CAST")
+            val value = slots[slot] as ValidationResult<ComponentTypeMismatch>?
+
             if (value != null) {
-                value
+                return value
             } else {
-                val value =
-                    Invalid(
-                        ComponentTypeMismatch(
-                            nameOfComponent,
-                            ExpectedActualClass.of(expectedIndex, actualIndex),
-                        ),
-                    )
-                mismatches[expectedIndex] =
-                    IntToObjectMap.of(
-                        actualIndex,
-                        value,
-                        map,
-                    )
-
-                value
+                val name = slots[0] as String
+                val built = Invalid(ComponentTypeMismatch(name, ExpectedActualClass.of(expectedIndex, actualIndex)))
+                slots[slot] = built
+                return built
             }
         }
+    }
+
+    private val nameCache = StringKeyedCache<Array<Any?>>()
+
+    fun getMismatchProperties(
+        nameOfComponent: String,
+        expectedIndex: Int,
+    ): Getter {
+        val slots =
+            nameCache.getOrPut(nameOfComponent) { n ->
+                arrayOfNulls<Any?>(GETTER_OFFSET + SIZE).also { it[0] = n }
+            }
+        val getterSlot = GETTER_OFFSET + expectedIndex
+        (slots[getterSlot] as Getter?)?.let { return it }
+        val getter = Getter(slots, expectedIndex)
+        slots[getterSlot] = getter
+        return getter
+    }
+}
+
+internal class StringKeyedCache<V : Any> {
+    private class Table<V : Any>(
+        val names: Array<String?>,
+        val values: Array<V?>,
+        val size: Int,
+    )
+
+    private var table: Table<V> = Table(arrayOfNulls(16), arrayOfNulls<Any?>(16) as Array<V?>, 0)
+
+    fun getOrPut(
+        name: String,
+        create: (String) -> V,
+    ): V {
+        val t = table
+        find(t, name)?.let { return it }
+        val value = create(name)
+        table = insertInto(t, name, value)
+        return value
+    }
+
+    private fun find(
+        t: Table<V>,
+        name: String,
+    ): V? {
+        val mask = t.names.size - 1
+        var slot = (name.hashCode() xor (name.hashCode() ushr 16)) and mask
+        while (true) {
+            val n = t.names[slot] ?: return null
+            if (n == name) return t.values[slot]
+            slot = (slot + 1) and mask
+        }
+    }
+
+    private fun insertInto(
+        old: Table<V>,
+        name: String,
+        value: V,
+    ): Table<V> {
+        val grow = (old.size + 1) * 2 >= old.names.size
+        val cap = if (grow) old.names.size * 2 else old.names.size
+        val names = arrayOfNulls<String>(cap)
+        val values = arrayOfNulls<Any?>(cap) as Array<V?>
+        val mask = cap - 1
+        for (i in old.names.indices) {
+            val n = old.names[i] ?: continue
+            val v = old.values[i] ?: continue
+            place(n, v, names, mask, values)
+        }
+        place(name, value, names, mask, values)
+        return Table(names, values, old.size + 1)
+    }
+
+    private fun place(
+        n: String,
+        v: V,
+        names: Array<String?>,
+        mask: Int,
+        values: Array<V?>,
+    ) {
+        var slot = (n.hashCode() xor (n.hashCode() ushr 16)) and mask
+        while (names[slot] != null) slot = (slot + 1) and mask
+        names[slot] = n
+        values[slot] = v
+    }
 }
 
 sealed interface ValidationError {

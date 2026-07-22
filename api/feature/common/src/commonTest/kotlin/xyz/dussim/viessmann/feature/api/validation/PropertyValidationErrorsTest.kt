@@ -32,6 +32,33 @@ val PropertyValidationErrorsTest by testSuite {
             result2.asIterable().first().name shouldBe "cachedPropUnique"
         }
 
+        test("does not reuse a mismatch error belonging to another property") {
+            val indoorTemperature =
+                PropertyValidationErrors.getMismatchProperties(
+                    "indoorTemperature",
+                    ENERGY_MATRIX_VALUE_CLASS_INDEX,
+                )
+            val outdoorTemperature =
+                PropertyValidationErrors.getMismatchProperties(
+                    "outdoorTemperature",
+                    ENERGY_MATRIX_VALUE_CLASS_INDEX,
+                )
+
+            val indoorError =
+                indoorTemperature(BOOLEAN_VALUE_CLASS_INDEX)
+                    .asIterable()
+                    .first()
+                    .shouldBeInstanceOf<ValidationError.ComponentTypeMismatch>()
+            val outdoorError =
+                outdoorTemperature(BOOLEAN_VALUE_CLASS_INDEX)
+                    .asIterable()
+                    .first()
+                    .shouldBeInstanceOf<ValidationError.ComponentTypeMismatch>()
+
+            indoorError.name shouldBe "indoorTemperature"
+            outdoorError.name shouldBe "outdoorTemperature"
+        }
+
         test("returns different results for different actual indices") {
             val getter = PropertyValidationErrors.getMismatchProperties("propUnique2", STRING_VALUE_CLASS_INDEX)
 
