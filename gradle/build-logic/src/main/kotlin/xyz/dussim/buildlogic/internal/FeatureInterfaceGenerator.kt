@@ -70,7 +70,7 @@ class FeatureInterfaceGenerator(
         )
 
     internal fun getCommandSignatures(feature: ParsedFeatureJson): List<CommandSignature> {
-        val metadataCommands = feature.metadata.commands
+        val metadataCommands = commandsToGenerate(feature.metadata.commands)
         return metadataCommands.map { command ->
             commandSignatureFromMetadata(command)
         }
@@ -89,8 +89,7 @@ class FeatureInterfaceGenerator(
                 }
 
         val commands =
-            feature.metadata
-                .commands
+            commandsToGenerate(feature.metadata.commands)
                 .map { metadata ->
                     CommandModel(
                         name = metadata.name,
@@ -108,6 +107,11 @@ class FeatureInterfaceGenerator(
             )
 
         return buildFeatureInterface(model, packageName, sharedCommands)
+    }
+
+    private fun commandsToGenerate(commands: List<CommandMetadata>): List<CommandMetadata> {
+        val replacedCommands = commandsReplacedByFullSetter(commands.map(CommandMetadata::name))
+        return commands.filterNot { it.name in replacedCommands }
     }
 
     private fun featureToInterfaceName(featureName: String): String {

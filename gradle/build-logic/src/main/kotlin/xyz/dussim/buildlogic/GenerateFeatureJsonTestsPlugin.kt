@@ -20,6 +20,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.create
 import org.gradle.work.DisableCachingByDefault
+import xyz.dussim.buildlogic.internal.commandsReplacedByFullSetter
 import java.io.File
 
 abstract class GenerateFeatureJsonTestsPlugin : Plugin<Project> {
@@ -177,25 +178,28 @@ abstract class GenerateFeatureJsonTestsTask : DefaultTask() {
             }
 
     private fun buildCommandAssertions(commands: JsonObject): List<String> =
-        commands.entries.sortedBy { it.key }.flatMap { (name, command) ->
-            val commandObject = command as? JsonObject ?: return@flatMap emptyList()
-            val commandAccessor = accessor(name)
-            buildList {
-                val commandName = stringValue(commandObject, "name")
-                val isExecutable = booleanValue(commandObject, "isExecutable")
-                val uri = stringValue(commandObject, "uri")
-                if (commandName != null && isExecutable != null && uri != null) {
-                    add("$commandAccessor.shouldHaveCommand(${kotlinString(commandName)}, $isExecutable, ${kotlinString(uri)})")
-                }
+        commands.entries
+            .filterNot { it.key in commandsReplacedByFullSetter(commands.keys) }
+            .sortedBy { it.key }
+            .flatMap { (name, command) ->
+                val commandObject = command as? JsonObject ?: return@flatMap emptyList()
+                val commandAccessor = accessor(name)
+                buildList {
+                    val commandName = stringValue(commandObject, "name")
+                    val isExecutable = booleanValue(commandObject, "isExecutable")
+                    val uri = stringValue(commandObject, "uri")
+                    if (commandName != null && isExecutable != null && uri != null) {
+                        add("$commandAccessor.shouldHaveCommand(${kotlinString(commandName)}, $isExecutable, ${kotlinString(uri)})")
+                    }
 
-                val params = commandObject["params"] as? JsonObject ?: return@buildList
-                params.entries.sortedBy { it.key }.forEach { (paramName, param) ->
-                    val paramObject = param as? JsonObject ?: return@forEach
-                    val constraints = paramObject["constraints"] as? JsonObject ?: JsonObject(emptyMap())
-                    buildConstraintAssertion("$commandAccessor?.${accessor(paramName)}", paramObject, constraints)?.let(::add)
+                    val params = commandObject["params"] as? JsonObject ?: return@buildList
+                    params.entries.sortedBy { it.key }.forEach { (paramName, param) ->
+                        val paramObject = param as? JsonObject ?: return@forEach
+                        val constraints = paramObject["constraints"] as? JsonObject ?: JsonObject(emptyMap())
+                        buildConstraintAssertion("$commandAccessor?.${accessor(paramName)}", paramObject, constraints)?.let(::add)
+                    }
                 }
             }
-        }
 
     private fun buildConstraintAssertion(
         accessor: String,
