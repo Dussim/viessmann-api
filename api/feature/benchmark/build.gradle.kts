@@ -18,6 +18,8 @@ dependencies {
     implementation(projects.api.feature.apiFeatureDefinitions)
     implementation(projects.api.feature.apiFeatureImplementations)
     ksp(projects.api.feature.apiFeatureProcessor)
+
+    testImplementation(libs.kotest.assertions.core)
 }
 
 val stableJvmArgs =
@@ -80,9 +82,7 @@ tasks.jmh {
     finalizedBy(tasks.jmhReport)
 }
 
-fun JMHTask.configureStableValidationJmh(
-    include: String,
-) {
+fun JMHTask.configureStableValidationJmh(include: String) {
     group = "benchmark"
     dependsOn(tasks.test, stableValidationEnvironment, tasks.named("jmhJar"))
 
