@@ -1,23 +1,32 @@
 package xyz.dussim.feature.benchmark.stable
 
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldBeSameSizeAs
+import io.kotest.matchers.collections.shouldHaveAtMostSize
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.maps.shouldContainExactly
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.types.instanceOf
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 fun assertStableSuite(size: StableSize) {
     val fixtures = StableFixtureRepository.load(verifyManifest = false)
     val suiteFixtures = fixtures.fixtures.filter { it.manifest.size == size }
-    assertEquals(StableCase.entries.size, suiteFixtures.size, "${size.id} fixture count")
+    StableCase.entries shouldBeSameSizeAs suiteFixtures
 
     val mismatches =
         suiteFixtures.mapNotNull { fixture ->
             val actual = StableFixtureRepository.sha256(fixture.canonicalJson)
             if (fixture.manifest.sha256 == actual) null else "${fixture.id}=$actual"
         }
-    assertTrue(mismatches.isEmpty(), "Update manifest hashes:\n${mismatches.joinToString("\n")}")
+    mismatches.shouldBeEmpty()
 
     suiteFixtures.forEach { fixture ->
         val manifest = fixture.manifest
@@ -26,44 +35,33 @@ fun assertStableSuite(size: StableSize) {
         val aggregateErrors = aggregate.map { it }
         val failFastErrors = failFast.map { it }
 
-        assertEquals(!manifest.expectedValid, aggregate.isInvalid, "${fixture.id} aggregate validity")
-        assertEquals(!manifest.expectedValid, failFast.isInvalid, "${fixture.id} fail-fast validity")
-        assertEquals(manifest.expectedErrorCount, aggregateErrors.size, "${fixture.id} aggregate count")
-        assertEquals(
-            manifest.expectedCategories,
-            aggregateErrors.groupingBy(StableErrorCategory::from).eachCount(),
-            "${fixture.id} aggregate categories",
-        )
-        assertEquals(
-            manifest.expectedFirstError,
-            failFastErrors.firstOrNull()?.let(StableErrorCategory::from),
-            "${fixture.id} first error",
-        )
-        assertTrue(failFastErrors.size <= 1, "${fixture.id} fail-fast returned multiple errors")
+        aggregate.isInvalid shouldBe !manifest.expectedValid
+        failFast.isInvalid shouldBe !manifest.expectedValid
+        aggregateErrors shouldHaveSize manifest.expectedErrorCount
+        aggregateErrors.groupingBy(StableErrorCategory::from).eachCount() shouldContainExactly manifest.expectedCategories
+        failFastErrors.firstOrNull()?.let(StableErrorCategory::from) shouldBe manifest.expectedFirstError
+        failFastErrors shouldHaveAtMostSize 1
 
         if (manifest.expectedValid) {
             val constructed = fixture.descriptor.getOrThrow(fixture.feature)
-            assertTrue(fixture.descriptor.featureClass.isInstance(constructed), "${fixture.id} factory type")
-            assertNotNull(fixture.descriptor.getOrNull(fixture.feature), "${fixture.id} getOrNull")
+            constructed shouldBe instanceOf(fixture.descriptor.featureClass)
+            fixture.descriptor.getOrNull(fixture.feature).shouldNotBeNull()
         } else {
-            assertFailsWith<FeatureValidationException>("${fixture.id} throwing factory accepted an invalid fixture") {
+            shouldThrow<FeatureValidationException> {
                 fixture.descriptor.getOrThrow(fixture.feature)
             }
-            assertEquals(null, fixture.descriptor.getOrNull(fixture.feature), "${fixture.id} getOrNull")
+            fixture.descriptor.getOrNull(fixture.feature).shouldBeNull()
         }
     }
 
-    assertTrue(fixtures[size, StableCase.OPTIONAL_COMMAND_ABSENT].manifest.expectedValid)
-    assertFalse(fixtures[size, StableCase.OPTIONAL_COMMAND_MALFORMED].manifest.expectedValid)
+    fixtures[size, StableCase.OPTIONAL_COMMAND_ABSENT].manifest.expectedValid.shouldBeTrue()
+    fixtures[size, StableCase.OPTIONAL_COMMAND_MALFORMED].manifest.expectedValid.shouldBeFalse()
 
     suiteFixtures.forEach { fixture ->
-        assertTrue(
-            fixture.descriptor.featureClass.qualifiedName.orEmpty().startsWith(
-                "xyz.dussim.feature.benchmark.stable.${size.id}.definitions.Stable",
-            ),
-            fixture.id,
-        )
-        assertFalse(fixture.canonicalJson.contains("all_features"))
-        assertFalse(fixture.canonicalJson.contains("xyz.dussim.viessmann.api.features.generated"))
+        fixture.descriptor.featureClass.qualifiedName
+            .shouldNotBeNull()
+            .shouldStartWith("xyz.dussim.feature.benchmark.stable.${size.id}.definitions.Stable")
+        fixture.canonicalJson shouldNotContain "all_features"
+        fixture.canonicalJson shouldNotContain "xyz.dussim.viessmann.api.features.generated"
     }
 }
