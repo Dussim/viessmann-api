@@ -43,8 +43,6 @@ internal fun Project.configureKotlinMultiplatformLibrary() {
 
         sourceSets.getByName("commonTest") {
             dependencies {
-                implementation(libs.kotlin.test.common)
-                implementation(libs.kotlin.test.annotations.common)
                 implementation(libs.kotest.assertions.core)
                 implementation(libs.testBalloon.framework.core)
                 implementation(libs.testBalloon.integration.kotest.assertions)
