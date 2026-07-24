@@ -37,8 +37,6 @@ class KotlinJvmCommonPlugin : Plugin<Project> {
             val testImplementation = configurations.named("testImplementation")
 
             dependencies {
-                testImplementation(libs.kotlin.test.common)
-                testImplementation(libs.kotlin.test.annotations.common)
                 testImplementation(libs.kotest.assertions.core)
                 testImplementation(libs.testBalloon.framework.core)
                 testImplementation(libs.testBalloon.integration.kotest.assertions)
