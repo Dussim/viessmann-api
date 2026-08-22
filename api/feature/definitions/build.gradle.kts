@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.gradle.KspAATask
 import xyz.dussim.buildlogic.GenerateFeatureJsonsFromYamlTask
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
@@ -55,6 +56,10 @@ generateFeatureInterfaces {
 }
 
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
+    dependsOn("generateFeatureInterfaces")
+}
+
+tasks.withType<KspAATask>().configureEach {
     dependsOn("generateFeatureInterfaces")
 }
 

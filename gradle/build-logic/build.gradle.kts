@@ -1,9 +1,11 @@
 import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     `kotlin-dsl`
     kotlin("plugin.serialization") version embeddedKotlinVersion
+    alias(libs.plugins.testBalloon)
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.ben.manes.versions)
 }
@@ -26,6 +28,7 @@ dependencies {
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.testBalloon.framework.core)
     testImplementation(libs.testBalloon.integration.kotest.assertions)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 gradlePlugin {
@@ -77,6 +80,15 @@ java {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+tasks.withType<KotlinJvmCompile>().configureEach {
+    if (name == "compileTestKotlin") {
+        // kotlin-dsl adds this flag, but it prevents TestBalloon's generated JVM entry point from being emitted.
+        compilerOptions.freeCompilerArgs.set(
+            compilerOptions.freeCompilerArgs.get().filterNot { it == "-Xuse-fir-lt=false" },
+        )
+    }
 }
 
 kotlinter {

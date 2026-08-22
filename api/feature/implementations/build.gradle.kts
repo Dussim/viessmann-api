@@ -69,6 +69,8 @@ tasks.withType<KspAATask>().configureEach {
             .files(featureProcessorInputs)
             .withPropertyName("featureImplementationProcessorInputs")
             .withPathSensitivity(PathSensitivity.RELATIVE)
+    } else if (name == "kspTestKotlinJvm") {
+        dependsOn("generateFeatureJsonTests")
     }
 }
 
