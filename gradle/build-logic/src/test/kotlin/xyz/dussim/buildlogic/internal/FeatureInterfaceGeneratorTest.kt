@@ -26,8 +26,8 @@ val FeatureInterfaceGeneratorTest by testSuite {
 
             val source = generator.generate(feature).toString()
             source shouldContain "public val $setter"
-            source shouldNotContain "public val $positive"
-            source shouldNotContain "public val $negative"
+            source shouldNotContain "public val $positive:"
+            source shouldNotContain "public val $negative:"
             source shouldNotContain "CommandName(\"$positive\")"
             source shouldNotContain "CommandName(\"$negative\")"
         }
@@ -68,7 +68,7 @@ private fun featureJson(vararg commandNames: String): JsonObject {
                         "{\"name\":\"$commandName\",\"parameters\":$parameters}"
                     },
                 )
-                append("]}}}")
+                append("]}}")
             },
         )
     return json.jsonObject

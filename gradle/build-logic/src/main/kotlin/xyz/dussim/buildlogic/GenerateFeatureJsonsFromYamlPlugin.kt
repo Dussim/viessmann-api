@@ -8,6 +8,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
@@ -17,7 +18,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.create
@@ -25,7 +25,9 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import xyz.dussim.buildlogic.internal.YamlFeatureJsonGenerator
+import java.io.File
 import java.time.LocalDate
+import java.util.Locale
 import javax.inject.Inject
 
 abstract class GenerateFeatureJsonsFromYamlPlugin : Plugin<Project> {
@@ -55,7 +57,6 @@ abstract class GenerateFeatureJsonsFromYamlExtension {
 abstract class GenerateFeatureJsonsFromYamlTask : DefaultTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:SkipWhenEmpty
     abstract val featuresYamls: DirectoryProperty
 
     @get:OutputDirectory
@@ -67,6 +68,9 @@ abstract class GenerateFeatureJsonsFromYamlTask : DefaultTask() {
     @get:Inject
     abstract val workerExecutor: WorkerExecutor
 
+    @get:Inject
+    abstract val fileSystemOperations: FileSystemOperations
+
     init {
         group = "build"
         description = "Generates valid JSON instances for each feature from YAML OpenAPI specifications"
@@ -75,7 +79,6 @@ abstract class GenerateFeatureJsonsFromYamlTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val outputDir = generatedJsons.get().asFile
-        outputDir.mkdirs()
 
         val inputFiles =
             featuresYamls
@@ -86,13 +89,36 @@ abstract class GenerateFeatureJsonsFromYamlTask : DefaultTask() {
 
         logger.lifecycle("Found ${inputFiles.size} YAML feature files for JSON generation")
 
+        val preflightGenerator =
+            YamlFeatureJsonGenerator(Logging.getLogger(GenerateFeatureJsonsFromYamlTask::class.java))
+        val outputPlans =
+            inputFiles.mapNotNull { file ->
+                preflightGenerator
+                    .featureNameForFile(file)
+                    ?.let { featureName ->
+                        FeatureJsonOutputPlan(
+                            yamlFile = file,
+                            outputFile = generatedJsonOutputFile(outputDir, featureName),
+                        )
+                    }
+            }
+        requireUniqueOutputPaths(outputDir, outputPlans)
+
+        fileSystemOperations.delete {
+            delete(outputDir)
+        }
+        check(outputDir.mkdirs() || outputDir.isDirectory) {
+            "Could not create generated JSON output directory: $outputDir"
+        }
+
         val queue = workerExecutor.noIsolation()
         val now = currentDate.get()
 
-        for (file in inputFiles) {
+        for (plan in outputPlans) {
             queue.submit(GenerateFeatureJsonAction::class.java) {
-                yamlFile.set(file)
+                yamlFile.set(plan.yamlFile)
                 this.outputDir.set(outputDir)
+                outputFile.set(plan.outputFile)
                 this.currentDate.set(now)
             }
         }
@@ -127,9 +153,62 @@ abstract class GenerateFeatureJsonsFromYamlTask : DefaultTask() {
     }
 }
 
+private data class FeatureJsonOutputPlan(
+    val yamlFile: File,
+    val outputFile: File,
+)
+
+private const val ALL_FEATURES_JSON_FILE_NAME = "all_features.json"
+
+private fun generatedJsonOutputFile(
+    outputDir: File,
+    featureName: String,
+): File {
+    val outputDirectoryPath = outputDir.toPath().toAbsolutePath().normalize()
+    val outputPath = outputDirectoryPath.resolve("${featureName.replace("{}", "0")}.json").normalize()
+    require(outputPath.parent == outputDirectoryPath) {
+        "Generated feature name '$featureName' escapes the JSON output directory: $outputDir"
+    }
+    return outputPath.toFile()
+}
+
+private fun normalizedOutputPath(file: File): String =
+    file
+        .toPath()
+        .toAbsolutePath()
+        .normalize()
+        .toString()
+        .replace('\\', '/')
+        .lowercase(Locale.ROOT)
+
+private fun requireUniqueOutputPaths(
+    outputDir: File,
+    outputPlans: List<FeatureJsonOutputPlan>,
+) {
+    val outputClaims =
+        buildList {
+            add(outputDir.resolve(ALL_FEATURES_JSON_FILE_NAME) to "combined feature output")
+            outputPlans.forEach { plan ->
+                add(plan.outputFile to plan.yamlFile.path)
+            }
+        }
+    val collisions =
+        outputClaims
+            .groupBy({ normalizedOutputPath(it.first) }, { it.second })
+            .filterValues { it.size > 1 }
+
+    check(collisions.isEmpty()) {
+        "Generated JSON output path collision(s): " +
+            collisions.entries.joinToString("; ") { (path, sources) ->
+                "$path <- ${sources.joinToString(", ")}"
+            }
+    }
+}
+
 internal interface GenerateFeatureJsonParameters : WorkParameters {
     val yamlFile: RegularFileProperty
     val outputDir: DirectoryProperty
+    val outputFile: RegularFileProperty
     val currentDate: Property<LocalDate>
 }
 
@@ -138,6 +217,7 @@ internal abstract class GenerateFeatureJsonAction : WorkAction<GenerateFeatureJs
         val logger = Logging.getLogger(GenerateFeatureJsonAction::class.java)
         val file = parameters.yamlFile.get().asFile
         val outputDir = parameters.outputDir.get().asFile
+        val expectedOutputFile = parameters.outputFile.get().asFile
         val now = parameters.currentDate.get()
 
         val generator = YamlFeatureJsonGenerator(logger)
@@ -164,7 +244,19 @@ internal abstract class GenerateFeatureJsonAction : WorkAction<GenerateFeatureJs
                 prettyPrint = true
                 prettyPrintIndent = "  "
             }
-        val outputFile = outputDir.resolve("${result.featureName.replace("{}", "0")}.json")
-        outputFile.writeText(prettyJson.encodeToString(JsonObject.serializer(), fixedJson))
+        val outputFile = generatedJsonOutputFile(outputDir, result.featureName)
+        check(normalizedOutputPath(outputFile) == normalizedOutputPath(expectedOutputFile)) {
+            "Generated feature '${result.featureName}' resolved to '$outputFile', " +
+                "but the preflight output path was '$expectedOutputFile'"
+        }
+        check(outputFile.createNewFile()) {
+            "Refusing to overwrite generated JSON output: $outputFile"
+        }
+        try {
+            outputFile.writeText(prettyJson.encodeToString(JsonObject.serializer(), fixedJson))
+        } catch (exception: Exception) {
+            outputFile.delete()
+            throw exception
+        }
     }
 }

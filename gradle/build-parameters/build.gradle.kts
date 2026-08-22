@@ -29,6 +29,7 @@ buildParameters {
             defaultValue = "build-cache-r"
         }
         string("password") {
+            // NOTE: this is not any kind of credential/secret leak, this password is for read-only user, and we want every developer of this repository to take adeventage of it
             fromEnvironment("BUILD_CACHE_USER_PASSWORD")
             description = "Password used for remote cache read/write user. Default for read only user"
             defaultValue = ",79'2V`?2CuC"

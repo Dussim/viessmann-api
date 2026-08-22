@@ -2,7 +2,7 @@
 
 A Kotlin Multiplatform project that models Viessmann API data (DTOs) and provides a type-safe, annotation-driven feature system with code generation (KSP2). The repository also includes JMH benchmarks and comprehensive tests across JVM and JS (Node + Browser) targets.
 
-> **JVM target:** Java 25. **Kotlin:** 2.4.0. **KSP2:** Enabled.
+> **JVM target:** Java 25. **Kotlin:** version managed in [`gradle/libs.versions.toml`](gradle/libs.versions.toml) (currently 2.4.10). **KSP2:** Enabled.
 
 ## Overview
 The project defines:
@@ -11,19 +11,20 @@ The project defines:
 - A benchmarking suite to assess performance characteristics around feature parsing/validation.
 
 ### Tech Stack
-- **Language:** Kotlin 2.4.0 (Multiplatform)
+- **Language:** Kotlin Multiplatform (version managed in [`gradle/libs.versions.toml`](gradle/libs.versions.toml))
 - **Frameworks:**
   - Kotlinx Serialization (JSON)
   - KSP2 (Code generation)
   - Kotest (Testing)
   - JMH (Benchmarking)
 - **Package Manager:** Gradle (Wrapper included)
-- **Static Analysis:** Detekt, Kotlinter
+- **Formatting and static analysis:** Kotlinter
 
 ## Requirements
 - Java 25+ (JDK 25 is the target).
 - Gradle Wrapper (provided).
 - Node.js (required for JS target tests).
+- OpenAPI feature specifications for generated feature artifacts. See [OpenAPI input](#openapi-input).
 
 ## Project Structure
 - `:api:dto` — Kotlin Multiplatform DTOs and feature models.
@@ -87,13 +88,24 @@ The project defines:
 # Lint
 ./gradlew.bat lintKotlin
 
-# Detekt
-./gradlew.bat detekt
 ```
 
-## Env Vars
+## OpenAPI Input
+
+Feature generation reads YAML specifications from the `features` subdirectory of the configured OpenAPI source directory. The `openApiPath` build parameter defaults to `.ignored/featuresOpenApi`; override it with `OPEN_API_PATH` when the specifications are stored elsewhere:
+
+```powershell
+$env:OPEN_API_PATH = "C:\path\to\featuresOpenApi"
+./gradlew.bat build
+```
+
+A populated OpenAPI source directory is required for meaningful generated feature artifacts. Without feature YAML files, a build may still complete but generated artifacts will be empty.
+
+## Environment Variables
+
 - `JAVA_HOME`: Should point to a valid JDK 25+ installation.
-- No specific environment variables are strictly required for standard builds, but ensure Node.js is in your PATH for JS targets.
+- `OPEN_API_PATH`: Optional only when using the default `.ignored/featuresOpenApi` path; set it to the OpenAPI source directory for an external specification checkout. Feature YAML files must be under its `features` subdirectory.
+- Node.js must be available on `PATH` for JS target tests.
 
 ## TODOs / Unknowns
 - [ ] Verify if any specific API credentials or configuration files are needed for real API interaction.

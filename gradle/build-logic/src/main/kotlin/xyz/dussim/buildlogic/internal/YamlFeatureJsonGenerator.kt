@@ -37,6 +37,16 @@ class YamlFeatureJsonGenerator(
         val removalDate: LocalDate? = null,
     )
 
+    fun featureNameForFile(file: File): String? =
+        try {
+            parseYaml(file)?.let { extractFeatureSchema(it)?.first }
+        } catch (
+            @Suppress("TooGenericExceptionCaught") e: Exception,
+        ) {
+            logger.warn("FAIL determining JSON output for ${file.name}: ${e::class.simpleName}: ${e.message}")
+            null
+        }
+
     fun generateJsonForFile(file: File): GenerationResult? =
         try {
             val api = parseYaml(file) ?: return null

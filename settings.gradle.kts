@@ -22,7 +22,7 @@ dependencyResolutionManagement {
             from(files("gradle/conventions.versions.toml"))
         }
         create("ktorLibs") {
-            from("io.ktor:ktor-version-catalog:3.5.1")
+            from("io.ktor:ktor-version-catalog:3.5.2")
         }
     }
 }
@@ -141,8 +141,8 @@ if (buildParameters.openApiPath.isNotBlank()) {
 
 develocity {
     val ci = buildParameters.ci
-    val gitHash = providers.environmentVariable("CI_COMMIT_SHA")
-    val gitBranch = providers.environmentVariable("CI_COMMIT_BRANCH")
+    val gitHash = providers.environmentVariable("CI_COMMIT_SHA").orElse("unknown")
+    val gitBranch = providers.environmentVariable("CI_COMMIT_BRANCH").orElse("unknown")
     buildScan {
         uploadInBackground = false
         publishing.onlyIf { false }
