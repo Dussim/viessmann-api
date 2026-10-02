@@ -77,6 +77,7 @@ internal data class ValidationRulePlan(
 
 internal data class ValidationPlan(
     val rules: List<ValidationRulePlan>,
+    val cachedProperties: List<PropertySpec> = emptyList(),
 ) {
     val normalExpressions: List<CodeBlock> get() = rules.map(ValidationRulePlan::normalExpression)
 

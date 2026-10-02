@@ -289,16 +289,6 @@ internal val LIST_SOLARLOG_DEVICES_PAIRED_VALUE_CLASS_INDEX =
 private val SIZE = CLASS_REGISTRY.size
 internal val CLASS_REGISTRY_SIZE = SIZE
 
-private val EXPECTED_ACTUAL_CLASSES by lazy {
-    buildList(CLASS_REGISTRY.size * CLASS_REGISTRY.size) {
-        for (i in CLASS_REGISTRY.indices) {
-            for (j in CLASS_REGISTRY.indices) {
-                add(CLASS_REGISTRY[i] to CLASS_REGISTRY[j])
-            }
-        }
-    }
-}
-
 @JvmInline
 value class ExpectedActualClass internal constructor(
     internal val indexIntoList: Int,
@@ -317,9 +307,9 @@ value class ExpectedActualClass internal constructor(
         require(indexIntoList < SIZE * SIZE) { "Index into list must be less than ${SIZE * SIZE}, got $indexIntoList" }
     }
 
-    val expectedClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].first
+    val expectedClass: KClass<*> get() = CLASS_REGISTRY[indexIntoList / SIZE]
 
-    val actualClass: KClass<*> get() = EXPECTED_ACTUAL_CLASSES[indexIntoList].second
+    val actualClass: KClass<*> get() = CLASS_REGISTRY[indexIntoList % SIZE]
 
     override fun toString(): String =
         if (actualClass == Nothing::class) {
@@ -330,45 +320,32 @@ value class ExpectedActualClass internal constructor(
 }
 
 object PropertyValidationErrors {
-    private val SIZE = CLASS_REGISTRY_SIZE
-    private val TABLE_SIZE = SIZE * SIZE
-    private val GETTER_OFFSET = TABLE_SIZE + 1
-
-    class Getter(
-        private val slots: Array<Any?>,
+    class Getter internal constructor(
+        private val name: String,
         private val expectedIndex: Int,
     ) {
+        private val errors = arrayOfNulls<ComponentTypeMismatch>(CLASS_REGISTRY_SIZE)
+
         operator fun invoke(actualIndex: Int): ValidationResult<ComponentTypeMismatch> {
-            val slot = expectedIndex * SIZE + actualIndex + 1
+            val cached = errors[actualIndex]
+            if (cached != null) return Invalid(cached)
 
-            @Suppress("UNCHECKED_CAST")
-            val value = slots[slot] as ValidationResult<ComponentTypeMismatch>?
-
-            if (value != null) {
-                return value
-            } else {
-                val name = slots[0] as String
-                val built = Invalid(ComponentTypeMismatch(name, ExpectedActualClass.of(expectedIndex, actualIndex)))
-                slots[slot] = built
-                return built
-            }
+            val error = ComponentTypeMismatch(name, ExpectedActualClass.of(expectedIndex, actualIndex))
+            errors[actualIndex] = error
+            return Invalid(error)
         }
     }
 
-    private val nameCache = StringKeyedCache<Array<Any?>>()
+    private val nameCache = StringKeyedCache<Array<Getter?>>()
 
     fun getMismatchProperties(
         nameOfComponent: String,
         expectedIndex: Int,
     ): Getter {
-        val slots =
-            nameCache.getOrPut(nameOfComponent) { n ->
-                arrayOfNulls<Any?>(GETTER_OFFSET + SIZE).also { it[0] = n }
-            }
-        val getterSlot = GETTER_OFFSET + expectedIndex
-        (slots[getterSlot] as Getter?)?.let { return it }
-        val getter = Getter(slots, expectedIndex)
-        slots[getterSlot] = getter
+        val getters = nameCache.getOrPut(nameOfComponent) { arrayOfNulls<Getter>(CLASS_REGISTRY_SIZE) }
+        getters[expectedIndex]?.let { return it }
+        val getter = Getter(nameOfComponent, expectedIndex)
+        getters[expectedIndex] = getter
         return getter
     }
 }

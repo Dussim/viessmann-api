@@ -14,6 +14,33 @@ import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
 
 val GeneratorAccessPatternTest by testSuite {
+    test("optional command factories are cached outside generated validation methods") {
+        val command =
+            CommandProperty(
+                name = "optionalCommand",
+                apiName = "setValue",
+                implType = ClassName("test", "CommandImpl").copy(nullable = true),
+                signature = CommandSignature("SetValue", listOf("value" to typeNameOf<NumberConstraints>())),
+                isNullable = true,
+            )
+        val plan = optionalCommandValidationPlan(command, 7)
+        val declarations = plan.cachedProperties.joinToString("\n")
+        declarations shouldContain "private val cachedOptionalCommandRule7"
+        declarations shouldContain "optionalCommandRule(\"setValue\", test.CommandImpl)"
+        declarations shouldContain "private val cachedOptionalCommandFailFastRule7"
+        declarations shouldContain "optionalCommandFailFastRule(\"setValue\", test.CommandImpl)"
+
+        val normal = generateValidateFunction(typeNameOf<Feature>(), plan.normalExpressions).toString()
+        val failFast = generateValidateFunction(typeNameOf<Feature>(), plan.failFastExpressions, isFailFast = true).toString()
+        normal shouldContain "cachedOptionalCommandRule7.validate(value)"
+        failFast shouldContain "cachedOptionalCommandFailFastRule7.validate(value)"
+        normal shouldNotContain "optionalCommandRule("
+        failFast shouldNotContain "optionalCommandFailFastRule("
+        plan.requiresSeparateFailFast shouldBe true
+        val otherNames = optionalCommandValidationPlan(command, 8).cachedProperties.map { it.name }.toSet()
+        (plan.cachedProperties.map { it.name }.toSet() intersect otherNames).isEmpty() shouldBe true
+    }
+
     test("feature generator emits requirePropertyValue for required scalar property") {
         val code =
             buildPropertyInitCode(

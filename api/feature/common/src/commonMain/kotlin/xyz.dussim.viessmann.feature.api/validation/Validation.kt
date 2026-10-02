@@ -52,7 +52,7 @@ value class ValidationResult<out T>
         inline fun <R> map(crossinline transform: (T) -> R): List<R> =
             when (value) {
                 null -> emptyList()
-                is Array<*> -> value.map { transform(it as T) }.toList()
+                is Array<*> -> value.map { transform(it as T) }
                 else -> listOf(transform(value as T))
             }
 
@@ -2971,10 +2971,30 @@ inline fun <From, To, E> ValidationRule<To, E>.transform(crossinline transform: 
  * Validates all values in the iterable, accumulating all errors into a single result.
  */
 @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
-inline fun <T, E> ValidationRule<T, E>.validateAll(values: Iterable<T>): ValidationResult<E> =
-    values.fold(Valid()) { acc, value ->
-        ValidationResult.of(acc, invoke(value))
+inline fun <T, E> ValidationRule<T, E>.validateAll(values: Iterable<T>): ValidationResult<E> {
+    var first: ValidationResult<E> = ValidationResult.Valid
+    var errors: ArrayList<E>? = null
+    for (value in values) {
+        val result = invoke(value)
+        if (!result.isInvalid) continue
+
+        val buffer = errors
+        if (buffer != null) {
+            result.forEach { buffer.add(it) }
+        } else if (!first.isInvalid) {
+            first = result
+        } else {
+            val accumulated = ArrayList<E>(first.size + result.size)
+            first.forEach { accumulated.add(it) }
+            result.forEach { accumulated.add(it) }
+            errors = accumulated
+        }
     }
+    val buffer = errors ?: return first
+    val array = arrayOfNulls<Any?>(buffer.size)
+    for (index in buffer.indices) array[index] = buffer[index]
+    return ValidationResult.Invalid(array as Array<E>)
+}
 
 /**
  * Validates all values in the sequence, accumulating all errors into a single result.

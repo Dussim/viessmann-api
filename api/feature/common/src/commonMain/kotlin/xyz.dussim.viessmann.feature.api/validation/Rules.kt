@@ -374,18 +374,48 @@ fun testResultPropertyRule(
     required: Boolean = true,
 ) = typedPropertyRule<TestResultValue>(propertyName, TEST_RESULT_VALUE_CLASS_INDEX, required)
 
+private const val CACHED_PARAMETER_COUNT_LIMIT = 4
+
+private class CountErrorCache(
+    name: String,
+    expected: Int,
+) {
+    private val expectedData = Expected(name, expected)
+    private val errors =
+        Array(CACHED_PARAMETER_COUNT_LIMIT + 1) { actual ->
+            if (actual == expected) null else NumberOfParametersMismatch(expectedData, actual)
+        }
+
+    fun mismatch(actual: Int): ValidationResult<NumberOfParametersMismatch> {
+        val error =
+            if (actual in 0..CACHED_PARAMETER_COUNT_LIMIT) {
+                checkNotNull(errors[actual])
+            } else {
+                NumberOfParametersMismatch(expectedData, actual)
+            }
+        return Invalid(error)
+    }
+}
+
+private val countErrorCaches = StringKeyedCache<MutableMap<Int, CountErrorCache>>()
+
+private fun countErrorCache(
+    name: String,
+    expected: Int,
+): CountErrorCache =
+    countErrorCaches.getOrPut(name) { mutableMapOf() }.getOrPut(expected) { CountErrorCache(name, expected) }
+
 fun numberOfParametersRule(
     expected: Int,
     name: String,
 ): ValidationRule<Command, ValidationError> {
-    val expectedData = Expected(name, expected)
+    val errors = countErrorCache(name, expected)
     return ValidationRule { command ->
-        if (command.params.size == expected) {
+        val actual = command.params.size
+        if (actual == expected) {
             return@ValidationRule ValidationResult.Valid
         } else {
-            return@ValidationRule Invalid(
-                NumberOfParametersMismatch(expectedData, command.params.size),
-            )
+            return@ValidationRule errors.mismatch(actual)
         }
     }
 }
@@ -400,13 +430,14 @@ fun oneParameterCommandRule(
     commandName: String,
     parameterRule: ValidationRule<Command, ValidationError>,
 ): ValidationRule<Command, ValidationError> {
-    val expectedData = Expected(commandName, 1)
+    val errors = countErrorCache(commandName, 1)
 
     return ValidationRule { command ->
         val parameterResult = parameterRule.validate(command)
-        if (command.params.size == 1) return@ValidationRule parameterResult
+        val actual = command.params.size
+        if (actual == 1) return@ValidationRule parameterResult
 
-        val countResult = Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+        val countResult = errors.mismatch(actual)
         ValidationResult.of(parameterResult, countResult)
     }
 }
@@ -421,16 +452,17 @@ fun oneParameterCommandFailFastRule(
     commandName: String,
     parameterRule: ValidationRule<Command, ValidationError>,
 ): ValidationRule<Command, ValidationError> {
-    val expectedData = Expected(commandName, 1)
+    val errors = countErrorCache(commandName, 1)
 
     return ValidationRule { command ->
         val parameterResult = parameterRule.validate(command)
         if (parameterResult.isInvalid) return@ValidationRule parameterResult
 
-        if (command.params.size == 1) {
+        val actual = command.params.size
+        if (actual == 1) {
             ValidationResult.Valid
         } else {
-            Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+            errors.mismatch(actual)
         }
     }
 }
@@ -502,15 +534,16 @@ fun energyMatrixConstraintsRule(parameterName: String): ValidationRule<Command, 
 
 fun zeroParameterCommandRule(commandName: String): ValidationRule<Feature, ValidationError> {
     val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
-    val expectedData = Expected(commandName, 0)
+    val errors = countErrorCache(commandName, 0)
     val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
 
     return ValidationRule { feature ->
         val command = feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError
-        if (command.params.size == 0) {
+        val actual = command.params.size
+        if (actual == 0) {
             ValidationResult.Valid
         } else {
-            Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+            errors.mismatch(actual)
         }
     }
 }
@@ -520,15 +553,16 @@ fun zeroParameterCommandRule(commandName: String): ValidationRule<Feature, Valid
  * parameters.
  */
 fun optionalZeroParameterCommandRule(commandName: String): ValidationRule<Feature, ValidationError> {
-    val expectedData = Expected(commandName, 0)
+    val errors = countErrorCache(commandName, 0)
     val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
 
     return ValidationRule { feature ->
         val command = feature.commands[commandName, precomputedHash] ?: return@ValidationRule ValidationResult.Valid
-        if (command.params.size == 0) {
+        val actual = command.params.size
+        if (actual == 0) {
             ValidationResult.Valid
         } else {
-            Invalid(NumberOfParametersMismatch(expectedData, command.params.size))
+            errors.mismatch(actual)
         }
     }
 }

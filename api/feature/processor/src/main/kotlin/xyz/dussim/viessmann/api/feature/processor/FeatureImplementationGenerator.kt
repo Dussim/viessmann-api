@@ -193,8 +193,9 @@ private fun CodeBlock.Builder.addValidationException() {
 /**
  * Generates rule expressions for the feature.
  */
-private fun validationPlan(context: SymbolContext): ValidationPlan =
-    ValidationPlan(
+private fun validationPlan(context: SymbolContext): ValidationPlan {
+    val cachedProperties = mutableListOf<PropertySpec>()
+    val rules =
         context
             .parameterProperties
             .map {
@@ -212,7 +213,7 @@ private fun validationPlan(context: SymbolContext): ValidationPlan =
             } +
             context
                 .commandProperties
-                .map {
+                .mapIndexed { index, it ->
                     if (it.signature.parameters.isEmpty()) {
                         ValidationRulePlan(
                             normalExpression =
@@ -225,24 +226,49 @@ private fun validationPlan(context: SymbolContext): ValidationPlan =
                                     ),
                                 ),
                         )
+                    } else if (it.isNullable) {
+                        val optionalPlan = optionalCommandValidationPlan(it, index)
+                        cachedProperties.addAll(optionalPlan.cachedProperties)
+                        optionalPlan.rules.single()
                     } else {
                         ValidationRulePlan(
-                            normalExpression =
-                                if (it.isNullable) {
-                                    optionalCommandRuleExpression(it)
-                                } else {
-                                    commandRuleExpression(it)
-                                },
-                            failFastExpression =
-                                if (it.isNullable) {
-                                    optionalCommandRuleExpression(it, isFailFast = true)
-                                } else {
-                                    commandRuleExpression(it, isFailFast = true)
-                                },
+                            normalExpression = commandRuleExpression(it),
+                            failFastExpression = commandRuleExpression(it, isFailFast = true),
                         )
                     }
-                },
+                }
+    return ValidationPlan(rules, cachedProperties)
+}
+
+internal fun optionalCommandValidationPlan(
+    property: CommandProperty,
+    index: Int,
+): ValidationPlan {
+    val normalName = "cachedOptionalCommandRule$index"
+    val failFastName = "cachedOptionalCommandFailFastRule$index"
+    return ValidationPlan(
+        rules =
+            listOf(
+                ValidationRulePlan(
+                    normalExpression = CodeBlock.of("%N", normalName),
+                    failFastExpression = CodeBlock.of("%N", failFastName),
+                ),
+            ),
+        cachedProperties =
+            listOf(
+                PropertySpec
+                    .builder(normalName, FEATURE_VALIDATION_RULE_TYPE)
+                    .addModifiers(KModifier.PRIVATE)
+                    .initializer(optionalCommandRuleExpression(property))
+                    .build(),
+                PropertySpec
+                    .builder(failFastName, FEATURE_VALIDATION_RULE_TYPE)
+                    .addModifiers(KModifier.PRIVATE)
+                    .initializer(optionalCommandRuleExpression(property, isFailFast = true))
+                    .build(),
+            ),
     )
+}
 
 internal fun commandRuleExpression(
     property: CommandProperty,
@@ -279,6 +305,7 @@ internal fun companionObject(
     TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(GENERATED_FEATURE_VALIDATION_RULE_TYPE)
+        .addProperties(validationPlan.cachedProperties)
         .addFunction(
             generateValidateFunction(
                 typeNameOf<Feature>(),
