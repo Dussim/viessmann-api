@@ -545,6 +545,15 @@ val RulesTest by testSuite {
         }
     }
 
+    testSuite("missingCommandResult") {
+        test("reports the same error as commandRule for a missing command") {
+            val expected = commandRule("setTemperature", numberOfParametersRule(1, "setTemperature")).validate(createFeature())
+            val result = missingCommandResult("setTemperature")
+            result.isInvalid shouldBe true
+            result.map { it } shouldBe expected.map { it }
+        }
+    }
+
     testSuite("optionalZeroParameterCommandRule") {
         test("returns Valid when command is absent") {
             optionalZeroParameterCommandRule("execute").validate(createFeature()).isInvalid shouldBe false

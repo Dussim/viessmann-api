@@ -156,12 +156,11 @@ private fun validationPlan(context: CommandSymbolContext): ValidationPlan {
 
     return ValidationPlan(
         constraintRules
-            .map { ValidationRulePlan(normalExpression = CodeBlock.of("%M", it)) }
+            .map { ValidationRulePlan(normalExpression = ruleResult(it)) }
             .plus(
                 ValidationRulePlan(
                     normalExpression =
-                        CodeBlock.of(
-                            "%M",
+                        ruleResult(
                             context.parentContext.ruleRegistry.register(
                                 NUMBER_OF_PARAMETERS_RULE,
                                 listOf(context.constraintsProperties.size, context.apiName),
@@ -180,8 +179,7 @@ internal fun oneParameterValidationRulePlan(
 ): ValidationRulePlan =
     ValidationRulePlan(
         normalExpression =
-            CodeBlock.of(
-                "%M",
+            ruleResult(
                 ruleRegistry.register(
                     ONE_PARAMETER_COMMAND_RULE,
                     listOf(commandName, parameterRule),
@@ -189,8 +187,7 @@ internal fun oneParameterValidationRulePlan(
                 ),
             ),
         failFastExpression =
-            CodeBlock.of(
-                "%M",
+            ruleResult(
                 ruleRegistry.register(
                     ONE_PARAMETER_COMMAND_FAIL_FAST_RULE,
                     listOf(commandName, parameterRule),

@@ -12,9 +12,11 @@ import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListStringValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
+import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 val GeneratorAccessPatternTest by testSuite {
-    test("optional command factories are cached outside generated validation methods") {
+    test("optional command validates through a direct companion call") {
+        val registry = RuleRegistry("test.rules")
         val command =
             CommandProperty(
                 name = "optionalCommand",
@@ -23,22 +25,49 @@ val GeneratorAccessPatternTest by testSuite {
                 signature = CommandSignature("SetValue", listOf("value" to typeNameOf<NumberConstraints>())),
                 isNullable = true,
             )
-        val plan = optionalCommandValidationPlan(command, 7)
-        val declarations = plan.cachedProperties.joinToString("\n")
-        declarations shouldContain "private val cachedOptionalCommandRule7"
-        declarations shouldContain "optionalCommandRule(\"setValue\", test.CommandImpl)"
-        declarations shouldContain "private val cachedOptionalCommandFailFastRule7"
-        declarations shouldContain "optionalCommandFailFastRule(\"setValue\", test.CommandImpl)"
+        val hash = propertyHash("setValue".hashCode(), "setValue".length)
+        val normal = generateValidateFunction(typeNameOf<Feature>(), listOf(commandResultExpression(command, registry))).toString()
+        val failFast =
+            generateValidateFunction(
+                typeNameOf<Feature>(),
+                listOf(commandResultExpression(command, registry, isFailFast = true)),
+                isFailFast = true,
+            ).toString()
 
-        val normal = generateValidateFunction(typeNameOf<Feature>(), plan.normalExpressions).toString()
-        val failFast = generateValidateFunction(typeNameOf<Feature>(), plan.failFastExpressions, isFailFast = true).toString()
-        normal shouldContain "cachedOptionalCommandRule7.validate(value)"
-        failFast shouldContain "cachedOptionalCommandFailFastRule7.validate(value)"
-        normal shouldNotContain "optionalCommandRule("
-        failFast shouldNotContain "optionalCommandFailFastRule("
-        plan.requiresSeparateFailFast shouldBe true
-        val otherNames = optionalCommandValidationPlan(command, 8).cachedProperties.map { it.name }.toSet()
-        (plan.cachedProperties.map { it.name }.toSet() intersect otherNames).isEmpty() shouldBe true
+        normal shouldContain "value.commands[\"setValue\", $hash]"
+        normal shouldContain "ValidationResult.Valid else test.CommandImpl.validate(it)"
+        failFast shouldContain "ValidationResult.Valid else test.CommandImpl.validateFailFast(it)"
+        listOf(normal, failFast).forEach { code ->
+            code shouldNotContain "optionalCommandRule"
+            code shouldNotContain "optionalCommandFailFastRule"
+            code shouldNotContain ".rule"
+            code shouldNotContain "?.let"
+        }
+        registry.getAllRules().isEmpty() shouldBe true
+    }
+
+    test("required command validates through a direct companion call with a shared missing result") {
+        val registry = RuleRegistry("test.rules")
+        val command =
+            CommandProperty(
+                name = "setValue",
+                apiName = "setValue",
+                implType = ClassName("test.commands", "SetValueImpl"),
+                signature = CommandSignature("SetValue", listOf("value" to typeNameOf<NumberConstraints>())),
+                isNullable = false,
+            )
+        val normal = commandResultExpression(command, registry).toString()
+        val failFast = commandResultExpression(command, registry, isFailFast = true).toString()
+
+        val missing = registry.getAllRules().entries.single()
+        missing.key.function.simpleName shouldBe "missingCommandResult"
+        missing.key.args shouldBe listOf("setValue")
+        normal shouldContain "if (it == null) ${missing.value.canonicalName} else test.commands.SetValueImpl.validate(it)"
+        failFast shouldContain "if (it == null) ${missing.value.canonicalName} else test.commands.SetValueImpl.validateFailFast(it)"
+        normal shouldNotContain ".rule"
+        failFast shouldNotContain "failFastRule"
+        generateValidationRuleFiles(registry, chunkSize = 64).single().toString() shouldContain
+            "ValidationResult<ValidationError> = missingCommandResult(\"setValue\")"
     }
 
     test("feature generator emits requirePropertyValue for required scalar property") {
@@ -138,24 +167,6 @@ val GeneratorAccessPatternTest by testSuite {
         code shouldNotContain "!!"
     }
 
-    test("feature fail-fast generator emits command fail-fast rule for parameterized command") {
-        val property =
-            CommandProperty(
-                name = "setValue",
-                apiName = "setValue",
-                implType = ClassName("test.commands", "SetValueImpl"),
-                signature =
-                    CommandSignature(
-                        name = "SetValue",
-                        parameters = listOf("value" to typeNameOf<NumberConstraints>()),
-                    ),
-                isNullable = false,
-            )
-
-        commandRuleExpression(property).toString() shouldContain "test.commands.SetValueImpl.rule"
-        commandRuleExpression(property, isFailFast = true).toString() shouldContain "test.commands.SetValueImpl.failFastRule"
-    }
-
     test("command generator emits requireParam + requireConstraints for non-array constraints") {
         val code =
             constraintPropertyInitializer(
@@ -205,15 +216,20 @@ val GeneratorAccessPatternTest by testSuite {
         (plan.normalExpression.toString() == plan.failFastExpression.toString()) shouldBe false
     }
 
+    test("rule result applies the rule to the validated value") {
+        ruleResult(validationRule("someRule")).toString() shouldBe
+            "xyz.dussim.viessmann.feature.api.validation.someRule.validate(value)"
+    }
+
     test("fail-fast generator directly returns single rule result") {
         val code =
             generateValidateFunction(
                 targetType = typeNameOf<Feature>(),
-                ruleExpressions = listOf(CodeBlock.of("singleRule")),
+                ruleExpressions = listOf(CodeBlock.of("singleResult")),
                 isFailFast = true,
             ).toString()
 
-        code shouldContain "= singleRule.validate(value)"
+        code shouldContain "= singleResult"
         code shouldNotContain "val result0"
         code shouldNotContain "isInvalid"
         code shouldNotContain "Valid()"
@@ -223,13 +239,13 @@ val GeneratorAccessPatternTest by testSuite {
         val code =
             generateValidateFunction(
                 targetType = typeNameOf<Feature>(),
-                ruleExpressions = listOf(CodeBlock.of("firstRule"), CodeBlock.of("secondRule")),
+                ruleExpressions = listOf(CodeBlock.of("firstResult"), CodeBlock.of("secondResult")),
                 isFailFast = true,
             ).toString()
 
-        code shouldContain "val result0 = firstRule.validate(value)"
+        code shouldContain "val result0 = firstResult\n"
         code shouldContain "if (result0.isInvalid) return result0"
-        code shouldContain "return secondRule.validate(value)"
+        code shouldContain "return secondResult\n"
         code shouldNotContain "val result1"
         code shouldNotContain "Valid()"
     }
@@ -238,11 +254,23 @@ val GeneratorAccessPatternTest by testSuite {
         val code =
             generateValidateFunction(
                 targetType = typeNameOf<Feature>(),
-                ruleExpressions = listOf(CodeBlock.of("singleRule")),
+                ruleExpressions = listOf(CodeBlock.of("singleResult")),
             ).toString()
 
-        code shouldContain "= singleRule.validate(value)"
+        code shouldContain "= singleResult"
         code shouldNotContain "of("
+    }
+
+    test("regular generator aggregates result expressions as they are") {
+        val code =
+            generateValidateFunction(
+                targetType = typeNameOf<Feature>(),
+                ruleExpressions = listOf(CodeBlock.of("firstResult"), CodeBlock.of("secondResult")),
+            ).toString()
+
+        code shouldContain "firstResult,"
+        code shouldContain "secondResult,"
+        code shouldNotContain ".validate(value)"
     }
 
     test("validation plan reuses normal rule when fail-fast behavior is identical") {
@@ -263,8 +291,8 @@ val GeneratorAccessPatternTest by testSuite {
         ValidationPlan(
             listOf(
                 ValidationRulePlan(
-                    normalExpression = CodeBlock.of("CommandImpl.rule"),
-                    failFastExpression = CodeBlock.of("CommandImpl.failFastRule"),
+                    normalExpression = CodeBlock.of("CommandImpl.validate(it)"),
+                    failFastExpression = CodeBlock.of("CommandImpl.validateFailFast(it)"),
                 ),
             ),
         ).requiresSeparateFailFast shouldBe true

@@ -19,14 +19,14 @@ import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureValidationException
 import xyz.dussim.viessmann.feature.api.GeneratedAccessException
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
+import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 private val REQUIRE_COMMAND = MemberName("xyz.dussim.viessmann.feature.api", "requireCommand")
 private val ZERO_PARAMETER_COMMAND_RULE = validationRule("zeroParameterCommandRule")
 private val OPTIONAL_ZERO_PARAMETER_COMMAND_RULE = validationRule("optionalZeroParameterCommandRule")
-private val OPTIONAL_COMMAND_RULE = validationRule("optionalCommandRule")
-private val OPTIONAL_COMMAND_FAIL_FAST_RULE = validationRule("optionalCommandFailFastRule")
+private val MISSING_COMMAND_RESULT = validationRule("missingCommandResult")
 private const val SOURCE_FEATURE = "sourceFeature"
 private const val FEATURE_TYPE = "featureType"
 private const val SOURCE_PROPERTIES = "sourceProperties"
@@ -194,15 +194,13 @@ private fun CodeBlock.Builder.addValidationException() {
  * Generates rule expressions for the feature.
  */
 private fun validationPlan(context: SymbolContext): ValidationPlan {
-    val cachedProperties = mutableListOf<PropertySpec>()
     val rules =
         context
             .parameterProperties
             .map {
                 ValidationRulePlan(
                     normalExpression =
-                        CodeBlock.of(
-                            "%M",
+                        ruleResult(
                             context.ruleRegistry.register(
                                 it.validationFunction,
                                 listOf(it.name, !it.isNullable),
@@ -213,12 +211,11 @@ private fun validationPlan(context: SymbolContext): ValidationPlan {
             } +
             context
                 .commandProperties
-                .mapIndexed { index, it ->
+                .map {
                     if (it.signature.parameters.isEmpty()) {
                         ValidationRulePlan(
                             normalExpression =
-                                CodeBlock.of(
-                                    "%M",
+                                ruleResult(
                                     context.ruleRegistry.register(
                                         if (it.isNullable) OPTIONAL_ZERO_PARAMETER_COMMAND_RULE else ZERO_PARAMETER_COMMAND_RULE,
                                         listOf(it.apiName),
@@ -226,74 +223,45 @@ private fun validationPlan(context: SymbolContext): ValidationPlan {
                                     ),
                                 ),
                         )
-                    } else if (it.isNullable) {
-                        val optionalPlan = optionalCommandValidationPlan(it, index)
-                        cachedProperties.addAll(optionalPlan.cachedProperties)
-                        optionalPlan.rules.single()
                     } else {
                         ValidationRulePlan(
-                            normalExpression = commandRuleExpression(it),
-                            failFastExpression = commandRuleExpression(it, isFailFast = true),
+                            normalExpression = commandResultExpression(it, context.ruleRegistry),
+                            failFastExpression = commandResultExpression(it, context.ruleRegistry, isFailFast = true),
                         )
                     }
                 }
-    return ValidationPlan(rules, cachedProperties)
+    return ValidationPlan(rules)
 }
 
-internal fun optionalCommandValidationPlan(
+/**
+ * Looks the command up and calls its companion validator directly. Going through a shared wrapper rule such as
+ * `commandRule` would route every command through one call site whose receiver is any command companion, which the
+ * JIT cannot inline; a direct companion call is a call on a known final class.
+ *
+ * `let` with an explicit `null` check keeps the result a non-null `ValidationResult`: `?.let { } ?: ...` would type
+ * it as nullable and box the value class, whose `null` payload already means valid.
+ */
+internal fun commandResultExpression(
     property: CommandProperty,
-    index: Int,
-): ValidationPlan {
-    val normalName = "cachedOptionalCommandRule$index"
-    val failFastName = "cachedOptionalCommandFailFastRule$index"
-    return ValidationPlan(
-        rules =
-            listOf(
-                ValidationRulePlan(
-                    normalExpression = CodeBlock.of("%N", normalName),
-                    failFastExpression = CodeBlock.of("%N", failFastName),
-                ),
-            ),
-        cachedProperties =
-            listOf(
-                PropertySpec
-                    .builder(normalName, FEATURE_VALIDATION_RULE_TYPE)
-                    .addModifiers(KModifier.PRIVATE)
-                    .initializer(optionalCommandRuleExpression(property))
-                    .build(),
-                PropertySpec
-                    .builder(failFastName, FEATURE_VALIDATION_RULE_TYPE)
-                    .addModifiers(KModifier.PRIVATE)
-                    .initializer(optionalCommandRuleExpression(property, isFailFast = true))
-                    .build(),
-            ),
+    ruleRegistry: RuleRegistry,
+    isFailFast: Boolean = false,
+): CodeBlock {
+    val apiName = property.apiName
+    val absentResult =
+        if (property.isNullable) {
+            CodeBlock.of("%T.Valid", ValidationResult::class)
+        } else {
+            CodeBlock.of("%M", ruleRegistry.register(MISSING_COMMAND_RESULT, listOf(apiName), VALIDATION_RESULT_TYPE))
+        }
+    return CodeBlock.of(
+        "value.commands[%S, %L].let { if (it == null) %L else %T.%N(it) }",
+        apiName,
+        propertyHash(apiName.hashCode(), apiName.length),
+        absentResult,
+        property.implType.copy(nullable = false),
+        if (isFailFast) "validateFailFast" else "validate",
     )
 }
-
-internal fun commandRuleExpression(
-    property: CommandProperty,
-    isFailFast: Boolean = false,
-): CodeBlock =
-    if (isFailFast) {
-        CodeBlock.of("%T.failFastRule", property.implType.copy(nullable = false))
-    } else {
-        CodeBlock.of("%T.rule", property.implType.copy(nullable = false))
-    }
-
-internal fun optionalCommandRuleExpression(
-    property: CommandProperty,
-    isFailFast: Boolean = false,
-): CodeBlock =
-    if (isFailFast) {
-        CodeBlock.of(
-            "%M(%S, %T)",
-            OPTIONAL_COMMAND_FAIL_FAST_RULE,
-            property.apiName,
-            property.implType.copy(nullable = false),
-        )
-    } else {
-        CodeBlock.of("%M(%S, %T)", OPTIONAL_COMMAND_RULE, property.apiName, property.implType.copy(nullable = false))
-    }
 
 /**
  * Generates companion object that implements validation rules for the feature.
@@ -305,7 +273,6 @@ internal fun companionObject(
     TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(GENERATED_FEATURE_VALIDATION_RULE_TYPE)
-        .addProperties(validationPlan.cachedProperties)
         .addFunction(
             generateValidateFunction(
                 typeNameOf<Feature>(),

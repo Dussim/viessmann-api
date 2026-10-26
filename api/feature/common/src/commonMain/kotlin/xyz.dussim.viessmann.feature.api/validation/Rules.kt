@@ -576,6 +576,12 @@ fun optionalZeroParameterCommandRule(commandName: String): ValidationRule<Featur
     }
 }
 
+/**
+ * Result reported when the required command [commandName] is absent. Generated feature validators keep one instance
+ * per command name and call the command companion directly instead of going through [commandRule].
+ */
+fun missingCommandResult(commandName: String): ValidationResult<ValidationError> = ValidationResult.Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
+
 fun commandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,

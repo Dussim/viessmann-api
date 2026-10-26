@@ -47,6 +47,7 @@ val VALIDATION_RESULT_OF_SINGLE_ERROR_RESULTS = ValidationResult.Companion::clas
 val STATIC_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "staticFeatureDescriptor")
 val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexedFeatureDescriptor")
 
+val VALIDATION_RESULT_TYPE = ValidationResult::class.asTypeName().parameterizedBy(typeNameOf<ValidationError>())
 val FEATURE_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Feature>())
 val COMMAND_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Command>())
 val GENERATED_FEATURE_VALIDATION_RULE_TYPE = generatedValidationRuleType(typeNameOf<Feature>())
@@ -70,14 +71,22 @@ fun generatedValidationRuleType(targetType: TypeName): TypeName =
             typeNameOf<ValidationError>(),
         )
 
+/**
+ * Expressions evaluate to a `ValidationResult` for the generated function's `value` parameter, either through a rule
+ * ([ruleResult]) or by direct code such as a command companion call.
+ */
 internal data class ValidationRulePlan(
     val normalExpression: CodeBlock,
     val failFastExpression: CodeBlock = normalExpression,
 )
 
+/**
+ * Result expression that applies [rule] to the generated function's `value` parameter.
+ */
+internal fun ruleResult(rule: MemberName): CodeBlock = CodeBlock.of("%M.validate(value)", rule)
+
 internal data class ValidationPlan(
     val rules: List<ValidationRulePlan>,
-    val cachedProperties: List<PropertySpec> = emptyList(),
 ) {
     val normalExpressions: List<CodeBlock> get() = rules.map(ValidationRulePlan::normalExpression)
 
@@ -209,7 +218,8 @@ fun varArgFunctionCall(
 }
 
 /**
- * Generates an override validate function that aggregates results from multiple rules.
+ * Generates an override validate function that aggregates results from multiple result expressions
+ * (see [ValidationRulePlan]).
  */
 fun generateValidateFunction(
     targetType: TypeName,
@@ -240,14 +250,14 @@ fun generateValidateFunction(
                     if (ruleExpressions.isEmpty()) {
                         add("return %M()\n", MemberName(VALIDATION_PACKAGE, "Valid"))
                     } else if (ruleExpressions.size == 1) {
-                        add("return %L.validate(value)\n", ruleExpressions.single())
+                        add("return %L\n", ruleExpressions.single())
                     } else if (isFailFast) {
                         ruleExpressions.dropLast(1).forEachIndexed { index, expr ->
                             val resultVar = "result$index"
-                            add("val %L = %L.validate(value)\n", resultVar, expr)
+                            add("val %L = %L\n", resultVar, expr)
                             add("if (%L.isInvalid) return %L\n", resultVar, resultVar)
                         }
-                        add("return %L.validate(value)\n", ruleExpressions.last())
+                        add("return %L\n", ruleExpressions.last())
                     } else {
                         add("return ")
                         add(
@@ -257,7 +267,7 @@ fun generateValidateFunction(
                                 } else {
                                     VALIDATION_RESULT_OF
                                 },
-                                ruleExpressions.map { CodeBlock.of("%L.validate(value),\n", it) },
+                                ruleExpressions.map { CodeBlock.of("%L,\n", it) },
                             ),
                         )
                     }
