@@ -336,7 +336,7 @@ private fun <F : Feature> getOrNullWithoutValidationException(
     factory: FeatureFactory<F>,
     structureMatcher: FeatureMatcher,
 ): F? {
-    if (featureClass.isInstance(feature)) {
+    if (featureClass.hasInstance(feature)) {
         @Suppress("UNCHECKED_CAST")
         return feature as F
     }

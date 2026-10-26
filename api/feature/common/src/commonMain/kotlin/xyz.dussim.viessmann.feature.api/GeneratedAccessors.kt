@@ -5,7 +5,7 @@ package xyz.dussim.viessmann.feature.api
 import kotlin.reflect.KClass
 
 private fun <T : Any> KClass<T>.castOrNull(value: Any?): T? {
-    if (!isInstance(value)) return null
+    if (!hasInstance(value)) return null
 
     @Suppress("UNCHECKED_CAST")
     return value as T
