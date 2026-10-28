@@ -57,8 +57,14 @@ definitions (`billion.definitions`) against a registry built from `src/test/reso
 (19 entries, decoded 500 times). Unlike `all_features.json`, the input does not depend on the OpenAPI schema, so the
 expected match counts are stable. The fixture's properties, commands and parameter maps cover every
 `EfficientStringKeyMap` representation (empty, 1–4 entries, N entries, and pass-through for 64+ character keys).
-Fast checks of that coverage and of the expected matches always run. The billion-validation run is opt-in because it
-takes a long time:
+Fast checks of that coverage and of the expected matches always run.
+
+Like the original test's `allOf(descriptor, descriptor.byStructure)` calls, every feature is validated by structure
+and each match is converted to its typed feature, with the match count asserted. Matches are only counted, not
+collected into a list or a registry cache, so the run measures validation and conversion. It runs single-threaded and
+in parallel (one task per descriptor per round): two runs of at least one billion validations each.
+
+The billion-validation runs are opt-in because they take a long time:
 
 ```powershell
 $env:ONE_BILLION_VALIDATIONS = "true"; ./gradlew.bat :api:feature:api-feature-benchmark:test

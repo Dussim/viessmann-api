@@ -7,6 +7,10 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import xyz.dussim.feature.benchmark.billion.definitions.BillionCircuitFeature
 import xyz.dussim.feature.benchmark.billion.definitions.BillionProgramFeature
@@ -18,7 +22,6 @@ import xyz.dussim.feature.benchmark.billion.definitions.descriptor
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureDescriptor
-import xyz.dussim.viessmann.feature.api.FeatureRegistry
 import xyz.dussim.viessmann.feature.api.ViessmannFeature
 import kotlin.time.TimeSource
 
@@ -26,7 +29,7 @@ private const val FIXTURE_RESOURCE = "one-billion-validations/features.json"
 private const val ENABLE_VARIABLE = "ONE_BILLION_VALIDATIONS"
 private const val MIN_VALIDATIONS = 1_000_000_000L
 
-// The fixture is decoded this many times, so the registry holds distinct instances like a real response would.
+// The fixture is decoded this many times, so the run uses distinct instances like a real response would.
 private const val FIXTURE_COPIES = 500
 
 // EfficientStringKeyMap picks its representation from the size: dedicated classes up to 4 entries, a jump table
@@ -37,10 +40,30 @@ private const val PASS_THROUGH_KEY_LENGTH = 64
 private const val URI = "https://billion.invalid/"
 
 /** [matchingUris] are the fixture entries the descriptor's structure matcher must accept, in fixture order. */
-private class Expectation(
-    val descriptor: FeatureDescriptor<out Feature>,
+private class Expectation<F : Feature>(
+    val descriptor: FeatureDescriptor<F>,
     val matchingUris: List<String>,
-)
+) {
+    private val matcher = descriptor.byStructure
+
+    /** The features [descriptor] accepts, each converted to [F]. */
+    fun matchAndConvert(features: List<Feature>): List<F> = features.filter(matcher::matches).map(descriptor::getOrThrow)
+
+    /**
+     * The work of [matchAndConvert] (a structure validation per feature, a conversion per match) without building a
+     * result list, so the run measures validation and conversion rather than collection growth.
+     */
+    fun countMatchAndConvert(features: List<Feature>): Int {
+        var count = 0
+        for (feature in features) {
+            if (matcher.matches(feature)) {
+                descriptor.getOrThrow(feature)
+                count++
+            }
+        }
+        return count
+    }
+}
 
 private val expectations =
     listOf(
@@ -118,47 +141,66 @@ val OneBillionValidationsTest by testSuite {
     }
 
     test("each descriptor matches exactly its expected fixture entries") {
-        val registry = FeatureRegistry.of(decodeFixture())
+        val features = decodeFixture()
 
         for (expectation in expectations) {
-            val matching = registry.all(expectation.descriptor.byStructure)
             withClue(expectation.descriptor.wildcardName) {
-                matching.map(Feature::uri) shouldBe expectation.matchingUris
+                expectation.matchAndConvert(features).map(Feature::uri) shouldBe expectation.matchingUris
+                expectation.countMatchAndConvert(features) shouldBe expectation.matchingUris.size
             }
-            // Matching by structure must also mean the typed conversion succeeds.
-            matching.forEach(expectation.descriptor::getOrThrow)
         }
     }
 
-    // Opt-in (set ONE_BILLION_VALIDATIONS=true): this is a long-running smoke/perf run, not a regular unit test.
-    // TestScope is disabled because its default timeout is far shorter than the run.
-    test(
-        "one billion validations against a stable feature set",
-        testConfig = (if (enabled) TestConfig else TestConfig.disable()).testScope(isEnabled = false),
+    // Opt-in (set ONE_BILLION_VALIDATIONS=true): these are long-running smoke/perf runs, not regular unit tests. Like
+    // the original test, the run happens single-threaded and with one concurrent task per descriptor and round.
+    // TestScope is disabled because its default timeout is far shorter than a run.
+    val billionConfig = (if (enabled) TestConfig else TestConfig.disable()).testScope(isEnabled = false)
+    test("one billion validations", testConfig = billionConfig) {
+        runOneBillionValidations("single-threaded", parallel = false)
+    }
+    test("one billion validations, parallel", testConfig = billionConfig) {
+        runOneBillionValidations("parallel", parallel = true)
+    }
+}
+
+private suspend fun runOneBillionValidations(
+    name: String,
+    parallel: Boolean,
+) {
+    val features = List(FIXTURE_COPIES) { decodeFixture() }.flatten()
+    val validationsPerRound = expectations.size.toLong() * features.size
+    // Rounded up: the descriptor and fixture counts do not divide one billion evenly.
+    val rounds = (MIN_VALIDATIONS + validationsPerRound - 1) / validationsPerRound
+    val expectedCounts = expectations.map { it.matchingUris.size * FIXTURE_COPIES }
+    val step = maxOf(1L, rounds / 10)
+
+    fun validate(
+        index: Int,
+        round: Long,
     ) {
-        val registry = FeatureRegistry.of(List(FIXTURE_COPIES) { decodeFixture() }.flatten())
-        val validationsPerRound = expectations.size.toLong() * registry.size
-        // Rounded up: the descriptor and fixture counts do not divide one billion evenly.
-        val rounds = (MIN_VALIDATIONS + validationsPerRound - 1) / validationsPerRound
-        val matchers = expectations.map { it.descriptor.byStructure }
-        val expectedCounts = expectations.map { it.matchingUris.size * FIXTURE_COPIES }
-        val step = maxOf(1L, rounds / 10)
-
-        val start = TimeSource.Monotonic.markNow()
-        for (round in 0L until rounds) {
-            for (index in matchers.indices) {
-                val actual = registry.all(matchers[index]).size
-                if (actual != expectedCounts[index]) {
-                    throw AssertionError(
-                        "Round $round: ${expectations[index].descriptor.wildcardName} matched $actual features, " +
-                            "expected ${expectedCounts[index]}",
-                    )
-                }
-            }
-            if ((round + 1) % step == 0L) {
-                println("[OneBillionValidationsTest] ${round + 1}/$rounds rounds after ${start.elapsedNow()}")
-            }
+        val actual = expectations[index].countMatchAndConvert(features)
+        if (actual != expectedCounts[index]) {
+            throw AssertionError(
+                "[$name] round $round: ${expectations[index].descriptor.wildcardName} matched $actual features, " +
+                    "expected ${expectedCounts[index]}",
+            )
         }
-        println("[OneBillionValidationsTest] ${rounds * validationsPerRound} validations finished in ${start.elapsedNow()}")
     }
+
+    val start = TimeSource.Monotonic.markNow()
+    for (round in 0L until rounds) {
+        if (parallel) {
+            coroutineScope {
+                expectations.indices
+                    .map { index -> async(Dispatchers.Default) { validate(index, round) } }
+                    .awaitAll()
+            }
+        } else {
+            for (index in expectations.indices) validate(index, round)
+        }
+        if ((round + 1) % step == 0L) {
+            println("[$name] ${round + 1}/$rounds rounds after ${start.elapsedNow()}")
+        }
+    }
+    println("[$name] ${rounds * validationsPerRound} validations finished in ${start.elapsedNow()}")
 }
