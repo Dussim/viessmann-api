@@ -23,8 +23,22 @@ private inline fun sameKey(
     key: String,
 ): Boolean = stored === key || stored.compareTo(key) == 0
 
+private const val KIND_EMPTY = 0
+private const val KIND_ONE = 1
+private const val KIND_TWO = 2
+private const val KIND_THREE = 3
+private const val KIND_FOUR = 4
+private const val KIND_N = 5
+private const val KIND_PASS_THROUGH = 6
+
+/**
+ * Lookups dispatch on [kind] in the final [get] instead of a virtual call: rule lambdas are shared by every feature,
+ * so a virtual call site would see every representation and stay megamorphic (not inlinable). A `when` over an `Int`
+ * field plus casts to final classes lets the JIT inline the per-kind bodies into the caller.
+ */
 sealed class EfficientStringKeyMap<out T>(
     private val originalMap: Map<String, T>,
+    private val kind: Int,
 ) : Map<String, T> by originalMap {
     companion object {
         operator fun <T> invoke(from: Map<String, T>): EfficientStringKeyMap<T> =
@@ -62,27 +76,34 @@ sealed class EfficientStringKeyMap<out T>(
 
     final override fun equals(other: Any?): Boolean = originalMap == other
 
+    // A final field instead of a per-representation override: call sites that see every representation would
+    // otherwise make `size` a megamorphic virtual call.
+    final override val size: Int = originalMap.size
+
     final override fun get(key: String): T? = get(key, propertyHash(key.hashCode(), key.length))
 
-    abstract operator fun get(
+    @Suppress("UNCHECKED_CAST")
+    operator fun get(
         key: String,
         precomputedHash: Long,
-    ): T?
+    ): T? =
+        when (kind) {
+            KIND_EMPTY -> null
+            KIND_ONE -> (this as OneElement<T>).lookup(key, precomputedHash)
+            KIND_TWO -> (this as TwoElements<T>).lookup(key, precomputedHash)
+            KIND_THREE -> (this as ThreeElements<T>).lookup(key, precomputedHash)
+            KIND_FOUR -> (this as FourElements<T>).lookup(key, precomputedHash)
+            KIND_N -> (this as NElements<T>).lookup(key, precomputedHash)
+            else -> (this as PassThrough<T>).lookup(key)
+        }
 }
 
-private data object Empty : EfficientStringKeyMap<Nothing>(emptyMap()) {
-    override val size = 0
-
+private data object Empty : EfficientStringKeyMap<Nothing>(emptyMap(), KIND_EMPTY) {
     override fun isEmpty(): Boolean = true
 
     override fun containsKey(key: String): Boolean = false
 
     override fun containsValue(value: Nothing): Boolean = false
-
-    override fun get(
-        key: String,
-        precomputedHash: Long,
-    ): Nothing? = null
 }
 
 private data class OneElement<T>(
@@ -90,9 +111,8 @@ private data class OneElement<T>(
     private val key1: String,
     private val value1: T,
     private val precomputedHash1: Long,
-    override val size: Int,
-) : EfficientStringKeyMap<T>(originalMap) {
-    override fun get(
+) : EfficientStringKeyMap<T>(originalMap, KIND_ONE) {
+    fun lookup(
         key: String,
         precomputedHash: Long,
     ): T? =
@@ -112,9 +132,8 @@ private data class TwoElements<T>(
     private val value2: T,
     private val precomputedHash1: Long,
     private val precomputedHash2: Long,
-    override val size: Int,
-) : EfficientStringKeyMap<T>(originalMap) {
-    override fun get(
+) : EfficientStringKeyMap<T>(originalMap, KIND_TWO) {
+    fun lookup(
         key: String,
         precomputedHash: Long,
     ): T? =
@@ -138,9 +157,8 @@ private data class ThreeElements<T>(
     private val precomputedHash1: Long,
     private val precomputedHash2: Long,
     private val precomputedHash3: Long,
-    override val size: Int,
-) : EfficientStringKeyMap<T>(originalMap) {
-    override fun get(
+) : EfficientStringKeyMap<T>(originalMap, KIND_THREE) {
+    fun lookup(
         key: String,
         precomputedHash: Long,
     ): T? =
@@ -168,9 +186,8 @@ private data class FourElements<T>(
     private val precomputedHash2: Long,
     private val precomputedHash3: Long,
     private val precomputedHash4: Long,
-    override val size: Int,
-) : EfficientStringKeyMap<T>(originalMap) {
-    override fun get(
+) : EfficientStringKeyMap<T>(originalMap, KIND_FOUR) {
+    fun lookup(
         key: String,
         precomputedHash: Long,
     ): T? =
@@ -194,9 +211,8 @@ private data class NElements<T>(
     private val startIndexJumpTable: IntArray,
     private val endIndexJumpTable: IntArray,
     private val lengthBitset: Long,
-    override val size: Int,
-) : EfficientStringKeyMap<T>(originalMap) {
-    override fun get(
+) : EfficientStringKeyMap<T>(originalMap, KIND_N) {
+    fun lookup(
         key: String,
         precomputedHash: Long,
     ): T? {
@@ -222,11 +238,8 @@ private data class NElements<T>(
 
 private class PassThrough<T>(
     private val originalMap: Map<String, T>,
-) : EfficientStringKeyMap<T>(originalMap) {
-    override fun get(
-        key: String,
-        precomputedHash: Long,
-    ): T? = originalMap[key]
+) : EfficientStringKeyMap<T>(originalMap, KIND_PASS_THROUGH) {
+    fun lookup(key: String): T? = originalMap[key]
 }
 
 data object ParametersSerializer : EfficientStringKeyMap.Serializer<Parameter>(Parameter.serializer())
@@ -238,7 +251,7 @@ data object CommandsSerializer : EfficientStringKeyMap.Serializer<Command>(Comma
 private fun <T> OneElement(originalMap: Map<String, T>): OneElement<T> {
     val (key1, value1) = originalMap.entries.first()
     val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
-    return OneElement(originalMap, key1.canonicalKey(), value1, precomputedHash1, 1)
+    return OneElement(originalMap, key1.canonicalKey(), value1, precomputedHash1)
 }
 
 private fun <T> TwoElements(originalMap: Map<String, T>): TwoElements<T> {
@@ -247,7 +260,7 @@ private fun <T> TwoElements(originalMap: Map<String, T>): TwoElements<T> {
     val (key2, value2) = entries.next()
     val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
     val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
-    return TwoElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, precomputedHash1, precomputedHash2, 2)
+    return TwoElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, precomputedHash1, precomputedHash2)
 }
 
 private fun <T> ThreeElements(originalMap: Map<String, T>): ThreeElements<T> {
@@ -258,7 +271,7 @@ private fun <T> ThreeElements(originalMap: Map<String, T>): ThreeElements<T> {
     val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
     val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
     val precomputedHash3 = propertyHash(key3.hashCode(), key3.length)
-    return ThreeElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, key3.canonicalKey(), value3, precomputedHash1, precomputedHash2, precomputedHash3, 3)
+    return ThreeElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, key3.canonicalKey(), value3, precomputedHash1, precomputedHash2, precomputedHash3)
 }
 
 private fun <T> FourElements(originalMap: Map<String, T>): FourElements<T> {
@@ -271,7 +284,7 @@ private fun <T> FourElements(originalMap: Map<String, T>): FourElements<T> {
     val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
     val precomputedHash3 = propertyHash(key3.hashCode(), key3.length)
     val precomputedHash4 = propertyHash(key4.hashCode(), key4.length)
-    return FourElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, key3.canonicalKey(), value3, key4.canonicalKey(), value4, precomputedHash1, precomputedHash2, precomputedHash3, precomputedHash4, 4)
+    return FourElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, key3.canonicalKey(), value3, key4.canonicalKey(), value4, precomputedHash1, precomputedHash2, precomputedHash3, precomputedHash4)
 }
 
 private fun <T> NElements(originalMap: Map<String, T>): NElements<T> {
@@ -295,5 +308,5 @@ private fun <T> NElements(originalMap: Map<String, T>): NElements<T> {
             }
         }
     val lengthBitset = arrayKeys.fold(0L) { acc, key -> acc or (1L shl key.length) }
-    return NElements(originalMap, arrayKeys, arrayValues, arrayHashes, startIndexJumpTable, endIndexJumpTable, lengthBitset, originalMap.size)
+    return NElements(originalMap, arrayKeys, arrayValues, arrayHashes, startIndexJumpTable, endIndexJumpTable, lengthBitset)
 }
