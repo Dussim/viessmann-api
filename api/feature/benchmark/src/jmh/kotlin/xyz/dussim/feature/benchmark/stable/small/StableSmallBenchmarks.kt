@@ -34,21 +34,14 @@ open class StableSmallValidationBenchmark {
         blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
     }
 
+    // Aggregate validation runs every rule, so error position does not matter here; one property
+    // mismatch (invalidFirst) and one command parameter mismatch (invalidLast) cover both error sites.
     @Benchmark
     fun invalidFirst(
         state: SuiteState,
         blackhole: Blackhole,
     ) {
         val fixture = state.invalidFirst
-        blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
-    }
-
-    @Benchmark
-    fun invalidMiddle(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.invalidMiddle
         blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
     }
 
@@ -80,47 +73,11 @@ open class StableSmallValidationBenchmark {
     }
 
     @Benchmark
-    fun missingCommand(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.missingCommand
-        blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
-    }
-
-    @Benchmark
     fun missingRequiredParam(
         state: SuiteState,
         blackhole: Blackhole,
     ) {
         val fixture = state.missingRequiredParam
-        blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
-    }
-
-    @Benchmark
-    fun wrongParamConstraintType(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.wrongParamConstraintType
-        blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
-    }
-
-    @Benchmark
-    fun optionalCommandAbsent(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.optionalCommandAbsent
-        blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
-    }
-
-    @Benchmark
-    fun optionalCommandMalformed(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.optionalCommandMalformed
         blackhole.consume(fixture.descriptor.structureValidator.validate(fixture.feature))
     }
 }
@@ -211,48 +168,13 @@ open class StableSmallConstructionBenchmark {
 @Fork(value = 3)
 @Suppress("unused")
 open class StableSmallNonThrowingRejectionBenchmark {
+    // getOrNull rejects through the fail-fast matcher; compare with FailFast.invalidFirst for wrapper overhead.
     @Benchmark
     fun invalidFirstOrNull(
         state: SuiteState,
         blackhole: Blackhole,
     ) {
         val fixture = state.invalidFirst
-        blackhole.consume(fixture.descriptor.getOrNull(fixture.feature))
-    }
-
-    @Benchmark
-    fun missingPropertyOrNull(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.missingProperty
-        blackhole.consume(fixture.descriptor.getOrNull(fixture.feature))
-    }
-
-    @Benchmark
-    fun missingCommandOrNull(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.missingCommand
-        blackhole.consume(fixture.descriptor.getOrNull(fixture.feature))
-    }
-
-    @Benchmark
-    fun wrongParamConstraintTypeOrNull(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.wrongParamConstraintType
-        blackhole.consume(fixture.descriptor.getOrNull(fixture.feature))
-    }
-
-    @Benchmark
-    fun optionalCommandMalformedOrNull(
-        state: SuiteState,
-        blackhole: Blackhole,
-    ) {
-        val fixture = state.optionalCommandMalformed
         blackhole.consume(fixture.descriptor.getOrNull(fixture.feature))
     }
 }
