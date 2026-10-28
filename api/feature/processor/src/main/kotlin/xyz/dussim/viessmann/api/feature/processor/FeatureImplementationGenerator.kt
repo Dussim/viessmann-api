@@ -7,74 +7,78 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Feature
-import xyz.dussim.viessmann.feature.api.FeatureValidationException
-import xyz.dussim.viessmann.feature.api.GeneratedAccessException
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
-private val REQUIRE_COMMAND = MemberName("xyz.dussim.viessmann.feature.api", "requireCommand")
+private val LIST_EMPTY_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "ListEmptyValue")
 private val ZERO_PARAMETER_COMMAND_RULE = validationRule("zeroParameterCommandRule")
 private val OPTIONAL_ZERO_PARAMETER_COMMAND_RULE = validationRule("optionalZeroParameterCommandRule")
 private val MISSING_COMMAND_RESULT = validationRule("missingCommandResult")
 private const val SOURCE_FEATURE = "sourceFeature"
-private const val FEATURE_TYPE = "featureType"
 private const val SOURCE_PROPERTIES = "sourceProperties"
 private const val SOURCE_COMMANDS = "sourceCommands"
+private const val FOUND_VALUE = "found"
+
+/** Name of the generated single-pass factory on feature and command companions. */
+internal const val CREATE_OR_NULL = "createOrNull"
 
 /**
- * Generates constructor accepting a delegate feature.
- * When using abstract class, only delegate parameter is needed.
- * Otherwise, all feature parameters and hashCode are included.
+ * Generates the private constructor. It receives the source feature plus every property and command value already
+ * checked by [createOrNullFunction], so it does no checking of its own.
  */
 fun constructor(context: SymbolContext): FunSpec =
     FunSpec
         .constructorBuilder()
-        .addParameter(
-            ParameterSpec
-                .builder(SOURCE_FEATURE, context.baseFeature.delegate)
-                .build(),
-        ).addParameter(FEATURE_TYPE, String::class)
-        .build()
+        .addModifiers(KModifier.PRIVATE)
+        .addParameter(SOURCE_FEATURE, context.baseFeature.delegate)
+        .apply {
+            context.parameterProperties.forEach { addParameter(it.name, it.type) }
+            context.commandProperties.forEach { addParameter(it.name, it.implType) }
+        }.build()
+
+/** Property and command overrides initialized from the same-named constructor parameters. */
+internal fun constructorProperties(context: SymbolContext): List<PropertySpec> =
+    context.parameterProperties.map { overrideProperty(it.name, it.type, CodeBlock.of("%N", it.name)) } +
+        context.commandProperties.map { overrideProperty(it.name, it.implType, CodeBlock.of("%N", it.name)) }
 
 /**
- * Generates initialization block that validates and assigns properties and commands.
- * Throws FeatureValidationException if validation fails.
+ * Generates `createOrNull(sourceFeature)`, which reads and checks every property and command once and returns `null`
+ * exactly when the feature's validation rules would report an error. It replaces validating first and constructing
+ * afterwards: `getOrNull` calls it directly, and `getOrThrow` throws `FeatureValidationException` on `null`.
  */
-fun initBlock(context: SymbolContext): CodeBlock {
-    if (context.parameterProperties.isEmpty() && context.commandProperties.isEmpty()) {
-        return CodeBlock.of("")
-    }
-
-    return CodeBlock
-        .builder()
-        .apply {
-            beginControlFlow("try")
-            addDelegateAccessLocals(
-                hasProperties = context.parameterProperties.isNotEmpty(),
-                hasCommands = context.commandProperties.isNotEmpty(),
-            )
-            context.parameterProperties.forEach { property ->
-                addPropertyInitialization(property)
-            }
-            context.commandProperties.forEach { property ->
-                addCommandInitialization(property)
-            }
-            nextControlFlow("catch (_: %T)", GeneratedAccessException::class.asTypeName())
-            addValidationException()
-            endControlFlow()
-        }.build()
-}
+internal fun createOrNullFunction(
+    context: SymbolContext,
+    implName: ClassName,
+): FunSpec =
+    FunSpec
+        .builder(CREATE_OR_NULL)
+        .addParameter(SOURCE_FEATURE, typeNameOf<Feature>())
+        .returns(implName.copy(nullable = true))
+        .addCode(
+            buildCodeBlock {
+                addDelegateAccessLocals(
+                    hasProperties = context.parameterProperties.isNotEmpty(),
+                    hasCommands = context.commandProperties.isNotEmpty(),
+                )
+                addSizeGate(requiredPropertyCount(context.parameterProperties), requiredCommandCount(context.commandProperties))
+                context.parameterProperties.forEach { addPropertyExtraction(it) }
+                context.commandProperties.forEach { addCommandExtraction(it) }
+                val arguments =
+                    (listOf(SOURCE_FEATURE) + context.parameterProperties.map { it.name } + context.commandProperties.map { it.name })
+                        .map { CodeBlock.of("%N", it) }
+                        .joinToCode(", ")
+                add("return %T(%L)\n", implName, arguments)
+            },
+        ).build()
 
 internal fun CodeBlock.Builder.addDelegateAccessLocals(
     hasProperties: Boolean,
@@ -89,105 +93,93 @@ internal fun CodeBlock.Builder.addDelegateAccessLocals(
 }
 
 /**
- * Adds property initialization code with validation.
+ * Rejects features with fewer entries than distinct required names from two map sizes, before any lookup. Most
+ * descriptor/feature pairs are mismatches, so skipping it makes every rejection pay for lookups.
  */
-internal fun CodeBlock.Builder.addPropertyInitialization(property: ParameterProperty) {
+internal fun CodeBlock.Builder.addSizeGate(
+    minPropertyCount: Int,
+    minCommandCount: Int,
+) {
+    val conditions =
+        buildList {
+            if (minPropertyCount > 0) add(CodeBlock.of("%N.size < %L", SOURCE_PROPERTIES, minPropertyCount))
+            if (minCommandCount > 0) add(CodeBlock.of("%N.size < %L", SOURCE_COMMANDS, minCommandCount))
+        }
+    if (conditions.isNotEmpty()) {
+        add("if (%L) return null\n", conditions.joinToCode(" || "))
+    }
+}
+
+/**
+ * Reads one property into a local of the same name, returning `null` from `createOrNull` when the property rule would
+ * fail: a required property is missing, or a present property has a type its rule rejects. Each branch accepts exactly
+ * what the corresponding rule in `Rules.kt` accepts (see [PropertyAccessorStrategy]).
+ */
+internal fun CodeBlock.Builder.addPropertyExtraction(property: ParameterProperty) {
     val name = property.name
-    val type = property.type
-    val isEnumProperty = property.isEnumProperty
-    val combined = propertyHash(name.hashCode(), name.length)
-    val isNullable = property.isNullable
-    val nonNullType = type.copy(nullable = false)
+    val nonNullType = property.type.copy(nullable = false)
     val adapter = property.typeAdapter()
-    val accessor = requireNotNull(if (isNullable) adapter.optionalAccessor else adapter.requiredAccessor)
-    when {
-        adapter.propertyAccessorStrategy == PropertyAccessorStrategy.NULLABLE_VALUE_WRAPPER -> {
-            add("this.%N = %N.%M(%S, %L)\n", name, SOURCE_PROPERTIES, accessor, name, combined)
+    val lookup = CodeBlock.of("%N[%S, %L]", SOURCE_PROPERTIES, name, propertyHash(name.hashCode(), name.length))
+    val isNullable = property.isNullable
+    when (adapter.propertyAccessorStrategy) {
+        PropertyAccessorStrategy.STANDARD ->
+            if (isNullable) {
+                add("val %N = %L.let { if (it == null) null else it.value as? %T ?: return null }\n", name, lookup, nonNullType)
+            } else {
+                add("val %N = %L?.value as? %T ?: return null\n", name, lookup, nonNullType)
+            }
+
+        PropertyAccessorStrategy.ENUM ->
+            if (isNullable) {
+                add(
+                    "val %N = %L.let { if (it == null) null else %T(it.value as? %T ?: return null) }\n",
+                    name,
+                    lookup,
+                    nonNullType,
+                    property.underlyingType,
+                )
+            } else {
+                add("val %N = %T(%L?.value as? %T ?: return null)\n", name, nonNullType, lookup, property.underlyingType)
+            }
+
+        PropertyAccessorStrategy.NULLABLE_VALUE_WRAPPER -> {
+            val converter = requireNotNull(adapter.valueConverter) { "Missing value converter for $nonNullType" }
+            if (isNullable) {
+                add("val %N = %L.let { if (it == null) null else it.value.%M() ?: return null }\n", name, lookup, converter)
+            } else {
+                add("val %N = %L?.value?.%M() ?: return null\n", name, lookup, converter)
+            }
         }
 
-        isEnumProperty && isNullable -> {
-            add(
-                "this.%N = %N.%M(%S, %L, %T::class)?.let { %T(it) }\n",
-                name,
-                SOURCE_PROPERTIES,
-                accessor,
-                name,
-                combined,
-                property.underlyingType,
-                type.copy(nullable = false),
-            )
+        // An absent optional list keeps today's value: the type's EMPTY instance rather than null.
+        PropertyAccessorStrategy.LIST_WITH_EMPTY_PROMOTION -> {
+            add("val %N = when (val %N = %L?.value) {\n", name, FOUND_VALUE, lookup)
+            indent()
+            if (isNullable) add("null -> %T.EMPTY\n", nonNullType) else add("null -> return null\n")
+            add("is %T -> %T.EMPTY\n", LIST_EMPTY_VALUE, nonNullType)
+            add("is %T -> %N\n", nonNullType, FOUND_VALUE)
+            add("else -> return null\n")
+            unindent()
+            add("}\n")
         }
 
-        isEnumProperty -> {
-            add(
-                "this.%N = %T(%N.%M(%S, %L, %T::class))\n",
-                name,
-                type,
-                SOURCE_PROPERTIES,
-                accessor,
-                name,
-                combined,
-                property.underlyingType,
-            )
-        }
-
-        adapter.propertyAccessorStrategy == PropertyAccessorStrategy.LIST_WITH_EMPTY_PROMOTION -> {
-            add(
-                "this.%1N = %6N.%5M(%2S, %3L, %4T::class, %4T.EMPTY)\n",
-                name,
-                name,
-                combined,
-                nonNullType,
-                accessor,
-                SOURCE_PROPERTIES,
-            )
-        }
-
-        else -> {
-            add(
-                "this.%N = %N.%M(%S, %L, %T::class)\n",
-                name,
-                SOURCE_PROPERTIES,
-                accessor,
-                name,
-                combined,
-                nonNullType,
-            )
-        }
+        null -> error("No accessor strategy for property $name of type $nonNullType")
     }
 }
 
 /**
- * Adds command initialization code with validation.
+ * Reads one command into a local of the same name through its companion's `createOrNull`, returning `null` from the
+ * feature's `createOrNull` when a required command is missing or a present command is malformed.
  */
-internal fun CodeBlock.Builder.addCommandInitialization(property: CommandProperty) {
-    val name = property.name
+internal fun CodeBlock.Builder.addCommandExtraction(property: CommandProperty) {
     val apiName = property.apiName
-    val propertyHash = propertyHash(apiName.hashCode(), apiName.length)
+    val lookup = CodeBlock.of("%N[%S, %L]", SOURCE_COMMANDS, apiName, propertyHash(apiName.hashCode(), apiName.length))
+    val implType = property.implType.copy(nullable = false)
     if (property.isNullable) {
-        add(
-            "this.%N = %N[%S, %L]?.let { %T(it) }\n",
-            name,
-            SOURCE_COMMANDS,
-            apiName,
-            propertyHash,
-            property.implType.copy(nullable = false),
-        )
+        add("val %N = %L.let { if (it == null) null else %T.%N(it) ?: return null }\n", property.name, lookup, implType, CREATE_OR_NULL)
     } else {
-        add("this.%N = %T(%N.%M(%S, %L))\n", name, property.implType, SOURCE_COMMANDS, REQUIRE_COMMAND, apiName, propertyHash)
+        add("val %N = %L?.let { %T.%N(it) } ?: return null\n", property.name, lookup, implType, CREATE_OR_NULL)
     }
-}
-
-/**
- * Adds FeatureValidationException throw statement.
- */
-private fun CodeBlock.Builder.addValidationException() {
-    add(
-        "throw %T(%N, %N, Companion)\n",
-        FeatureValidationException::class.asTypeName(),
-        FEATURE_TYPE,
-        SOURCE_FEATURE,
-    )
 }
 
 /**
@@ -269,10 +261,12 @@ internal fun commandResultExpression(
 internal fun companionObject(
     context: SymbolContext,
     validationPlan: ValidationPlan,
+    implName: ClassName,
 ): TypeSpec =
     TypeSpec
         .companionObjectBuilder()
         .addSuperinterface(GENERATED_FEATURE_VALIDATION_RULE_TYPE)
+        .addFunction(createOrNullFunction(context, implName))
         .addFunction(
             generateValidateFunction(
                 typeNameOf<Feature>(),
@@ -287,6 +281,15 @@ internal fun companionObject(
                 isFailFast = validationPlan.requiresSeparateFailFast,
             ),
         ).build()
+
+/**
+ * Distinct names of properties whose rule fails when absent; any feature passing validation has at least this many.
+ * Counting names rather than declarations keeps the bound sound if two declarations share an API name.
+ */
+internal fun requiredPropertyCount(properties: List<ParameterProperty>): Int = properties.filterNot { it.isNullable }.mapTo(HashSet()) { it.name }.size
+
+/** Distinct API names of non-optional commands; see [requiredPropertyCount]. */
+internal fun requiredCommandCount(commands: List<CommandProperty>): Int = commands.filterNot { it.isNullable }.mapTo(HashSet()) { it.apiName }.size
 
 private fun SymbolContext.hasOnlySingleErrorRules(): Boolean =
     commandProperties.none { command ->
@@ -327,26 +330,19 @@ fun generateSharedFeatureImplementation(
     superInterfaces: List<TypeName>,
     context: SymbolContext,
 ): FileSpec {
-    val constructor = constructor(context)
-    val properties = context.parameterPropertiesImpl + context.commandPropertiesImpl
-    val initBlock = initBlock(context)
     val validationPlan = validationPlan(context)
     val classImpl =
         TypeSpec
             .classBuilder(implName)
             .addModifiers(KModifier.INTERNAL)
             .addAnnotation(VIESSMANN_API_INTERNAL_EXCEPTION_USAGE_OPT_IN)
-            .primaryConstructor(constructor)
+            .primaryConstructor(constructor(context))
             .superclass(context.baseFeature.abstractClass)
             .addSuperclassConstructorParameter(SOURCE_FEATURE)
             .addSuperinterfaces(superInterfaces.filter { it != context.baseFeature.delegate })
-            .addType(companionObject(context, validationPlan))
-            .addProperties(properties)
-            .apply {
-                if (initBlock.isNotEmpty()) {
-                    addInitializerBlock(initBlock)
-                }
-            }.build()
+            .addType(companionObject(context, validationPlan, implName))
+            .addProperties(constructorProperties(context))
+            .build()
 
     return FileSpec
         .builder(implName.packageName, implName.simpleName)
@@ -384,10 +380,11 @@ fun generateFeatureDescriptorAndExtensions(
                     if (validationPlan.requiresSeparateFailFast) {
                         add("failFast = %T(%T::validateFailFast),\n", ValidationRule::class, implName)
                     }
+                    add("featureType = %S,\n", context.superInterface.canonicalName)
                     unindent()
                     add(") { feature ->\n")
                     indent()
-                    add("feature as? %T ?: %T(feature, %S)\n", context.superInterface, implName, context.superInterface.canonicalName)
+                    add("feature as? %T ?: %T.%N(feature)\n", context.superInterface, implName, CREATE_OR_NULL)
                     unindent()
                     add("}")
                 },

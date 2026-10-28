@@ -11,7 +11,9 @@ import xyz.dussim.viessmann.feature.api.ArrayStringConstraints
 import xyz.dussim.viessmann.feature.api.DoubleValue
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ListStringValue
+import xyz.dussim.viessmann.feature.api.NullableStringValue
 import xyz.dussim.viessmann.feature.api.NumberConstraints
+import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 val GeneratorAccessPatternTest by testSuite {
@@ -25,7 +27,7 @@ val GeneratorAccessPatternTest by testSuite {
                 signature = CommandSignature("SetValue", listOf("value" to typeNameOf<NumberConstraints>())),
                 isNullable = true,
             )
-        val hash = propertyHash("setValue".hashCode(), "setValue".length)
+        val hash = hashOf("setValue")
         val normal = generateValidateFunction(typeNameOf<Feature>(), listOf(commandResultExpression(command, registry))).toString()
         val failFast =
             generateValidateFunction(
@@ -64,94 +66,117 @@ val GeneratorAccessPatternTest by testSuite {
         missing.key.args shouldBe listOf("setValue")
         normal shouldContain "if (it == null) ${missing.value.canonicalName} else test.commands.SetValueImpl.validate(it)"
         failFast shouldContain "if (it == null) ${missing.value.canonicalName} else test.commands.SetValueImpl.validateFailFast(it)"
-        normal shouldNotContain ".rule"
+        // `.rule` alone would match the generated rules package (`test.rules`); the companion property is `Impl.rule`.
+        normal shouldNotContain "Impl.rule"
         failFast shouldNotContain "failFastRule"
-        generateValidationRuleFiles(registry, chunkSize = 64).single().toString() shouldContain
+        // KotlinPoet may wrap after `=`, so compare with whitespace collapsed.
+        generateValidationRuleFiles(registry, chunkSize = 64).single().toString().replace(Regex("\\s+"), " ") shouldContain
             "ValidationResult<ValidationError> = missingCommandResult(\"setValue\")"
     }
 
-    test("feature generator emits requirePropertyValue for required scalar property") {
-        val code =
-            buildPropertyInitCode(
-                ParameterProperty(
-                    name = "temperature",
-                    type = typeNameOf<DoubleValue>(),
-                    isEnumProperty = false,
-                ),
+    test("size bounds count distinct required property and command names only") {
+        val properties =
+            listOf(
+                ParameterProperty(name = "a", type = typeNameOf<DoubleValue>(), isEnumProperty = false),
+                ParameterProperty(name = "a", type = typeNameOf<DoubleValue>(), isEnumProperty = false),
+                ParameterProperty(name = "b", type = typeNameOf<DoubleValue>(), isEnumProperty = false),
+                ParameterProperty(name = "optional", type = typeNameOf<DoubleValue>().copy(nullable = true), isEnumProperty = false),
             )
 
-        code shouldContain "requirePropertyValue(\"temperature\""
-        code shouldContain "xyz.dussim.viessmann.feature.api.DoubleValue::class"
-        code shouldContain "this.temperature = "
-        code shouldNotContain "!!"
+        fun command(
+            apiName: String,
+            isNullable: Boolean,
+        ) = CommandProperty(
+            name = apiName,
+            apiName = apiName,
+            implType = ClassName("test", "${apiName}Impl").copy(nullable = isNullable),
+            signature = CommandSignature(apiName, emptyList()),
+            isNullable = isNullable,
+        )
+        val commands = listOf(command("set", false), command("set", false), command("reset", true))
+
+        requiredPropertyCount(properties) shouldBe 2
+        requiredCommandCount(commands) shouldBe 1
+        requiredPropertyCount(emptyList()) shouldBe 0
+        requiredCommandCount(emptyList()) shouldBe 0
     }
 
-    test("feature generator emits findPropertyValueOrNull for nullable scalar property") {
-        val code =
-            buildPropertyInitCode(
-                ParameterProperty(
-                    name = "temperature",
-                    type = typeNameOf<DoubleValue?>(),
-                    isEnumProperty = false,
-                ),
-            )
+    test("single-pass factory rejects a missing or mistyped required scalar property") {
+        val code = buildPropertyExtractionCode(ParameterProperty("temperature", typeNameOf<DoubleValue>(), isEnumProperty = false))
 
-        code shouldContain "findPropertyValueOrNull(\"temperature\""
-        code shouldContain "xyz.dussim.viessmann.feature.api.DoubleValue::class"
-        code shouldContain "this.temperature = "
-        code shouldNotContain "!!"
+        code shouldBe
+            "val temperature = sourceProperties[\"temperature\", ${hashOf("temperature")}]?.value as? " +
+            "xyz.dussim.viessmann.feature.api.DoubleValue ?: return null\n"
+        code shouldNotContain "::class"
+        code shouldNotContain "throw"
     }
 
-    test("feature generator emits requirePropertyValueOrPromoteEmpty for required list property") {
-        val code =
-            buildPropertyInitCode(
-                ParameterProperty(
-                    name = "supported",
-                    type = typeNameOf<ListStringValue>(),
-                    isEnumProperty = false,
-                ),
-            )
+    test("single-pass factory accepts an absent optional scalar property but rejects a mistyped one") {
+        val code = buildPropertyExtractionCode(ParameterProperty("temperature", typeNameOf<DoubleValue?>(), isEnumProperty = false))
 
-        code shouldContain
-            "requirePropertyValueOrPromoteEmpty(\"supported\""
-        code shouldContain "this.supported = "
-        code shouldContain "ListStringValue.EMPTY"
-        code shouldNotContain "!!"
+        code shouldContain "sourceProperties[\"temperature\", ${hashOf("temperature")}].let { if (it == null) null else "
+        code shouldContain "it.value as? xyz.dussim.viessmann.feature.api.DoubleValue ?: return null }"
     }
 
-    test("feature generator emits findPropertyValueOrPromoteEmpty for nullable list property") {
-        val code =
-            buildPropertyInitCode(
-                ParameterProperty(
-                    name = "supported",
-                    type = typeNameOf<ListStringValue?>(),
-                    isEnumProperty = false,
-                ),
-            )
+    test("single-pass factory wraps non-null values for nullable value properties") {
+        val required = buildPropertyExtractionCode(ParameterProperty("name", typeNameOf<NullableStringValue>(), isEnumProperty = false))
+        val optional = buildPropertyExtractionCode(ParameterProperty("name", typeNameOf<NullableStringValue?>(), isEnumProperty = false))
 
-        code shouldContain
-            "findPropertyValueOrPromoteEmpty(\"supported\""
-        code shouldContain "this.supported = "
-        code shouldContain "ListStringValue.EMPTY"
-        code shouldNotContain "!!"
+        // Extension members render fully qualified in a bare CodeBlock; generated files import them.
+        required shouldContain "]?.value?.xyz.dussim.viessmann.feature.api.toNullableStringValueOrNull() ?: return null"
+        optional shouldContain "if (it == null) null else it.value.xyz.dussim.viessmann.feature.api.toNullableStringValueOrNull() ?: return null"
     }
 
-    test("feature generator emits requireCommand for required command property") {
-        val code =
-            buildCommandInitCode(
-                CommandProperty(
-                    name = "setValue",
-                    apiName = "set_value",
-                    implType = ClassName("test.commands", "SetValueImpl"),
-                    signature = CommandSignature(name = "SetValue", parameters = emptyList()),
-                    isNullable = false,
-                ),
+    test("single-pass factory promotes empty lists and rejects mistyped or missing required lists") {
+        val code = buildPropertyExtractionCode(ParameterProperty("supported", typeNameOf<ListStringValue>(), isEnumProperty = false))
+
+        code shouldContain "val supported = when (val found = sourceProperties[\"supported\", ${hashOf("supported")}]?.value) {"
+        code shouldContain "null -> return null"
+        code shouldContain "is xyz.dussim.viessmann.feature.api.ListEmptyValue -> xyz.dussim.viessmann.feature.api.ListStringValue.EMPTY"
+        code shouldContain "is xyz.dussim.viessmann.feature.api.ListStringValue -> found"
+        code shouldContain "else -> return null"
+    }
+
+    test("single-pass factory keeps EMPTY for an absent optional list") {
+        val code = buildPropertyExtractionCode(ParameterProperty("supported", typeNameOf<ListStringValue?>(), isEnumProperty = false))
+
+        code shouldContain "null -> xyz.dussim.viessmann.feature.api.ListStringValue.EMPTY"
+        code shouldContain "else -> return null"
+    }
+
+    test("single-pass factory wraps enum properties after checking the underlying value") {
+        val enumType = ClassName("test", "Feature", "Mode")
+        val property =
+            ParameterProperty(
+                name = "mode",
+                type = enumType,
+                isEnumProperty = true,
+                underlyingType = typeNameOf<StringValue>(),
+                validationFunction = validationRule("stringPropertyRule"),
             )
 
-        code shouldContain """requireCommand("set_value""""
-        code shouldContain "SetValueImpl(sourceCommands."
-        code shouldNotContain "delegate.commands"
-        code shouldNotContain "!!"
+        buildPropertyExtractionCode(property) shouldBe
+            "val mode = test.Feature.Mode(sourceProperties[\"mode\", ${hashOf("mode")}]?.value as? " +
+            "xyz.dussim.viessmann.feature.api.StringValue ?: return null)\n"
+        buildPropertyExtractionCode(property.copy(type = enumType.copy(nullable = true))) shouldContain
+            "if (it == null) null else test.Feature.Mode(it.value as? xyz.dussim.viessmann.feature.api.StringValue ?: return null)"
+    }
+
+    test("single-pass factory builds commands through their companion createOrNull") {
+        val command =
+            CommandProperty(
+                name = "setValue",
+                apiName = "set_value",
+                implType = ClassName("test.commands", "SetValueImpl"),
+                signature = CommandSignature(name = "SetValue", parameters = emptyList()),
+                isNullable = false,
+            )
+
+        buildCommandExtractionCode(command) shouldBe
+            "val setValue = sourceCommands[\"set_value\", ${hashOf("set_value")}]?.let { " +
+            "test.commands.SetValueImpl.createOrNull(it) } ?: return null\n"
+        buildCommandExtractionCode(command.copy(implType = command.implType.copy(nullable = true), isNullable = true)) shouldContain
+            "if (it == null) null else test.commands.SetValueImpl.createOrNull(it) ?: return null"
     }
 
     test("feature generator emits cached feature access locals when needed") {
@@ -167,33 +192,25 @@ val GeneratorAccessPatternTest by testSuite {
         code shouldNotContain "!!"
     }
 
-    test("command generator emits requireParam + requireConstraints for non-array constraints") {
-        val code =
-            constraintPropertyInitializer(
-                ConstraintProperty(
-                    name = "value",
-                    type = typeNameOf<NumberConstraints>(),
-                ),
-            ).toString()
-
-        code shouldContain """requireParam("value""""
-        code shouldContain """requireConstraints(xyz.dussim.viessmann.feature.api.NumberConstraints::class)"""
-        code shouldNotContain "!!.constraints as"
+    test("single-pass factory rejects undersized features before any lookup") {
+        buildSizeGateCode(2, 1) shouldBe "if (sourceProperties.size < 2 || sourceCommands.size < 1) return null\n"
+        buildSizeGateCode(3, 0) shouldBe "if (sourceProperties.size < 3) return null\n"
+        buildSizeGateCode(0, 2) shouldBe "if (sourceCommands.size < 2) return null\n"
+        buildSizeGateCode(0, 0) shouldBe ""
     }
 
-    test("command generator emits toArray*ConstraintsOrThrow for array constraints") {
-        val code =
-            constraintPropertyInitializer(
-                ConstraintProperty(
-                    name = "equipment",
-                    type = typeNameOf<ArrayStringConstraints>(),
-                ),
-            ).toString()
+    test("command single-pass factory type-checks non-array constraints") {
+        buildConstraintExtractionCode(ConstraintProperty("value", typeNameOf<NumberConstraints>())) shouldBe
+            "val `value` = command.params[\"value\", ${hashOf("value")}]?.constraints as? " +
+            "xyz.dussim.viessmann.feature.api.NumberConstraints ?: return null\n"
+    }
 
-        code shouldContain "command.params."
-        code shouldContain """requireParam("equipment""""
-        code shouldContain "toArrayStringConstraintsOrThrow()"
-        code shouldNotContain "!!.constraints"
+    test("command single-pass factory converts array constraints without throwing") {
+        val code = buildConstraintExtractionCode(ConstraintProperty("equipment", typeNameOf<ArrayStringConstraints>()))
+
+        code shouldContain
+            "command.params[\"equipment\", ${hashOf("equipment")}]?.constraints?.xyz.dussim.viessmann.feature.api.toArrayStringConstraintsOrNull() ?: return null"
+        code shouldNotContain "OrThrow"
     }
 
     test("command generator specializes one-parameter aggregate and fail-fast rules") {
@@ -403,27 +420,48 @@ val GeneratorAccessPatternTest by testSuite {
     test("one type adapter supplies validation access conversion and naming metadata") {
         val propertyAdapter = PROPERTY_TYPE_ADAPTERS.getValue(typeNameOf<DoubleValue>())
         propertyAdapter.validationRule.simpleName shouldBe "doublePropertyRule"
-        propertyAdapter.requiredAccessor?.simpleName shouldBe "requirePropertyValue"
-        propertyAdapter.optionalAccessor?.simpleName shouldBe "findPropertyValueOrNull"
+        propertyAdapter.propertyAccessorStrategy shouldBe PropertyAccessorStrategy.STANDARD
+
+        val nullableAdapter = PROPERTY_TYPE_ADAPTERS.getValue(typeNameOf<NullableStringValue>())
+        nullableAdapter.validationRule.simpleName shouldBe "nullableStringPropertyRule"
+        nullableAdapter.valueConverter?.simpleName shouldBe "toNullableStringValueOrNull"
 
         val constraintAdapter = CONSTRAINT_TYPE_ADAPTERS.getValue(typeNameOf<ArrayStringConstraints>())
         constraintAdapter.validationRule.simpleName shouldBe "arrayStringConstraintsRule"
-        constraintAdapter.constraintConverter?.simpleName shouldBe "toArrayStringConstraintsOrThrow"
+        constraintAdapter.constraintConverter?.simpleName shouldBe "toArrayStringConstraintsOrNull"
         constraintAdapter.abbreviation shouldBe "AS"
     }
 }
 
-private fun buildPropertyInitCode(property: ParameterProperty): String {
+private fun buildSizeGateCode(
+    minPropertyCount: Int,
+    minCommandCount: Int,
+): String {
     val builder = CodeBlock.builder()
-    builder.addPropertyInitialization(property)
+    builder.addSizeGate(minPropertyCount, minCommandCount)
     return builder.build().toString()
 }
 
-private fun buildCommandInitCode(property: CommandProperty): String {
+private fun buildPropertyExtractionCode(property: ParameterProperty): String {
     val builder = CodeBlock.builder()
-    builder.addCommandInitialization(property)
+    builder.addPropertyExtraction(property)
     return builder.build().toString()
 }
+
+private fun buildCommandExtractionCode(property: CommandProperty): String {
+    val builder = CodeBlock.builder()
+    builder.addCommandExtraction(property)
+    return builder.build().toString()
+}
+
+private fun buildConstraintExtractionCode(property: ConstraintProperty): String {
+    val builder = CodeBlock.builder()
+    builder.addConstraintExtraction(property)
+    return builder.build().toString()
+}
+
+/** The precomputed lookup hash of [name] as the generator renders it (KotlinPoet adds digit separators to `%L` numbers). */
+private fun hashOf(name: String): String = CodeBlock.of("%L", propertyHash(name.hashCode(), name.length)).toString()
 
 private fun buildDelegateAccessLocalsCode(
     hasProperties: Boolean,

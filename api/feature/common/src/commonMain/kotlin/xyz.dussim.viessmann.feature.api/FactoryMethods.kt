@@ -201,6 +201,91 @@ inline fun <reified F : Feature> indexedFeatureDescriptor(
         rule = rule,
     )
 
+/**
+ * Creates a static feature descriptor backed by a single-pass factory.
+ *
+ * [createOrNull] must return the converted feature exactly when [failFast] (and therefore [rule]) accepts it, and
+ * `null` otherwise. [FeatureDescriptor.getOrNull] then calls it directly instead of validating first and constructing
+ * afterwards, and [FeatureDescriptor.getOrThrow] throws [FeatureValidationException] naming [featureType] when it
+ * returns `null`.
+ */
+inline fun <reified F : Feature> staticFeatureDescriptor(
+    wildcardName: String,
+    rule: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
+    featureType: String,
+    noinline createOrNull: (Feature) -> F?,
+): FeatureDescriptor.Static<F> =
+    FeatureDescriptorStaticImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = SinglePassFeatureFactory(F::class, featureType, rule, createOrNull),
+        matchers = Static(wildcardName, rule, failFast),
+        rule = rule,
+    )
+
+/** Single-pass [staticFeatureDescriptor] for descriptors whose regular and fail-fast validation are the same rule. */
+inline fun <reified F : Feature> staticFeatureDescriptor(
+    wildcardName: String,
+    rule: ValidationRule<Feature, ValidationError>,
+    featureType: String,
+    noinline createOrNull: (Feature) -> F?,
+): FeatureDescriptor.Static<F> =
+    FeatureDescriptorStaticImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = SinglePassFeatureFactory(F::class, featureType, rule, createOrNull),
+        matchers = Static(wildcardName, rule),
+        rule = rule,
+    )
+
+/** Single-pass [indexedFeatureDescriptor]; see the single-pass [staticFeatureDescriptor] for the [createOrNull] contract. */
+inline fun <reified F : Feature> indexedFeatureDescriptor(
+    wildcardName: String,
+    rule: ValidationRule<Feature, ValidationError>,
+    failFast: ValidationRule<Feature, ValidationError>,
+    featureType: String,
+    noinline createOrNull: (Feature) -> F?,
+): FeatureDescriptor.Indexed<F> =
+    FeatureDescriptorIndexedImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = SinglePassFeatureFactory(F::class, featureType, rule, createOrNull),
+        matchers = Indexed(wildcardName, rule, failFast),
+        rule = rule,
+    )
+
+/** Single-pass [indexedFeatureDescriptor] for descriptors whose regular and fail-fast validation are the same rule. */
+inline fun <reified F : Feature> indexedFeatureDescriptor(
+    wildcardName: String,
+    rule: ValidationRule<Feature, ValidationError>,
+    featureType: String,
+    noinline createOrNull: (Feature) -> F?,
+): FeatureDescriptor.Indexed<F> =
+    FeatureDescriptorIndexedImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = SinglePassFeatureFactory(F::class, featureType, rule, createOrNull),
+        matchers = Indexed(wildcardName, rule),
+        rule = rule,
+    )
+
+/**
+ * Factory that validates while it constructs: [createOrNull] returns `null` exactly when [rule] reports errors, so
+ * neither conversion needs a separate validation pass. [rule] only runs (lazily) to build the exception message.
+ */
+@PublishedApi
+internal class SinglePassFeatureFactory<F : Feature>(
+    override val featureClass: KClass<F>,
+    private val featureType: String,
+    private val rule: ValidationRule<Feature, ValidationError>,
+    private val createOrNull: (Feature) -> F?,
+) : FeatureFactory<F> {
+    override fun getOrNull(feature: Feature): F? = createOrNull(feature)
+
+    override fun getOrThrow(feature: Feature): F = createOrNull(feature) ?: throw FeatureValidationException(featureType, feature, rule)
+}
+
 @PublishedApi
 internal class FeatureDescriptorIndexedImpl<F : Feature>(
     override val featureClass: KClass<F>,
@@ -212,7 +297,13 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
     FeatureFactory<F> by factory,
     FeatureMatchers.Indexed by matchers,
     ValidationRule<Feature, ValidationError> by rule {
-    override fun getOrNull(feature: Feature): F? = getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
+    private val singlePass = factory as? SinglePassFeatureFactory<F>
+
+    override fun getOrNull(feature: Feature): F? {
+        val singlePass = singlePass
+        if (singlePass != null) return singlePass.getOrNull(feature)
+        return getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
+    }
 
     override fun toString(): String = "FeatureDescriptor.Indexed[$wildcardName](${featureClass.simpleName})"
 }
@@ -228,7 +319,13 @@ internal class FeatureDescriptorStaticImpl<F : Feature>(
     FeatureFactory<F> by factory,
     FeatureMatchers.Static by matchers,
     ValidationRule<Feature, ValidationError> by rule {
-    override fun getOrNull(feature: Feature): F? = getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
+    private val singlePass = factory as? SinglePassFeatureFactory<F>
+
+    override fun getOrNull(feature: Feature): F? {
+        val singlePass = singlePass
+        if (singlePass != null) return singlePass.getOrNull(feature)
+        return getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
+    }
 
     override fun toString(): String = "FeatureDescriptor.Static[$wildcardName](${featureClass.simpleName})"
 }

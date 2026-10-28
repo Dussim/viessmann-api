@@ -168,3 +168,27 @@ fun <T : ArrayConstraints> Constraints<*>.requireArrayConstraintsOrPromoteEmpty(
         is ArrayEmptyConstraints -> fromEmpty(minLength, maxLength)
         else -> expectedType.castOrNull(this) ?: throw GeneratedAccessException
     }
+
+// Non-throwing counterparts used by generated single-pass factories. Each accepts exactly what the matching
+// `typedNullablePropertyRule` accepts: the nullable value type, or its non-null type wrapped.
+
+fun PropertyValue<*>.toNullableBooleanValueOrNull(): NullableBooleanValue? =
+    when (this) {
+        is NullableBooleanValue -> this
+        is BooleanValue -> NullableBooleanValue(element)
+        else -> null
+    }
+
+fun PropertyValue<*>.toNullableDoubleValueOrNull(): NullableDoubleValue? =
+    when (this) {
+        is NullableDoubleValue -> this
+        is DoubleValue -> NullableDoubleValue(element)
+        else -> null
+    }
+
+fun PropertyValue<*>.toNullableStringValueOrNull(): NullableStringValue? =
+    when (this) {
+        is NullableStringValue -> this
+        is StringValue -> NullableStringValue(element)
+        else -> null
+    }

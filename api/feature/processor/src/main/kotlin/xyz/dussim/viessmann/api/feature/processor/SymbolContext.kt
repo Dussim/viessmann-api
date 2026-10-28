@@ -62,18 +62,15 @@ internal val PROPERTY_TYPE_ADAPTERS: Map<TypeName, TypeAdapterSpec> =
         standardPropertyAdapter<DoubleValue>("doublePropertyRule"),
         nullableValuePropertyAdapter<NullableStringValue>(
             "nullableStringPropertyRule",
-            "requireNullableStringPropertyValue",
-            "findNullableStringPropertyValueOrNull",
+            "toNullableStringValueOrNull",
         ),
         nullableValuePropertyAdapter<NullableBooleanValue>(
             "nullableBooleanPropertyRule",
-            "requireNullableBooleanPropertyValue",
-            "findNullableBooleanPropertyValueOrNull",
+            "toNullableBooleanValueOrNull",
         ),
         nullableValuePropertyAdapter<NullableDoubleValue>(
             "nullableDoublePropertyRule",
-            "requireNullableDoublePropertyValue",
-            "findNullableDoublePropertyValueOrNull",
+            "toNullableDoubleValueOrNull",
         ),
         listPropertyAdapter<ListDoubleValue>("listDoublePropertyRule"),
         listPropertyAdapter<ListStringValue>("listStringPropertyRule"),
@@ -259,8 +256,6 @@ class SymbolContext(
                     .sortedBy { it.propertyName },
         )
 
-    val parameterPropertiesImpl = parameterProperties.map { it.asPropertySpec() }
-    val commandPropertiesImpl = commandProperties.map { it.asPropertySpec() }
     val nestedCommands = nestedCommands(this)
 }
 

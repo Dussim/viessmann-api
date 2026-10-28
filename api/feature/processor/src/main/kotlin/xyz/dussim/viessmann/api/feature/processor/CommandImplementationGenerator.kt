@@ -8,10 +8,11 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.buildCodeBlock
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.ArrayBooleanConstraints
 import xyz.dussim.viessmann.feature.api.ArrayNumberConstraints
@@ -34,8 +35,6 @@ private val NUMBER_OF_PARAMETERS_RULE = validationRule("numberOfParametersRule")
 private val ONE_PARAMETER_COMMAND_RULE = validationRule("oneParameterCommandRule")
 private val ONE_PARAMETER_COMMAND_FAIL_FAST_RULE = validationRule("oneParameterCommandFailFastRule")
 private val COMMAND_FAIL_FAST_RULE = validationRule("commandFailFastRule")
-private val REQUIRE_PARAM = MemberName("xyz.dussim.viessmann.feature.api", "requireParam")
-private val REQUIRE_CONSTRAINTS = MemberName("xyz.dussim.viessmann.feature.api", "requireConstraints")
 
 internal val CONSTRAINT_TYPE_ADAPTERS: Map<TypeName, TypeAdapterSpec> =
     listOf(
@@ -45,27 +44,27 @@ internal val CONSTRAINT_TYPE_ADAPTERS: Map<TypeName, TypeAdapterSpec> =
         constraintAdapter<ArrayNumberConstraints>(
             "arrayNumberConstraintsRule",
             "AN",
-            "toArrayNumberConstraintsOrThrow",
+            "toArrayNumberConstraintsOrNull",
         ),
         constraintAdapter<ArrayStringConstraints>(
             "arrayStringConstraintsRule",
             "AS",
-            "toArrayStringConstraintsOrThrow",
+            "toArrayStringConstraintsOrNull",
         ),
         constraintAdapter<ArrayBooleanConstraints>(
             "arrayBooleanConstraintsRule",
             "AB",
-            "toArrayBooleanConstraintsOrThrow",
+            "toArrayBooleanConstraintsOrNull",
         ),
         constraintAdapter<ArrayObjectConstraints>(
             "arrayObjectConstraintsRule",
             "AO",
-            "toArrayObjectConstraintsOrThrow",
+            "toArrayObjectConstraintsOrNull",
         ),
         constraintAdapter<ArrayUnknownConstraints>(
             "arrayUnknownConstraintsRule",
             "AU",
-            "toArrayUnknownConstraintsOrThrow",
+            "toArrayUnknownConstraintsOrNull",
         ),
         constraintAdapter<ObjectConstraints>("objectConstraintsRule", "O"),
         constraintAdapter<ScheduleConstraints>("scheduleConstraintsRule", "SC"),
@@ -76,58 +75,60 @@ internal val CONSTRAINT_TYPE_ADAPTERS: Map<TypeName, TypeAdapterSpec> =
 internal val CONSTRAINTS_VALIDATION_FUNCTIONS = CONSTRAINT_TYPE_ADAPTERS.mapValues { it.value.validationRule }
 
 /**
- * Generates constructor for command implementation.
+ * Generates the private constructor. It receives the command plus every constraint already checked by
+ * [createOrNullFunction], so it does no checking of its own.
  */
 fun constructor(context: CommandSymbolContext) =
     FunSpec
         .constructorBuilder()
-        .addParameter(
-            ParameterSpec
-                .builder(COMMAND, typeNameOf<Command>())
-                .build(),
-        ).build()
+        .addModifiers(KModifier.PRIVATE)
+        .addParameter(COMMAND, typeNameOf<Command>())
+        .apply { context.constraintsProperties.forEach { addParameter(it.name, it.type) } }
+        .build()
 
 /**
  * Generates command property that overrides the base command.
  */
-fun constructorProperty(context: CommandSymbolContext) = overrideProperty(COMMAND, typeNameOf<Command>(), COMMAND)
+fun constructorProperty(context: CommandSymbolContext) = overrideProperty(COMMAND, typeNameOf<Command>(), CodeBlock.of("%N", COMMAND))
 
 /**
- * Generates property initializer that extracts command constraints.
- * Throws GeneratedAccessException if constraints are invalid.
+ * Reads one parameter's constraints into a local of the same name, returning `null` from `createOrNull` when the
+ * parameter rule would fail: the parameter is missing or its constraints have a type the rule rejects. Array
+ * converters also accept `ArrayEmptyConstraints`, like `typedArrayCommandRule`.
  */
-internal fun constraintPropertyInitializer(property: ConstraintProperty): CodeBlock {
-    val combined = propertyHash(property.name.hashCode(), property.name.length)
-    val arrayTypeCastFunction = CONSTRAINT_TYPE_ADAPTERS.getValue(property.type).constraintConverter
-
-    return if (arrayTypeCastFunction != null) {
-        CodeBlock.of(
-            "command.params.%M(%S, %L).constraints.%M()",
-            REQUIRE_PARAM,
-            property.name,
-            combined,
-            arrayTypeCastFunction,
-        )
+internal fun CodeBlock.Builder.addConstraintExtraction(property: ConstraintProperty) {
+    val lookup = CodeBlock.of("%N.params[%S, %L]", COMMAND, property.name, propertyHash(property.name.hashCode(), property.name.length))
+    val arrayConverter = CONSTRAINT_TYPE_ADAPTERS.getValue(property.type).constraintConverter
+    if (arrayConverter != null) {
+        add("val %N = %L?.constraints?.%M() ?: return null\n", property.name, lookup, arrayConverter)
     } else {
-        CodeBlock.of(
-            "command.params.%M(%S, %L).constraints.%M(%T::class)",
-            REQUIRE_PARAM,
-            property.name,
-            combined,
-            REQUIRE_CONSTRAINTS,
-            property.type,
-        )
+        add("val %N = %L?.constraints as? %T ?: return null\n", property.name, lookup, property.type)
     }
 }
 
+/**
+ * Generates `createOrNull(command)`, which returns `null` exactly when the command's validation rules would report an
+ * error: a parameter is missing or mistyped, or the parameter count differs from the declared one.
+ */
+internal fun createOrNullFunction(
+    context: CommandSymbolContext,
+    implName: ClassName,
+): FunSpec =
+    FunSpec
+        .builder(CREATE_OR_NULL)
+        .addParameter(COMMAND, typeNameOf<Command>())
+        .returns(implName.copy(nullable = true))
+        .addCode(
+            buildCodeBlock {
+                add("if (%N.params.size != %L) return null\n", COMMAND, context.constraintsProperties.size)
+                context.constraintsProperties.forEach { addConstraintExtraction(it) }
+                val arguments = (listOf(COMMAND) + context.constraintsProperties.map { it.name }).map { CodeBlock.of("%N", it) }.joinToCode(", ")
+                add("return %T(%L)\n", implName, arguments)
+            },
+        ).build()
+
 private fun constraintPropertiesImpl(context: CommandSymbolContext): List<PropertySpec> =
-    context.constraintsProperties.map { property ->
-        PropertySpec
-            .builder(property.name, property.type)
-            .addModifiers(KModifier.OVERRIDE)
-            .initializer(constraintPropertyInitializer(property))
-            .build()
-    }
+    context.constraintsProperties.map { property -> overrideProperty(property.name, property.type, CodeBlock.of("%N", property.name)) }
 
 /**
  * Generates rule expressions for the command.
@@ -202,6 +203,7 @@ internal fun oneParameterValidationRulePlan(
 internal fun companionObject(
     context: CommandSymbolContext,
     validationPlan: ValidationPlan,
+    implName: ClassName,
 ): TypeSpec =
     TypeSpec
         .companionObjectBuilder()
@@ -209,6 +211,7 @@ internal fun companionObject(
         .addSuperinterface(COMMAND_VALIDATION_RULE_TYPE)
         .addProperty(commandRuleProperty(context))
         .addProperty(commandFailFastRuleProperty(context))
+        .addFunction(createOrNullFunction(context, implName))
         .addFunction(
             generateValidateFunction(
                 typeNameOf<Command>(),
@@ -264,7 +267,7 @@ fun generateCommandImplementation(
             .addProperty(constructorProperty(context))
             .addProperties(context.inheritedConstraintsProperties)
             .addProperties(constraintPropertiesImpl(context))
-            .addType(companionObject(context, validationPlan))
+            .addType(companionObject(context, validationPlan, implName))
             .build()
 
     return FileSpec

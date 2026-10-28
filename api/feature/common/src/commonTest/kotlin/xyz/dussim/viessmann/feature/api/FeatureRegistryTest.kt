@@ -1,7 +1,9 @@
 package xyz.dussim.viessmann.feature.api
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import xyz.dussim.viessmann.feature.api.validation.ExpectedActualClass
 import xyz.dussim.viessmann.feature.api.validation.Valid
@@ -76,6 +78,38 @@ val FeatureRegistryTest by testSuite {
 
         descriptor.validate(feature).isInvalid shouldBe false
         structureCalls shouldBe 1
+    }
+
+    test("single-pass descriptor converts in one pass and throws only from getOrThrow") {
+        var ruleCalls = 0
+        var createCalls = 0
+        val invalidRule =
+            ValidationRule<Feature, ValidationError> {
+                ruleCalls++
+                ValidationResult.Invalid(ValidationError.MissingComponent("temperature", ExpectedActualClass.of(0)))
+            }
+        val accepted = testFeature("rooms.1.sensors.temperature")
+        val descriptor =
+            indexedFeatureDescriptor(
+                wildcardName = "rooms.{N}.sensors.temperature",
+                rule = invalidRule,
+                featureType = "RoomTemperatureFeature",
+            ) { feature ->
+                createCalls++
+                if (feature === accepted) RoomTemperatureFeature(feature) else null
+            }
+        val rejected = testFeature("rooms.2.sensors.temperature")
+
+        descriptor.getOrNull(accepted).shouldNotBeNull()
+        descriptor.getOrNull(rejected) shouldBe null
+        createCalls shouldBe 2
+        ruleCalls shouldBe 0
+
+        val exception = shouldThrow<FeatureValidationException> { descriptor.getOrThrow(rejected) }
+        exception.featureClass shouldBe "RoomTemperatureFeature"
+        ruleCalls shouldBe 0
+        exception.validationResult.isInvalid shouldBe true
+        ruleCalls shouldBe 1
     }
 
     test("descriptor getOrNull rejects invalid structure without invoking the throwing factory") {

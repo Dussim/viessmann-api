@@ -307,3 +307,41 @@ fun Constraints<*>.toArrayBooleanConstraintsOrThrow(): ArrayBooleanConstraints =
 fun Constraints<*>.toArrayObjectConstraintsOrThrow(): ArrayObjectConstraints = requireArrayConstraintsOrPromoteEmpty(ArrayObjectConstraints::class, ::ArrayObjectConstraints)
 
 fun Constraints<*>.toArrayUnknownConstraintsOrThrow(): ArrayUnknownConstraints = requireArrayConstraintsOrPromoteEmpty(ArrayUnknownConstraints::class, ::ArrayUnknownConstraints)
+
+// Non-throwing counterparts used by generated single-pass factories. Each accepts exactly what the matching
+// `typedArrayCommandRule` accepts: the expected type, or `ArrayEmptyConstraints` promoted to it.
+
+fun Constraints<*>.toArrayNumberConstraintsOrNull(): ArrayNumberConstraints? =
+    when (this) {
+        is ArrayNumberConstraints -> this
+        is ArrayEmptyConstraints -> ArrayNumberConstraints(minLength, maxLength)
+        else -> null
+    }
+
+fun Constraints<*>.toArrayStringConstraintsOrNull(): ArrayStringConstraints? =
+    when (this) {
+        is ArrayStringConstraints -> this
+        is ArrayEmptyConstraints -> ArrayStringConstraints(minLength, maxLength)
+        else -> null
+    }
+
+fun Constraints<*>.toArrayBooleanConstraintsOrNull(): ArrayBooleanConstraints? =
+    when (this) {
+        is ArrayBooleanConstraints -> this
+        is ArrayEmptyConstraints -> ArrayBooleanConstraints(minLength, maxLength)
+        else -> null
+    }
+
+fun Constraints<*>.toArrayObjectConstraintsOrNull(): ArrayObjectConstraints? =
+    when (this) {
+        is ArrayObjectConstraints -> this
+        is ArrayEmptyConstraints -> ArrayObjectConstraints(minLength, maxLength)
+        else -> null
+    }
+
+fun Constraints<*>.toArrayUnknownConstraintsOrNull(): ArrayUnknownConstraints? =
+    when (this) {
+        is ArrayUnknownConstraints -> this
+        is ArrayEmptyConstraints -> ArrayUnknownConstraints(minLength, maxLength)
+        else -> null
+    }
