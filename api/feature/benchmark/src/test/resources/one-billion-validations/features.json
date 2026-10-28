@@ -1,0 +1,439 @@
+{
+  "data": [
+    {
+      "feature": "billion.system",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.system",
+      "properties": {},
+      "commands": {
+        "start": { "name": "start", "isExecutable": true, "uri": "https://billion.invalid/billion.system/start", "params": {} },
+        "stop": { "name": "stop", "isExecutable": true, "uri": "https://billion.invalid/billion.system/stop", "params": {} },
+        "setLevel": {
+          "name": "setLevel", "isExecutable": true, "uri": "https://billion.invalid/billion.system/setLevel",
+          "params": {
+            "level": { "type": "number", "required": true, "constraints": { "min": 0, "max": 10, "stepping": 1 } }
+          }
+        },
+        "setRange": {
+          "name": "setRange", "isExecutable": true, "uri": "https://billion.invalid/billion.system/setRange",
+          "params": {
+            "lower": { "type": "number", "required": true, "constraints": { "min": 0, "max": 50 } },
+            "upper": { "type": "number", "required": true, "constraints": { "min": 50, "max": 100 } }
+          }
+        },
+        "setWindow": {
+          "name": "setWindow", "isExecutable": true, "uri": "https://billion.invalid/billion.system/setWindow",
+          "params": {
+            "opens": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "closes": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "level": { "type": "number", "required": false, "constraints": { "min": 0, "max": 10 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.system",
+      "gatewayId": "billion-gateway", "deviceId": "1", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.system/missing-command",
+      "properties": {},
+      "commands": {
+        "start": { "name": "start", "isExecutable": true, "uri": "https://billion.invalid/billion.system/start", "params": {} },
+        "stop": { "name": "stop", "isExecutable": true, "uri": "https://billion.invalid/billion.system/stop", "params": {} },
+        "setLevel": {
+          "name": "setLevel", "isExecutable": true, "uri": "https://billion.invalid/billion.system/setLevel",
+          "params": {
+            "level": { "type": "number", "required": true, "constraints": { "min": 0, "max": 10, "stepping": 1 } }
+          }
+        },
+        "setRange": {
+          "name": "setRange", "isExecutable": true, "uri": "https://billion.invalid/billion.system/setRange",
+          "params": {
+            "lower": { "type": "number", "required": true, "constraints": { "min": 0, "max": 50 } },
+            "upper": { "type": "number", "required": true, "constraints": { "min": 50, "max": 100 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.pumps.0",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.pumps.0",
+      "properties": {
+        "status": { "type": "string", "value": "on" }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "billion.pumps.1",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.pumps.1/long-property-name",
+      "properties": {
+        "status": { "type": "string", "value": "off" },
+        "speed": { "type": "number", "value": 0, "unit": "percent" },
+        "hours": { "type": "number", "value": 120, "unit": "hour" },
+        "starts": { "type": "number", "value": 42 },
+        "propertyNameThatIsDeliberatelyLongerThanSixtyFourCharactersToForcePassThrough": { "type": "boolean", "value": true }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "billion.pumps.2",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.pumps.2/wrong-property-type",
+      "properties": {
+        "status": { "type": "boolean", "value": true }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "billion.thermostat",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.thermostat",
+      "properties": {
+        "active": { "type": "boolean", "value": true },
+        "temperature": { "type": "number", "value": 21.5, "unit": "celsius" }
+      },
+      "commands": {
+        "setTemperature": {
+          "name": "setTemperature", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setTemperature",
+          "params": {
+            "targetTemperature": { "type": "number", "required": true, "constraints": { "min": 3, "max": 37, "stepping": 0.5 } }
+          }
+        },
+        "setMode": {
+          "name": "setMode", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setMode",
+          "params": {
+            "mode": { "type": "string", "required": true, "constraints": { "enum": ["comfort", "eco"] } },
+            "duration": { "type": "number", "required": false, "constraints": { "min": 0, "max": 1440 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.thermostat",
+      "gatewayId": "billion-gateway", "deviceId": "1", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.thermostat/wrong-property-type",
+      "properties": {
+        "active": { "type": "boolean", "value": true },
+        "temperature": { "type": "string", "value": "warm" }
+      },
+      "commands": {
+        "setTemperature": {
+          "name": "setTemperature", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setTemperature",
+          "params": {
+            "targetTemperature": { "type": "number", "required": true, "constraints": { "min": 3, "max": 37, "stepping": 0.5 } }
+          }
+        },
+        "setMode": {
+          "name": "setMode", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setMode",
+          "params": {
+            "mode": { "type": "string", "required": true, "constraints": { "enum": ["comfort", "eco"] } },
+            "duration": { "type": "number", "required": false, "constraints": { "min": 0, "max": 1440 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.thermostat",
+      "gatewayId": "billion-gateway", "deviceId": "2", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.thermostat/missing-commands",
+      "properties": {
+        "active": { "type": "boolean", "value": false },
+        "temperature": { "type": "number", "value": 18.0, "unit": "celsius" }
+      },
+      "commands": {}
+    },
+    {
+      "feature": "billion.thermostat",
+      "gatewayId": "billion-gateway", "deviceId": "3", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.thermostat/missing-parameter",
+      "properties": {
+        "active": { "type": "boolean", "value": true },
+        "temperature": { "type": "number", "value": 20.0, "unit": "celsius" }
+      },
+      "commands": {
+        "setTemperature": {
+          "name": "setTemperature", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setTemperature",
+          "params": {}
+        },
+        "setMode": {
+          "name": "setMode", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setMode",
+          "params": {
+            "mode": { "type": "string", "required": true, "constraints": { "enum": ["comfort", "eco"] } },
+            "duration": { "type": "number", "required": false, "constraints": { "min": 0, "max": 1440 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.thermostat",
+      "gatewayId": "billion-gateway", "deviceId": "4", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.thermostat/wrong-parameter-type",
+      "properties": {
+        "active": { "type": "boolean", "value": true },
+        "temperature": { "type": "number", "value": 20.0, "unit": "celsius" }
+      },
+      "commands": {
+        "setTemperature": {
+          "name": "setTemperature", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setTemperature",
+          "params": {
+            "targetTemperature": { "type": "string", "required": true, "constraints": { "enum": ["low", "high"] } }
+          }
+        },
+        "setMode": {
+          "name": "setMode", "isExecutable": true, "uri": "https://billion.invalid/billion.thermostat/setMode",
+          "params": {
+            "mode": { "type": "string", "required": true, "constraints": { "enum": ["comfort", "eco"] } },
+            "duration": { "type": "number", "required": false, "constraints": { "min": 0, "max": 1440 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.sensors.0.temperature",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.sensors.0.temperature",
+      "properties": {
+        "value": { "type": "number", "value": 12.3, "unit": "celsius" },
+        "minimum": { "type": "number", "value": -20.0, "unit": "celsius" },
+        "maximum": { "type": "number", "value": 40.0, "unit": "celsius" }
+      },
+      "commands": {
+        "calibrate": {
+          "name": "calibrate", "isExecutable": true, "uri": "https://billion.invalid/billion.sensors.0.temperature/calibrate",
+          "params": {
+            "offset": { "type": "number", "required": true, "constraints": { "min": -5, "max": 5, "stepping": 0.1 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.sensors.1.temperature",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.sensors.1.temperature/missing-property",
+      "properties": {
+        "value": { "type": "number", "value": 7.5, "unit": "celsius" },
+        "minimum": { "type": "number", "value": -20.0, "unit": "celsius" }
+      },
+      "commands": {
+        "calibrate": {
+          "name": "calibrate", "isExecutable": true, "uri": "https://billion.invalid/billion.sensors.1.temperature/calibrate",
+          "params": {
+            "offset": { "type": "number", "required": true, "constraints": { "min": -5, "max": 5, "stepping": 0.1 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.program",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.program/with-optional-command",
+      "properties": {
+        "name": { "type": "string", "value": "comfort" },
+        "enabled": { "type": "boolean", "value": true },
+        "start": { "type": "string", "value": "06:00" },
+        "end": { "type": "string", "value": "22:00" }
+      },
+      "commands": {
+        "activate": { "name": "activate", "isExecutable": true, "uri": "https://billion.invalid/billion.program/activate", "params": {} },
+        "rename": {
+          "name": "rename", "isExecutable": true, "uri": "https://billion.invalid/billion.program/rename",
+          "params": {
+            "name": { "type": "string", "required": true, "constraints": { "minLength": 1, "maxLength": 20 } }
+          }
+        },
+        "reschedule": {
+          "name": "reschedule", "isExecutable": true, "uri": "https://billion.invalid/billion.program/reschedule",
+          "params": {
+            "start": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "end": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "repeat": { "type": "boolean", "required": false, "constraints": {} }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.program",
+      "gatewayId": "billion-gateway", "deviceId": "1", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.program/without-optional-command",
+      "properties": {
+        "name": { "type": "string", "value": "eco" },
+        "enabled": { "type": "boolean", "value": false },
+        "start": { "type": "string", "value": "08:00" },
+        "end": { "type": "string", "value": "18:00" }
+      },
+      "commands": {
+        "activate": { "name": "activate", "isExecutable": true, "uri": "https://billion.invalid/billion.program/activate", "params": {} },
+        "reschedule": {
+          "name": "reschedule", "isExecutable": true, "uri": "https://billion.invalid/billion.program/reschedule",
+          "params": {
+            "start": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "end": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "repeat": { "type": "boolean", "required": false, "constraints": {} }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.program",
+      "gatewayId": "billion-gateway", "deviceId": "2", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.program/malformed-optional-command",
+      "properties": {
+        "name": { "type": "string", "value": "night" },
+        "enabled": { "type": "boolean", "value": true },
+        "start": { "type": "string", "value": "22:00" },
+        "end": { "type": "string", "value": "06:00" }
+      },
+      "commands": {
+        "activate": { "name": "activate", "isExecutable": true, "uri": "https://billion.invalid/billion.program/activate", "params": {} },
+        "rename": {
+          "name": "rename", "isExecutable": true, "uri": "https://billion.invalid/billion.program/rename",
+          "params": {
+            "name": { "type": "number", "required": true, "constraints": { "min": 0, "max": 10 } }
+          }
+        },
+        "reschedule": {
+          "name": "reschedule", "isExecutable": true, "uri": "https://billion.invalid/billion.program/reschedule",
+          "params": {
+            "start": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "end": { "type": "string", "required": true, "constraints": { "regEx": "^[0-9]{2}:[0-9]{2}$" } },
+            "repeat": { "type": "boolean", "required": false, "constraints": {} }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.circuits.0",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.circuits.0",
+      "properties": {
+        "mode": { "type": "string", "value": "heating" },
+        "supplyTemperature": { "type": "number", "value": 45.0, "unit": "celsius" },
+        "returnTemperature": { "type": "number", "value": 35.0, "unit": "celsius" },
+        "pressure": { "type": "number", "value": 1.8, "unit": "bar" },
+        "demand": { "type": "string", "value": "unknown" },
+        "frostProtection": { "type": "boolean", "value": false }
+      },
+      "commands": {
+        "reset": { "name": "reset", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.0/reset", "params": {} },
+        "changeMode": {
+          "name": "changeMode", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.0/changeMode",
+          "params": {
+            "mode": { "type": "string", "required": true, "constraints": { "enum": ["heating", "standby"] } }
+          }
+        },
+        "setLimits": {
+          "name": "setLimits", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.0/setLimits",
+          "params": {
+            "minimum": { "type": "number", "required": true, "constraints": { "min": 10, "max": 30 } },
+            "maximum": { "type": "number", "required": true, "constraints": { "min": 30, "max": 80 } },
+            "hysteresis": { "type": "number", "required": false, "constraints": { "min": 0, "max": 5, "stepping": 0.5 } },
+            "delay": { "type": "number", "required": false, "constraints": { "min": 0, "max": 600 } }
+          }
+        },
+        "configure": {
+          "name": "configure", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.0/configure",
+          "params": {
+            "curve": { "type": "string", "required": true, "constraints": { "enum": ["flat", "steep"] } },
+            "slope": { "type": "number", "required": true, "constraints": { "min": 0.2, "max": 3.5, "stepping": 0.1 } },
+            "shift": { "type": "number", "required": true, "constraints": { "min": -13, "max": 40 } },
+            "enabled": { "type": "boolean", "required": false, "constraints": {} },
+            "label": { "type": "string", "required": false, "constraints": { "maxLength": 20 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.circuits.1",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.circuits.1/wrong-parameter-type",
+      "properties": {
+        "mode": { "type": "string", "value": "standby" },
+        "supplyTemperature": { "type": "number", "value": 20.0, "unit": "celsius" },
+        "returnTemperature": { "type": "number", "value": 20.0, "unit": "celsius" },
+        "pressure": { "type": "number", "value": 1.5, "unit": "bar" },
+        "demand": { "type": "string", "value": "none" },
+        "frostProtection": { "type": "boolean", "value": true }
+      },
+      "commands": {
+        "reset": { "name": "reset", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.1/reset", "params": {} },
+        "changeMode": {
+          "name": "changeMode", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.1/changeMode",
+          "params": {
+            "mode": { "type": "string", "required": true, "constraints": { "enum": ["heating", "standby"] } }
+          }
+        },
+        "setLimits": {
+          "name": "setLimits", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.1/setLimits",
+          "params": {
+            "minimum": { "type": "number", "required": true, "constraints": { "min": 10, "max": 30 } },
+            "maximum": { "type": "number", "required": true, "constraints": { "min": 30, "max": 80 } },
+            "hysteresis": { "type": "number", "required": false, "constraints": { "min": 0, "max": 5, "stepping": 0.5 } },
+            "delay": { "type": "number", "required": false, "constraints": { "min": 0, "max": 600 } }
+          }
+        },
+        "configure": {
+          "name": "configure", "isExecutable": true, "uri": "https://billion.invalid/billion.circuits.1/configure",
+          "params": {
+            "curve": { "type": "string", "required": true, "constraints": { "enum": ["flat", "steep"] } },
+            "slope": { "type": "number", "required": true, "constraints": { "min": 0.2, "max": 3.5, "stepping": 0.1 } },
+            "shift": { "type": "number", "required": true, "constraints": { "min": -13, "max": 40 } },
+            "enabled": { "type": "boolean", "required": false, "constraints": {} },
+            "label": { "type": "number", "required": false, "constraints": { "max": 20 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.combined",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.combined",
+      "properties": {
+        "active": { "type": "boolean", "value": true },
+        "temperature": { "type": "number", "value": 22.0, "unit": "celsius" },
+        "status": { "type": "string", "value": "on" }
+      },
+      "commands": {
+        "setTemperature": {
+          "name": "setTemperature", "isExecutable": true, "uri": "https://billion.invalid/billion.combined/setTemperature",
+          "params": {
+            "targetTemperature": { "type": "number", "required": true, "constraints": { "min": 3, "max": 37 } }
+          }
+        },
+        "setMode": {
+          "name": "setMode", "isExecutable": true, "uri": "https://billion.invalid/billion.combined/setMode",
+          "params": {
+            "mode": { "type": "string", "required": true, "constraints": { "enum": ["comfort", "eco"] } },
+            "duration": { "type": "number", "required": false, "constraints": { "min": 0, "max": 1440 } }
+          }
+        }
+      }
+    },
+    {
+      "feature": "billion.unrelated",
+      "gatewayId": "billion-gateway", "deviceId": "0", "apiVersion": 1, "isEnabled": true, "isReady": true,
+      "timestamp": "2000-01-01T00:00:00Z",
+      "uri": "https://billion.invalid/billion.unrelated",
+      "properties": {},
+      "commands": {}
+    }
+  ]
+}

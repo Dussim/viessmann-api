@@ -51,6 +51,19 @@ Benchmark reports are generated in `api/feature/benchmark/build/reports/jmh/`:
 - **Environment fingerprint**: `environment.json` for stable runs
 - **Human-readable**: `human.txt`
 
+## One billion validations test
+`OneBillionValidationsTest` runs at least one billion structure-matcher validations: six small benchmark-owned feature
+definitions (`billion.definitions`) against a registry built from `src/test/resources/one-billion-validations/features.json`
+(19 entries, decoded 500 times). Unlike `all_features.json`, the input does not depend on the OpenAPI schema, so the
+expected match counts are stable. The fixture's properties, commands and parameter maps cover every
+`EfficientStringKeyMap` representation (empty, 1–4 entries, N entries, and pass-through for 64+ character keys).
+Fast checks of that coverage and of the expected matches always run. The billion-validation run is opt-in because it
+takes a long time:
+
+```powershell
+$env:ONE_BILLION_VALIDATIONS = "true"; ./gradlew.bat :api:feature:api-feature-benchmark:test
+```
+
 ## Key Benchmark Scenarios
 - `ValidationBenchmark`: Performance of feature validation logic.
 - `EfficientMapBenchmark`: Microbenchmarks comparing `EfficientStringKeyMap` against standard `Map` implementations.

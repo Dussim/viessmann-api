@@ -78,6 +78,14 @@ val stableValidationEnvironment =
         outputs.file(stableEnvironmentFile)
     }
 
+tasks.test {
+    // Opt-in switch for OneBillionValidationsTest; declared as an input so toggling it re-runs the tests.
+    inputs.property(
+        "oneBillionValidations",
+        providers.environmentVariable("ONE_BILLION_VALIDATIONS").orElse("false"),
+    )
+}
+
 tasks.jmh {
     finalizedBy(tasks.jmhReport)
 }
