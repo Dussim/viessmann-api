@@ -216,7 +216,10 @@ private data class NElements<T>(
         key: String,
         precomputedHash: Long,
     ): T? {
+        // Stored keys are shorter than 64 (longer maps use PassThrough), so a lookup key of 64+ characters can never
+        // be present. Without this check `1L shl length` wraps around and the jump tables are indexed out of range.
         val length = extractLow(precomputedHash)
+        if (length >= Long.SIZE_BITS) return null
         if (lengthBitset and (1L shl length) == 0L) return null
         var current = startIndexJumpTable[length]
         val end = endIndexJumpTable[length]

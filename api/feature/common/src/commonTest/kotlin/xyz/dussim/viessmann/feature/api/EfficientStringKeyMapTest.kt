@@ -169,6 +169,24 @@ val EfficientStringKeyMapTest by testSuite {
             map["key100"] shouldBe 100
             map["key101"].shouldBeNull()
         }
+
+        test("returns null for lookup keys of 64+ chars whose length aliases a stored length") {
+            val map =
+                EfficientStringKeyMap(
+                    mapOf(
+                        "a" to 1,
+                        "bb" to 2,
+                        "ccc" to 3,
+                        "dddd" to 4,
+                        "eeeee" to 5,
+                    ),
+                )
+            // 64 + n shifts to the same bit as n, which is set for n in 1..5.
+            for (n in 0..5) {
+                map["z".repeat(64 + n)].shouldBeNull()
+            }
+            map["a".repeat(65)].shouldBeNull()
+        }
     }
 
     testSuite("Map interface methods") {
