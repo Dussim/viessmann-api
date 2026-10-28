@@ -1,7 +1,7 @@
 [versions]
 ksp = "2.3.12"
-testBalloon = "1.0.1-K2.4.0"
-kotlin = "2.4.10"
+testBalloon = "1.2.0"
+kotlin = "2.4.21"
 ktlint = "1.8.0"
 slf4j = "2.0.20"
 

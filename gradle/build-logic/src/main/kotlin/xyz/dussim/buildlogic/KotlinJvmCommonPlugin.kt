@@ -35,11 +35,15 @@ class KotlinJvmCommonPlugin : Plugin<Project> {
             }
 
             val testImplementation = configurations.named("testImplementation")
+            val testRuntimeOnly = configurations.named("testRuntimeOnly")
 
             dependencies {
                 testImplementation(libs.kotest.assertions.core)
                 testImplementation(libs.testBalloon.framework.core)
                 testImplementation(libs.testBalloon.integration.kotest.assertions)
+                // The TestBalloon plugin adds its own pinned launcher (1.13.4); declaring ours lets conflict
+                // resolution select the catalog version, which also aligns junit-platform-engine.
+                testRuntimeOnly(libs.junit.platform.launcher)
             }
 
             configureCommon()

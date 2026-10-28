@@ -48,5 +48,13 @@ internal fun Project.configureKotlinMultiplatformLibrary() {
                 implementation(libs.testBalloon.integration.kotest.assertions)
             }
         }
+
+        sourceSets.getByName("jvmTest") {
+            dependencies {
+                // The TestBalloon plugin adds its own pinned launcher (1.13.4); declaring ours lets conflict
+                // resolution select the catalog version, which also aligns junit-platform-engine.
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
     }
 }
