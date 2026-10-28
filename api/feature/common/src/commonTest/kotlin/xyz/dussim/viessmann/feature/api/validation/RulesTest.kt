@@ -65,6 +65,26 @@ val RulesTest by testSuite {
             params = EfficientStringKeyMap(params),
         )
 
+    testSuite("rules built from runtime names") {
+        // Neither the rule name nor the map key is a literal instance, so lookups cannot rely on literal identity.
+        fun runtime(value: String): String = buildString { append(value) }
+
+        test("property rule finds a property keyed by a distinct instance") {
+            val feature = createFeature(mapOf(runtime("runtimeName") to Property("string", StringValue("test"))))
+            stringPropertyRule(runtime("runtimeName")).validate(feature).isInvalid shouldBe false
+        }
+
+        test("command rule finds a command keyed by a distinct instance") {
+            val feature = createFeature(commands = mapOf(runtime("runtimeCommand") to createCommand()))
+            zeroParameterCommandRule(runtime("runtimeCommand")).validate(feature).isInvalid shouldBe false
+        }
+
+        test("constraints rule finds a parameter keyed by a distinct instance") {
+            val command = createCommand(mapOf(runtime("runtimeParam") to Parameter.of(BooleanConstraints)))
+            booleanConstraintsRule(runtime("runtimeParam")).validate(command).isInvalid shouldBe false
+        }
+    }
+
     testSuite("stringPropertyRule") {
         test("returns Valid when property exists with StringValue") {
             val feature = createFeature(mapOf("value" to Property("string", StringValue("test"))))

@@ -254,6 +254,26 @@ val EfficientStringKeyMapTest by testSuite {
         }
     }
 
+    testSuite("non-canonical key instances") {
+        // Keys built at runtime are distinct instances from the literals used in lookups (and vice versa), so both
+        // the reference fast path and the content-comparison fallback are exercised.
+        fun runtime(value: String): String = buildString { append(value) }
+
+        val sizes = listOf(1, 2, 3, 4, 5, 8)
+        for (size in sizes) {
+            test("map of $size built from runtime keys matches literal and runtime lookups") {
+                val literals = listOf("alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta").take(size)
+                val map = EfficientStringKeyMap(literals.withIndex().associate { (index, key) -> runtime(key) to index })
+
+                literals.forEachIndexed { index, key ->
+                    map[key] shouldBe index
+                    map[runtime(key)] shouldBe index
+                }
+                map[runtime("iota")].shouldBeNull()
+            }
+        }
+    }
+
     testSuite("Very long keys (>= 64 chars)") {
         test("falls back to PassThrough and returns correct values") {
             val longKey = "a".repeat(64)

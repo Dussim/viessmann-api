@@ -58,6 +58,7 @@ import xyz.dussim.viessmann.feature.api.StringConstraints
 import xyz.dussim.viessmann.feature.api.StringValue
 import xyz.dussim.viessmann.feature.api.TestResultValue
 import xyz.dussim.viessmann.feature.api.UnknownConstraints
+import xyz.dussim.viessmann.feature.api.canonicalKey
 import xyz.dussim.viessmann.feature.api.validation.PropertyValidationErrors.getMismatchProperties
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.MissingComponent
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
@@ -84,10 +85,11 @@ internal inline fun <reified T : PropertyValue<*>> typedPropertyRule(
             ValidationResult.Valid
         }
     val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
-    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
+    val lookupKey = propertyName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { target ->
-        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingResult
+        val property = target.properties[lookupKey, precomputedHash] ?: return@ValidationRule missingResult
         if (property.value is T) {
             ValidationResult.Valid
         } else {
@@ -109,10 +111,11 @@ internal inline fun <reified T : PropertyValue<*>, reified NonNullT : PropertyVa
             ValidationResult.Valid
         }
     val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
-    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
+    val lookupKey = propertyName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { target ->
-        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingResult
+        val property = target.properties[lookupKey, precomputedHash] ?: return@ValidationRule missingResult
         if (property.value is T || property.value is NonNullT) {
             ValidationResult.Valid
         } else {
@@ -134,10 +137,11 @@ internal inline fun <reified T : PropertyValue<*>> typedListPropertyRule(
             ValidationResult.Valid
         }
     val getMismatchProperties = getMismatchProperties(propertyName, expectedIndex)
-    val precomputedHash = propertyHash(propertyName.hashCode(), propertyName.length)
+    val lookupKey = propertyName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { target ->
-        val property = target.properties[propertyName, precomputedHash] ?: return@ValidationRule missingResult
+        val property = target.properties[lookupKey, precomputedHash] ?: return@ValidationRule missingResult
         if (property.value is ListEmptyValue || property.value is T) {
             ValidationResult.Valid
         } else {
@@ -153,10 +157,11 @@ internal inline fun <reified T : Constraints<*>> typedCommandRule(
 ): ValidationRule<Command, ValidationError> {
     val missingError = Invalid(MissingComponent(parameterName, ExpectedActualClass.of(expectedIndex)))
     val getMismatchProperties = getMismatchProperties(parameterName, expectedIndex)
-    val precomputedHash = propertyHash(parameterName.hashCode(), parameterName.length)
+    val lookupKey = parameterName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { target ->
-        val property = target.params[parameterName, precomputedHash]?.constraints ?: return@ValidationRule missingError
+        val property = target.params[lookupKey, precomputedHash]?.constraints ?: return@ValidationRule missingError
         if (property is T) {
             ValidationResult.Valid
         } else {
@@ -486,10 +491,11 @@ fun arrayUnknownConstraintsRule(parameterName: String) = typedArrayCommandRule<A
 fun arrayConstraintsRule(parameterName: String): ValidationRule<Command, ValidationError> {
     val missingError = Invalid(MissingComponent(parameterName, ExpectedActualClass.of(ARRAY_CONSTRAINTS_CLASS_INDEX)))
     val getMismatchProperties = getMismatchProperties(parameterName, ARRAY_CONSTRAINTS_CLASS_INDEX)
-    val precomputedHash = propertyHash(parameterName.hashCode(), parameterName.length)
+    val lookupKey = parameterName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { target ->
-        val constraints = target.params[parameterName, precomputedHash]?.constraints ?: return@ValidationRule missingError
+        val constraints = target.params[lookupKey, precomputedHash]?.constraints ?: return@ValidationRule missingError
         if (constraints is ArrayConstraints) {
             ValidationResult.Valid
         } else {
@@ -510,10 +516,11 @@ internal inline fun <reified T : ArrayConstraints> typedArrayCommandRule(
 ): ValidationRule<Command, ValidationError> {
     val missingError = Invalid(MissingComponent(parameterName, ExpectedActualClass.of(expectedIndex)))
     val getMismatchProperties = getMismatchProperties(parameterName, expectedIndex)
-    val precomputedHash = propertyHash(parameterName.hashCode(), parameterName.length)
+    val lookupKey = parameterName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { target ->
-        val constraints = target.params[parameterName, precomputedHash]?.constraints ?: return@ValidationRule missingError
+        val constraints = target.params[lookupKey, precomputedHash]?.constraints ?: return@ValidationRule missingError
         if (constraints is ArrayEmptyConstraints || constraints is T) {
             ValidationResult.Valid
         } else {
@@ -535,10 +542,11 @@ fun energyMatrixConstraintsRule(parameterName: String): ValidationRule<Command, 
 fun zeroParameterCommandRule(commandName: String): ValidationRule<Feature, ValidationError> {
     val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
     val errors = countErrorCache(commandName, 0)
-    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+    val lookupKey = commandName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { feature ->
-        val command = feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError
+        val command = feature.commands[lookupKey, precomputedHash] ?: return@ValidationRule missingError
         val actual = command.params.size
         if (actual == 0) {
             ValidationResult.Valid
@@ -554,10 +562,11 @@ fun zeroParameterCommandRule(commandName: String): ValidationRule<Feature, Valid
  */
 fun optionalZeroParameterCommandRule(commandName: String): ValidationRule<Feature, ValidationError> {
     val errors = countErrorCache(commandName, 0)
-    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+    val lookupKey = commandName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { feature ->
-        val command = feature.commands[commandName, precomputedHash] ?: return@ValidationRule ValidationResult.Valid
+        val command = feature.commands[lookupKey, precomputedHash] ?: return@ValidationRule ValidationResult.Valid
         val actual = command.params.size
         if (actual == 0) {
             ValidationResult.Valid
@@ -572,10 +581,11 @@ fun commandRule(
     innerRule: ValidationRule<Command, ValidationError>,
 ): ValidationRule<Feature, ValidationError> {
     val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
-    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+    val lookupKey = commandName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { feature ->
-        innerRule.validate(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
+        innerRule.validate(feature.commands[lookupKey, precomputedHash] ?: return@ValidationRule missingError)
     }
 }
 
@@ -587,10 +597,11 @@ fun commandFailFastRule(
     innerRule: GeneratedValidationRule<Command, ValidationError>,
 ): ValidationRule<Feature, ValidationError> {
     val missingError = Invalid(MissingComponent(commandName, MISSING_COMMAND_EXPECTED_CLASS))
-    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+    val lookupKey = commandName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { feature ->
-        innerRule.validateFailFast(feature.commands[commandName, precomputedHash] ?: return@ValidationRule missingError)
+        innerRule.validateFailFast(feature.commands[lookupKey, precomputedHash] ?: return@ValidationRule missingError)
     }
 }
 
@@ -601,10 +612,11 @@ fun optionalCommandRule(
     commandName: String,
     innerRule: ValidationRule<Command, ValidationError>,
 ): ValidationRule<Feature, ValidationError> {
-    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+    val lookupKey = commandName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { feature ->
-        feature.commands[commandName, precomputedHash]
+        feature.commands[lookupKey, precomputedHash]
             ?.let(innerRule::validate)
             ?: ValidationResult.Valid
     }
@@ -617,10 +629,11 @@ fun optionalCommandFailFastRule(
     commandName: String,
     innerRule: GeneratedValidationRule<Command, ValidationError>,
 ): ValidationRule<Feature, ValidationError> {
-    val precomputedHash = propertyHash(commandName.hashCode(), commandName.length)
+    val lookupKey = commandName.canonicalKey()
+    val precomputedHash = propertyHash(lookupKey.hashCode(), lookupKey.length)
 
     return ValidationRule { feature ->
-        feature.commands[commandName, precomputedHash]
+        feature.commands[lookupKey, precomputedHash]
             ?.let(innerRule::validateFailFast)
             ?: ValidationResult.Valid
     }

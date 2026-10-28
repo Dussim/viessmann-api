@@ -7,6 +7,22 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
+/**
+ * Returns the canonical instance of this key. Keys are canonicalized once when a map is built so that lookups with
+ * canonical keys (e.g. string literals in generated rules) match by reference in [sameKey].
+ */
+@PublishedApi
+internal expect fun String.canonicalKey(): String
+
+/**
+ * [stored] is canonical; the reference check is the fast path, content comparison the fallback for any other key.
+ */
+@Suppress("NOTHING_TO_INLINE")
+private inline fun sameKey(
+    stored: String,
+    key: String,
+): Boolean = stored === key || stored.compareTo(key) == 0
+
 sealed class EfficientStringKeyMap<out T>(
     private val originalMap: Map<String, T>,
 ) : Map<String, T> by originalMap {
@@ -81,7 +97,7 @@ private data class OneElement<T>(
         precomputedHash: Long,
     ): T? =
         when (precomputedHash) {
-            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
+            precomputedHash1 if (sameKey(key1, key)) -> value1
             else -> null
         }
 
@@ -103,8 +119,8 @@ private data class TwoElements<T>(
         precomputedHash: Long,
     ): T? =
         when (precomputedHash) {
-            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
-            precomputedHash2 if (key2.compareTo(key) == 0) -> value2
+            precomputedHash1 if (sameKey(key1, key)) -> value1
+            precomputedHash2 if (sameKey(key2, key)) -> value2
             else -> null
         }
 
@@ -129,9 +145,9 @@ private data class ThreeElements<T>(
         precomputedHash: Long,
     ): T? =
         when (precomputedHash) {
-            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
-            precomputedHash2 if (key2.compareTo(key) == 0) -> value2
-            precomputedHash3 if (key3.compareTo(key) == 0) -> value3
+            precomputedHash1 if (sameKey(key1, key)) -> value1
+            precomputedHash2 if (sameKey(key2, key)) -> value2
+            precomputedHash3 if (sameKey(key3, key)) -> value3
             else -> null
         }
 
@@ -159,10 +175,10 @@ private data class FourElements<T>(
         precomputedHash: Long,
     ): T? =
         when (precomputedHash) {
-            precomputedHash1 if (key1.compareTo(key) == 0) -> value1
-            precomputedHash2 if (key2.compareTo(key) == 0) -> value2
-            precomputedHash3 if (key3.compareTo(key) == 0) -> value3
-            precomputedHash4 if (key4.compareTo(key) == 0) -> value4
+            precomputedHash1 if (sameKey(key1, key)) -> value1
+            precomputedHash2 if (sameKey(key2, key)) -> value2
+            precomputedHash3 if (sameKey(key3, key)) -> value3
+            precomputedHash4 if (sameKey(key4, key)) -> value4
             else -> null
         }
 
@@ -189,7 +205,7 @@ private data class NElements<T>(
         var current = startIndexJumpTable[length]
         val end = endIndexJumpTable[length]
         do {
-            if (precomputedHash == arrayHashes[current] && key.compareTo(arrayKeys[current]) == 0) {
+            if (precomputedHash == arrayHashes[current] && sameKey(arrayKeys[current], key)) {
                 @Suppress("UNCHECKED_CAST")
                 return arrayValues[current] as T?
             }
@@ -222,7 +238,7 @@ data object CommandsSerializer : EfficientStringKeyMap.Serializer<Command>(Comma
 private fun <T> OneElement(originalMap: Map<String, T>): OneElement<T> {
     val (key1, value1) = originalMap.entries.first()
     val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
-    return OneElement(originalMap, key1, value1, precomputedHash1, 1)
+    return OneElement(originalMap, key1.canonicalKey(), value1, precomputedHash1, 1)
 }
 
 private fun <T> TwoElements(originalMap: Map<String, T>): TwoElements<T> {
@@ -231,7 +247,7 @@ private fun <T> TwoElements(originalMap: Map<String, T>): TwoElements<T> {
     val (key2, value2) = entries.next()
     val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
     val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
-    return TwoElements(originalMap, key1, value1, key2, value2, precomputedHash1, precomputedHash2, 2)
+    return TwoElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, precomputedHash1, precomputedHash2, 2)
 }
 
 private fun <T> ThreeElements(originalMap: Map<String, T>): ThreeElements<T> {
@@ -242,7 +258,7 @@ private fun <T> ThreeElements(originalMap: Map<String, T>): ThreeElements<T> {
     val precomputedHash1 = propertyHash(key1.hashCode(), key1.length)
     val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
     val precomputedHash3 = propertyHash(key3.hashCode(), key3.length)
-    return ThreeElements(originalMap, key1, value1, key2, value2, key3, value3, precomputedHash1, precomputedHash2, precomputedHash3, 3)
+    return ThreeElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, key3.canonicalKey(), value3, precomputedHash1, precomputedHash2, precomputedHash3, 3)
 }
 
 private fun <T> FourElements(originalMap: Map<String, T>): FourElements<T> {
@@ -255,12 +271,12 @@ private fun <T> FourElements(originalMap: Map<String, T>): FourElements<T> {
     val precomputedHash2 = propertyHash(key2.hashCode(), key2.length)
     val precomputedHash3 = propertyHash(key3.hashCode(), key3.length)
     val precomputedHash4 = propertyHash(key4.hashCode(), key4.length)
-    return FourElements(originalMap, key1, value1, key2, value2, key3, value3, key4, value4, precomputedHash1, precomputedHash2, precomputedHash3, precomputedHash4, 4)
+    return FourElements(originalMap, key1.canonicalKey(), value1, key2.canonicalKey(), value2, key3.canonicalKey(), value3, key4.canonicalKey(), value4, precomputedHash1, precomputedHash2, precomputedHash3, precomputedHash4, 4)
 }
 
 private fun <T> NElements(originalMap: Map<String, T>): NElements<T> {
     val sortedEntries = originalMap.entries.sortedBy { it.key.length }
-    val arrayKeys = Array(sortedEntries.size) { sortedEntries[it].key }
+    val arrayKeys = Array(sortedEntries.size) { sortedEntries[it].key.canonicalKey() }
     val arrayValues = Array<Any?>(sortedEntries.size) { sortedEntries[it].value }
     val arrayHashes = LongArray(sortedEntries.size) { propertyHash(arrayKeys[it].hashCode(), arrayKeys[it].length) }
     val startIndexJumpTable =
