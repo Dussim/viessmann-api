@@ -22,7 +22,7 @@ open class SuiteState : StableValidationState(StableSize.MEDIUM)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableMediumValidationBenchmark {
     @Benchmark
@@ -86,7 +86,7 @@ open class StableMediumValidationBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableMediumFailFastValidationBenchmark {
     @Benchmark
@@ -130,7 +130,7 @@ open class StableMediumFailFastValidationBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableMediumConstructionBenchmark {
     @Benchmark
@@ -165,7 +165,7 @@ open class StableMediumConstructionBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableMediumNonThrowingRejectionBenchmark {
     // getOrNull rejects through the fail-fast matcher; compare with FailFast.invalidFirst for wrapper overhead.
@@ -183,7 +183,7 @@ open class StableMediumNonThrowingRejectionBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableMediumThrowingConstructionBenchmark {
     @Benchmark

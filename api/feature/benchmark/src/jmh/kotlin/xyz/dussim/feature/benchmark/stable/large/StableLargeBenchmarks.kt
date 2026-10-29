@@ -22,7 +22,7 @@ open class SuiteState : StableValidationState(StableSize.LARGE)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableLargeValidationBenchmark {
     @Benchmark
@@ -86,7 +86,7 @@ open class StableLargeValidationBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableLargeFailFastValidationBenchmark {
     @Benchmark
@@ -130,7 +130,7 @@ open class StableLargeFailFastValidationBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableLargeConstructionBenchmark {
     @Benchmark
@@ -165,7 +165,7 @@ open class StableLargeConstructionBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableLargeNonThrowingRejectionBenchmark {
     // getOrNull rejects through the fail-fast matcher; compare with FailFast.invalidFirst for wrapper overhead.
@@ -183,7 +183,7 @@ open class StableLargeNonThrowingRejectionBenchmark {
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(value = 3)
+@Fork(value = 1)
 @Suppress("unused")
 open class StableLargeThrowingConstructionBenchmark {
     @Benchmark

@@ -38,7 +38,7 @@ object StableEnvironmentFingerprint {
                 put("osArch", System.getProperty("os.arch"))
                 put("cpu", cpuModel())
                 put("jvmArgs", buildJsonArray { benchmarkJvmArgs.forEach { add(JsonPrimitive(it)) } })
-                put("forks", 3)
+                put("forks", 1)
                 put("warmupIterations", 3)
                 put("measurementIterations", 5)
                 put("iterationSeconds", 1)

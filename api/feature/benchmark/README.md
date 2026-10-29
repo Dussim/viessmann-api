@@ -32,8 +32,9 @@ Each workload size is also an independently runnable suite:
 
 These are typed `me.champeau.jmh.JMHTask` tasks selecting benchmarks from the corresponding `stable.small`,
 `stable.medium`, and `stable.large` packages. Their benchmark classes define
-three warmup iterations, five measurement iterations, three forks, one thread, one validation per invocation, and
-nanoseconds per operation. The Gradle configuration fixes a 2 GiB heap and enables the GC profiler.
+three warmup iterations, five measurement iterations, one fork, one thread, one validation per invocation, and
+nanoseconds per operation. One fork stays within the default three-fork run's own error (median deviation 1.3%)
+and takes a third of the time. The Gradle configuration fixes a 2 GiB heap and enables the GC profiler.
 
 The workload is generated from benchmark-owned `StableSmallFeature`, `StableMediumFeature`, and `StableLargeFeature`
 interfaces. `stable-validation/v1/fixture-manifest.json` is the versioned input contract: it records every canonical
