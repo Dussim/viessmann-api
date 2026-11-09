@@ -20,101 +20,98 @@ apply: always
 
 ### Build & Configuration
 
-**Requirements:** Java 21+ on PATH, Node.js (for JS tests)
+**Requirements:** Java 25+ on PATH, Node.js (for JS tests)
 
-**Java:** Do NOT set or override `JAVA_HOME`. Java 21+ is already on PATH. Run all commands using the system `java` directly. Gradle wrapper will pick it up automatically.
+**Java:** Do NOT set or override `JAVA_HOME`. Java 25+ is already on PATH. Run all commands using the system `java` directly. Gradle wrapper will pick it up automatically.
 
 **Build commands:**
 
+Project names are set in `settings.gradle.kts`, so Gradle paths differ from directory names (`api/dto` is `:api:api-dto`).
+
 ```powershell
 ./gradlew.bat build                    # Build all modules (use cautiously)
-./gradlew.bat :api:dto:build           # Build specific module
+./gradlew.bat :api:api-dto:build       # Build specific module
 ./gradlew.bat clean build              # Clean build
 ```
 
 **KSP Code Generation:** KSP2 generates feature implementations from interfaces annotated with
-`@GenerateFeatureImplementation`. Generated sources are in `build/generated/ksp/`. Note that `kspCommonMainMetadata`
-is only needed if you want to generate code directly into `commonMain`. All compilation tasks depend on
-`kspCommonMainKotlinMetadata` - do not change this dependency order.
+`@GenerateFeatureImplementation`. `:api:feature:api-feature-implementations` runs it per target through `kspKotlinJvm` and
+`kspKotlinJs`, after `generateFeatureInterfaces`. Output is under `build/generated/ksp/jvm/jvmMain/kotlin` and
+`build/generated/ksp/js/jsMain/kotlin`.
 
 ---
 
 ### Testing
 
-**Framework:** Kotest with FunSpec style. JVM tests run on JUnit Platform.
+**Framework:** TestBalloon with Kotest assertions. JVM tests run on JUnit Platform.
 
 **Test commands:**
 
 ```powershell
-./gradlew.bat test                         # Run all tests (all modules/targets - use cautiously)
-./gradlew.bat :api:dto:jvmTest             # JVM tests for api:dto
-./gradlew.bat :api:feature:common:jvmTest  # JVM tests for feature:common
-./gradlew.bat :api:dto:jsNodeTest          # JS Node tests (if requested)
-./gradlew.bat :api:dto:jsBrowserTest       # JS Browser tests (if requested)
-
-# Run specific test class
-./gradlew.bat :api:dto:jvmTest --tests "xyz.dussim.viessmann.api.enums.AccessLevelTest"
+./gradlew.bat test                                     # Run all tests (all modules/targets - use cautiously)
+./gradlew.bat :api:api-dto:jvmTest                     # JVM tests for api-dto
+./gradlew.bat :api:feature:api-feature-common:jvmTest  # JVM tests for api-feature-common
+./gradlew.bat :api:api-dto:jsNodeTest                  # JS Node tests (if requested)
+./gradlew.bat :api:api-dto:jsBrowserTest               # JS Browser tests (if requested)
 ```
 
 **Adding new tests:**
 
 1. Create test file in `src/commonTest/kotlin/` (for multiplatform) or `src/jvmTest/kotlin/` (JVM-only)
-2. Extend `FunSpec` from Kotest
-3. Use `test("description") { ... }` or `context("group") { ... }` blocks
+2. Declare a top-level `val ExampleTest by testSuite { ... }`
+3. Use `test("description") { ... }` and nested `testSuite("group") { ... }` blocks
 
 **Test file example:**
 
 ```kotlin
 package xyz.dussim.viessmann.feature.api
 
-import io.kotest.core.spec.style.FunSpec
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
-class ExampleTest :
-    FunSpec({
-        test("example test") {
-            val result = 1 + 1
-            result shouldBe 2
-        }
+val ExampleTest by testSuite {
+    test("example test") {
+        val result = 1 + 1
+        result shouldBe 2
+    }
 
-        context("grouped tests") {
-            test("first") {
-                true shouldBe true
-            }
+    testSuite("grouped tests") {
+        test("first") {
+            true shouldBe true
         }
-    })
+    }
+}
 ```
 
 **Test dependencies** (automatically provided by convention plugin `xyz.dussim.kotlin.common`):
 
-- `kotest-framework-engine` - test framework
+- `testBalloon-framework-core` - test framework
 - `kotest-assertions-core` - assertions (`shouldBe`, `shouldContain`, etc.)
-- `kotest-runner-junit5` - JVM runner (jvmTest only)
+- `testBalloon-integration-kotest-assertions` - TestBalloon and Kotest assertion integration
+- `junit-platform-launcher` - JVM launcher (jvmTest only)
 
 ---
 
 ### Code Style & Patterns
 
 **Formatter:** Kotlinter with ktlint_official style
-**Static analysis:** Detekt (config: `config/detekt/detekt.yml`)
 **Max line length:** 180 characters
 
 **Multiplatform:** This is a Kotlin Multiplatform project.
 - `commonMain`: Shared logic, DTOs, interfaces.
-- `jvmMain`: JVM-specific implementations (e.g., JMH benchmarks, specialized performance optimizations).
+- `jvmMain`: JVM-specific implementations (e.g., specialized performance optimizations).
+- `webMain`: Code shared by web targets; `jsMain` depends on it.
 - Always prefer `commonMain` unless platform-specific APIs are required.
 - Use `expect`/`actual` for platform-specific functionality.
 
 ```powershell
 ./gradlew.bat formatKotlin    # Auto-format code
 ./gradlew.bat lintKotlin      # Check formatting
-./gradlew.bat detekt          # Run static analysis
-./gradlew.bat check           # Run all verifications (tests + lint + detekt)
+./gradlew.bat check           # Run all verifications (tests + lint)
 ```
 
 **Style conventions:**
 
-- Class definition with lambda on new line (see test examples)
 - Trailing commas in multi-line lists
 - Explicit type parameters when needed for clarity
 
@@ -138,28 +135,30 @@ class ExampleTest :
 
 - **Convention Plugins:** The project uses custom convention plugins (e.g., `xyz.dussim.kotlin.common`, `xyz.dussim.generate.*`). When working on `build.gradle.kts` files, prefer applying these plugins rather than manually configuring dependencies, KSP, or serialization. Assume they handle essential boilerplate.
 - **Version Catalog:** Always use `gradle/libs.versions.toml` to reference plugin and library versions. Do not hardcode versions in `build.gradle.kts`.
-- **Anonymization:** For any generated or test-related JSON processing, check if the `xyz.dussim.anonymize.json` plugin or related utilities are applicable.
 
 ### Module Structure
 
-For each module, there is a standard `README.md` for human developers and a `README.ai.md` (AI Hints) file that provides high-level technical context, design patterns, and internal implementation details specifically for AI agents.
+See `README.adoc` at the repository root for the module table.
 
-| Module                     | Description                                                                                                                                                     |
-|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `:api:dto`                 | Multiplatform DTOs, feature models. Uses KSP-generated sources.                                                                                                 |
-| `:api:feature:annotations` | Annotation definitions for KSP processor ([README](api/feature/annotations/README.md), [AI Hints](api/feature/annotations/README.ai.md))                        |
-| `:api:feature:processor`   | KSP2 processor generating feature implementations ([README](api/feature/processor/README.md), [AI Hints](api/feature/processor/README.ai.md))                   |
-| `:api:feature:common`      | Core types (`Feature`, `Property`, `Command`), validation, efficient maps ([README](api/feature/common/README.md), [AI Hints](api/feature/common/README.ai.md)) |
-| `:api:feature:benchmark`   | JMH benchmarks (JVM only) ([README](api/feature/benchmark/README.md), [AI Hints](api/feature/benchmark/README.ai.md))                                           |
-| `:api:feature:definitions` | Generated feature interfaces from YAML ([README](api/feature/definitions/README.md), [AI Hints](api/feature/definitions/README.ai.md))                       |
-| `:api:feature:implementations` | KSP-generated feature implementation classes ([README](api/feature/implementations/README.md), [AI Hints](api/feature/implementations/README.ai.md)) |
+**Module notes:**
+
+- **`api-dto`:** API enums have an `Unknown` case so new API values do not break decoding.
+- **`api-auth`:** SAML-specific error payloads are intentionally separate from the shared error DTO.
+- **`api-errors`:** `extendedPayload` and validation `context` are intentionally modeled as `JsonObject`.
+- **`api-equipment`:** Status payloads intentionally model the endpoint responses, not the full equipment domain.
+- **`api-users`:** Some nested response objects are intentionally partial because the upstream schema is loose.
+- **`api-feature-annotations`:** Must stay a leaf module; every feature module and the processor depend on it.
+- **`api-feature-common`:** `EfficientStringKeyMap` dispatches on an integer kind to keep call sites inlinable. Do not replace it with virtual dispatch without benchmarks.
+- **`api-feature-processor`:** Update `FeatureSymbolValidator` and `docs/feature-processor-guide.adoc` together.
+- **`api-feature-implementations`:** JSON fixture tests live here because they need concrete descriptors.
+- **`client-core`:** The client sets `expectSuccess = false` because status mapping happens in the request helpers.
 
 ---
 
 ### Benchmarks (JVM only)
 
 ```powershell
-./gradlew.bat :api:feature:benchmark:jmh
+./gradlew.bat :api:feature:api-feature-benchmark:jmh
 ```
 
 Reports: `api/feature/benchmark/build/reports/jmh/results.json`
@@ -168,17 +167,16 @@ Reports: `api/feature/benchmark/build/reports/jmh/results.json`
 
 ### Troubleshooting
 
-**JAVA_HOME issues on Windows:** Do not set `JAVA_HOME` manually. Java 21+ must be on PATH. If Gradle complains about `JAVA_HOME`, unset it and rely on PATH.
+**JAVA_HOME issues on Windows:** Do not set `JAVA_HOME` manually. Java 25+ must be on PATH. If Gradle complains about `JAVA_HOME`, unset it and rely on PATH.
 
 **Configuration Cache:** Enabled by default. Problems report: `build/reports/problems/problems-report.html`
 
-**KSP issues:** Ensure `kspCommonMainKotlinMetadata` runs before other compilation tasks. Check generated sources in
-`build/generated/ksp/metadata/commonMain/kotlin/`. Note: `kspCommonMainMetadata` should only be used if code is
-meant to be generated directly into `commonMain`.
+**KSP issues:** Ensure `generateFeatureInterfaces` runs before `kspKotlinJvm` and `kspKotlinJs`. Check generated sources in
+`api/feature/implementations/build/generated/ksp/`.
 
 ---
 
 ### Feature Processor
 
-For detailed information on how to create feature interfaces for code generation with `:feature:processor`, see:
-[Feature Processor Code Generation Guide](docs/feature-processor-guide.md)
+For detailed information on how to create feature interfaces for code generation with `:api:feature:api-feature-processor`, see:
+[Feature Processor Code Generation Guide](docs/feature-processor-guide.adoc)

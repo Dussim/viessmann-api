@@ -1,0 +1,218 @@
+= Viessmann API for Kotlin Multiplatform
+:toc: macro
+:toclevels: 2
+:source-highlighter: rouge
+:icons: font
+
+Typed Kotlin Multiplatform DTOs, Ktor clients, and an annotation-driven feature system for the Viessmann API.
+Feature interfaces are generated from OpenAPI YAML, and KSP2 generates validated implementations for them.
+
+toc::[]
+
+== At a glance
+
+[cols="1,3"]
+|===
+|Targets |JVM (Java 25), JS (Node and browser, ES modules, TypeScript definitions)
+|Kotlin |Version in link:gradle/libs.versions.toml[`gradle/libs.versions.toml`]
+|Build |Gradle wrapper, KSP2, configuration cache, build cache
+|Runtime libraries |Ktor client, kotlinx.serialization
+|Tests |TestBalloon with Kotest assertions
+|Benchmarks |JMH (JVM only)
+|Formatting |Kotlinter (ktlint)
+|License |Apache License 2.0, see link:LICENSE.txt[`LICENSE.txt`]
+|===
+
+== Architecture
+
+=== Module dependencies
+
+Arrows point from a module to what it depends on.
+
+[mermaid]
+....
+graph TD
+    facade[client-facade] --> cauth[client-auth]
+    facade --> cequip[client-equipment]
+    facade --> cfeat[client-features]
+    facade --> cusers[client-users]
+
+    cauth --> core[client-core]
+    cequip --> core
+    cfeat --> core
+    cusers --> core
+
+    cauth --> aauth[api-auth]
+    cequip --> aequip[api-equipment]
+    cfeat --> afeat[api-features]
+    cusers --> ausers[api-users]
+
+    core --> errors[api-errors]
+    aauth --> errors
+    aequip --> errors
+    afeat --> errors
+    ausers --> errors
+    aequip --> dto[api-dto]
+    ausers --> dto
+    errors --> dto
+
+    afeat --> common[api-feature-common]
+    dto --> defs[api-feature-definitions]
+    dto --> common
+    dto --> annot[api-feature-annotations]
+    defs --> common
+    defs --> annot
+    impl[api-feature-implementations] --> defs
+    impl -. KSP .-> proc[api-feature-processor]
+    proc --> common
+    proc --> annot
+....
+
+=== Feature code generation
+
+[mermaid]
+....
+flowchart LR
+    yaml[/"OpenAPI YAML<br/>openApiPath/features/*.yaml"/]
+    json[/"Feature JSON<br/>build/generated/feature-jsons"/]
+    ifaces[/"Kotlin interfaces<br/>build/generated/features"/]
+    impls[/"Implementations, descriptors, rules<br/>build/generated/ksp"/]
+    tests[/"JSON fixture tests<br/>build/generated/feature-json-tests"/]
+
+    yaml -->|generateFeatureJsonsFromYaml| json
+    json -->|generateFeatureInterfaces| ifaces
+    ifaces -->|kspKotlinJvm, kspKotlinJs| impls
+    json -->|generateFeatureJsonTests| tests
+....
+
+See link:docs/feature-processor-guide.adoc[Feature processor guide] for the modeling rules.
+
+== Modules
+
+Project names are set in `settings.gradle.kts`, so Gradle paths differ from directory names.
+Use the paths below on the command line.
+
+[cols="2,3,4"]
+|===
+|Directory |Gradle path |Purpose
+
+|`api/dto` |`:api:api-dto` |Shared models and sealed API enums
+|`api/errors` |`:api:api-errors` |Shared error payloads
+|`api/auth` |`:api:api-auth` |Auth, CSRF, and SAML DTOs
+|`api/equipment` |`:api:api-equipment` |Equipment v2 DTOs
+|`api/features` |`:api:api-features` |Features v2 HTTP DTOs
+|`api/users` |`:api:api-users` |Users v1 and v2 DTOs
+|`api/feature/annotations` |`:api:feature:api-feature-annotations` |Code generation annotations
+|`api/feature/common` |`:api:feature:api-feature-common` |Feature runtime, validation, registry
+|`api/feature/processor` |`:api:feature:api-feature-processor` |KSP2 processor
+|`api/feature/definitions` |`:api:feature:api-feature-definitions` |Generated feature interfaces
+|`api/feature/implementations` |`:api:feature:api-feature-implementations` |Generated implementations
+|link:api/feature/benchmark/README.adoc[`api/feature/benchmark`] |`:api:feature:api-feature-benchmark` |JMH benchmarks and long-running validation tests
+|`client/core` |`:client:client-core` |Ktor setup, request helpers, exceptions
+|`client/auth` |`:client:client-auth` |Auth client
+|`client/equipment` |`:client:client-equipment` |Equipment client
+|`client/features` |`:client:client-features` |Features client
+|`client/users` |`:client:client-users` |Users client
+|`client/facade` |`:client:client-facade` |`ViessmannApiClient` entry point
+|`client/test-support` |`:client:client-test-support` |Mock engine helpers for client tests
+|===
+
+== Getting started
+
+=== Requirements
+
+* JDK 25 or newer
+* Node.js, for JS tests
+* OpenAPI feature specifications, see <<openapi-input>>
+
+=== Common tasks
+
+[source,powershell]
+----
+# Build one module
+./gradlew.bat :api:api-dto:build
+
+# Build everything
+./gradlew.bat build
+
+# JVM tests for one module
+./gradlew.bat :api:api-dto:jvmTest
+
+# JS tests
+./gradlew.bat :api:api-dto:jsNodeTest
+./gradlew.bat :api:api-dto:jsBrowserTest
+
+# Format and lint
+./gradlew.bat formatKotlin
+./gradlew.bat lintKotlin
+
+# Default JMH benchmark
+./gradlew.bat :api:feature:api-feature-benchmark:jmh
+----
+
+On Unix-like systems, use `./gradlew`.
+
+=== Using the client
+
+[source,kotlin]
+----
+val client = ViessmannApiClient.create(
+    ViessmannClientConfig(accessTokenProvider = { loadAccessToken() }),
+)
+
+val installations = client.equipment.getInstallations()
+
+client.close()
+----
+
+Add a Ktor engine for your platform to the runtime classpath, or pass one through `engineFactory`.
+
+[[openapi-input]]
+== OpenAPI input
+
+Feature generation reads `*.yaml` files from the `features` subdirectory of the `openApiPath` build parameter.
+The default is `.ignored/featuresOpenApi`.
+
+[source,powershell]
+----
+$env:OPEN_API_PATH = "C:\path\to\featuresOpenApi"
+./gradlew.bat build
+----
+
+WARNING: Missing or empty input currently produces only a settings-time warning, so a build can finish with empty generated artifacts.
+Do not publish from such a build.
+
+== Configuration
+
+[cols="2,4"]
+|===
+|Variable |Purpose
+
+|`OPEN_API_PATH` |OpenAPI source directory; optional when using the default path
+|`CI` |Enables CI behavior: pushes to the remote build cache and disables the local one
+|`BUILD_CACHE_URL` |Remote build cache URL
+|`BUILD_CACHE_USER`, `BUILD_CACHE_USER_PASSWORD` |Remote build cache credentials; defaults are a read-only user
+|`REPO_USERNAME`, `REPO_PASSWORD` |Maven publishing credentials; also available as `repoUsername` and `repoPassword` Gradle properties
+|`ONE_BILLION_VALIDATIONS` |Set to `true` to enable the billion-validation test runs
+|===
+
+== Convention plugins
+
+Convention plugins live in `gradle/build-logic`.
+
+[cols="2,4"]
+|===
+|Plugin |Purpose
+
+|`xyz.dussim.kotlin.common` |Multiplatform library setup, Kotlinter, Dokka, KSP, TestBalloon, publishing
+|`xyz.dussim.kotlin.jvm.common` |The same setup for JVM-only modules
+|`xyz.dussim.kotlin.client` |Multiplatform client setup, adds `client-test-support` to tests
+|`xyz.dussim.generate.features.json` |YAML to feature JSON
+|`xyz.dussim.generate.features` |Feature JSON to Kotlin interfaces
+|`xyz.dussim.generate.features.json.tests` |Feature JSON to fixture tests
+|`xyz.dussim.generate.validation.result.of` |Regenerates `ValidationResult.of` overloads
+|===
+
+== License
+
+Licensed under the Apache License, Version 2.0.

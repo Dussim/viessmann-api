@@ -1,0 +1,84 @@
+= api-feature-benchmark
+
+Gradle path: `:api:feature:api-feature-benchmark`
+
+JVM-only JMH benchmarks and long-running validation tests for the feature system.
+
+[mermaid]
+....
+flowchart LR
+    t[test: correctness oracle] --> s[Stable validation JMH task]
+    env[stableValidationEnvironment] --> s
+    s --> r[/results.json/]
+    s --> h[HTML report]
+....
+
+== Running benchmarks
+
+[source,powershell]
+----
+# Default benchmark: MassiveValidationBenchmark
+./gradlew.bat :api:feature:api-feature-benchmark:jmh
+
+# Versioned stable validation suites
+./gradlew.bat :api:feature:api-feature-benchmark:stableValidationJmh
+./gradlew.bat :api:feature:api-feature-benchmark:stableSmallValidationJmh
+./gradlew.bat :api:feature:api-feature-benchmark:stableMediumValidationJmh
+./gradlew.bat :api:feature:api-feature-benchmark:stableLargeValidationJmh
+
+# Compile only
+./gradlew.bat :api:feature:api-feature-benchmark:compileJmhKotlin
+----
+
+The `includes` setting in `build.gradle.kts` selects what the `jmh` task runs.
+
+== Benchmarks
+
+[cols="2,4"]
+|===
+|Benchmark |Measures
+
+|`featurevalidation.average.MassiveValidationBenchmark` |Validation over `all_features.json`; throughput per minute
+|`featurevalidation.ValidationBenchmark`, `ValidationSmallFeatureBenchmark` |Validation scenarios
+|`featurevalidation.IncorrectFeatureConstructionBenchmark` |Construction from incorrect features
+|`maps` package |`EfficientStringKeyMap` against standard maps
+|`stable.small`, `stable.medium`, `stable.large` |Versioned validation acceptance workload
+|===
+
+`MassiveValidationBenchmark` loads `all_features.json` from `src/main/resources`.
+It uses 3 warmup and 5 measurement iterations of 5 seconds each, in one fork.
+
+== Stable workload
+
+The stable suites use benchmark-owned feature interfaces, so they do not depend on the OpenAPI input.
+Each suite uses three warmup iterations, five measurement iterations, one fork, one thread, one validation per invocation, and nanoseconds per operation.
+All JMH tasks use a fixed 2 GiB heap and the GC profiler.
+
+`stable-validation/v1/fixture-manifest.json` is the versioned input contract.
+Fixture parsing and construction run in trial setup and are not measured.
+The oracle tests run first through the `test` task.
+
+Compare base and candidate results on the same idle machine.
+Scores are comparable only when the input dataset and JMH parameters match.
+
+== Results
+
+[cols="2,4"]
+|===
+|Run |Location under `build/reports`
+
+|`jmh` |`jmh/results.json`
+|Stable suites |`validation/<all, small, medium, or large>/<UTC timestamp>/results.json`
+|Stable environment fingerprint |`jmh/environment.json`
+|===
+
+== One billion validations
+
+`OneBillionValidationsTest` runs at least one billion structure-matcher validations, single-threaded and in parallel.
+Its input is `src/test/resources/one-billion-validations/features.json`, independent of the OpenAPI schema.
+Fast coverage checks always run; the long runs are opt-in.
+
+[source,powershell]
+----
+$env:ONE_BILLION_VALIDATIONS = "true"; ./gradlew.bat :api:feature:api-feature-benchmark:test
+----

@@ -1,0 +1,201 @@
+= Feature Processor Guide
+:toc: macro
+:toclevels: 2
+:source-highlighter: rouge
+:icons: font
+
+How to model a feature so that `:api:feature:api-feature-processor` can generate its implementation.
+
+toc::[]
+
+== Overview
+
+The processor is a KSP2 `SymbolProcessor`.
+It handles interfaces annotated with `@GenerateFeatureImplementation`, whether handwritten or generated from OpenAPI YAML.
+
+[mermaid]
+....
+sequenceDiagram
+    participant KSP
+    participant P as FeatureImplementationProcessor
+    participant V as FeatureSymbolValidator
+    participant B as GeneratedFeatureFilesBuilder
+    participant E as GeneratedFileEmitter
+
+    KSP->>P: process(resolver)
+    P->>V: validate annotated symbols
+    alt validation fails
+        V-->>KSP: report errors at declarations
+    else validation passes
+        P->>P: collect SymbolContext per feature
+        KSP->>P: finish()
+        P->>B: build generated file models
+        B-->>P: implementations, descriptors, commands, rules
+        P->>E: render in parallel and write
+    end
+....
+
+== Declaring a feature
+
+[source,kotlin]
+----
+@GenerateFeatureImplementation("heating.circuits.{N}.operating.modes.active")
+interface ActiveModeFeature : Feature {
+    val value: Mode
+    val setMode: SetMode
+    val comment: NullableStringValue?
+
+    @FeatureEnum
+    enum class Mode {
+        HEATING,
+        STANDBY,
+        ;
+
+        @FeatureEnum.Factory
+        companion object : FeatureEnumFactory<StringValue, Mode> {
+            override fun invoke(propertyValue: StringValue): Mode = valueOf(propertyValue.element.uppercase())
+        }
+    }
+
+    @CommandName("setMode")
+    interface SetMode : Command1<String> {
+        val mode: StringConstraints
+
+        companion object
+    }
+
+    companion object
+}
+----
+
+=== Feature rules
+
+A feature declaration must:
+
+* be a public, top-level, non-sealed, non-generic interface
+* have `Feature` as its only direct supertype
+* declare a public `companion object`
+* declare only public `val` properties with concrete types
+* declare no abstract functions
+
+=== Feature names
+
+The annotation value is the API feature name.
+Use `+{N}+` for each numeric index, for example `+heating.circuits.{N}+`.
+A name containing `+{N}+` is an indexed feature; any other name is a static feature.
+
+=== Properties
+
+Each property's type must be one of:
+
+* a supported `PropertyValue` subclass from `Property.kt`; `PROPERTY_VALIDATION_FUNCTIONS` in the processor is the authoritative list
+* a `@FeatureEnum` type
+* a command interface
+
+A nullable type marks an optional property or command.
+Raw collections such as `List<T>` are not supported, so use a `PropertyValue` wrapper.
+
+=== Feature enums
+
+An enum-valued property type must have the `@FeatureEnum` annotation and a companion object that:
+
+* has the `@FeatureEnum.Factory` annotation
+* implements `FeatureEnumFactory<V, E>`, where `V` is the source property value and `E` is the enum type
+
+=== Commands
+
+A command interface must:
+
+* be public, non-sealed, and non-generic
+* directly extend exactly one of `Command0` through `Command8`, and nothing else
+* declare exactly one constraint property per type argument, in parameter order
+* declare no abstract functions
+
+Each constraint property must be a public, non-nullable `val`, and its `Constraints<T>` type must match the type argument at that position.
+For example, `Command2<Boolean, Double>` takes `BooleanConstraints` followed by `NumberConstraints`.
+
+The `CommandN` indexed accessor names are reserved, so declare semantic names instead.
+Use `@CommandName` to give the API command name.
+
+== Generated output
+
+[mermaid]
+....
+graph TD
+    iface[Feature interface in package P]
+    iface --> impl["P.implementations<br/>implementation shared by feature signature"]
+    iface --> desc["P.Descriptors<br/>GeneratedDescriptors chunks"]
+    iface --> cmd["P.commands<br/>implementation shared by command signature"]
+    iface --> rules["P.components.rules<br/>cached validation rules"]
+....
+
+Features and commands with identical signatures share one implementation class.
+
+=== Using generated code
+
+Each feature has a `descriptor`, reached through its companion.
+A descriptor is a `FeatureFactory`, a `ValidationRule`, and a source of matchers.
+
+[source,kotlin]
+----
+val feature = StableSmallFeature.descriptor.getOrNull(rawFeature)
+
+val registry = FeatureRegistry(rawFeatures)
+val typed = registry[StableSmallFeature.descriptor]
+----
+
+=== Validation
+
+Generated companions implement `GeneratedValidationRule`:
+
+[cols="1,3"]
+|===
+|`validate` |Evaluates the rule plan and aggregates errors
+|`validateFailFast` |Evaluates the same plan and returns after the first invalid result
+|===
+
+Structure matchers such as `descriptor.byStructure` use the fail-fast path.
+
+=== Runtime flow
+
+[mermaid]
+....
+flowchart LR
+    resp[API response] --> raw[ViessmannFeature]
+    raw --> reg[FeatureRegistry]
+    reg --> match{FeatureMatcher}
+    match -->|name, wildcard, or structure| conv[FeatureDescriptor]
+    conv --> typed[Generated feature]
+....
+
+== Generation design notes
+
+* KSP receives the generated sources from `api-feature-definitions` as explicit source roots because the annotations have source retention and are absent from the compiled interfaces.
+* `generateFeatureJsonsFromYaml` uses a fixed `currentDate` to keep output deterministic. Features past their removal date are omitted relative to that date.
+* Output directories are replaced on every run so removed or renamed schema entries cannot survive as stale generated data.
+* JSON output paths are checked with case-insensitive keys because feature names can collide on case-insensitive filesystems.
+
+== Processor options
+
+[cols="2,2,1,4"]
+|===
+|Option |Default |Allowed |Purpose
+
+|`descriptorsChunkSize` |64 |1 to 256 |Maximum feature descriptors in one source file
+|`validationRulesChunkSize` |64 |1 to 128 |Maximum cached validation rules in one source file
+|`formatGeneratedSources` |`true` |`true`, `false` |Formats generated sources; consumer modules normally disable it
+|`renderParallelism` |CPU count minus one, from 1 to 16 |1 to 16 |Maximum parallel rendering workers
+|===
+
+Invalid values are reported as KSP errors.
+
+== Related sources
+
+[cols="1,3"]
+|===
+|Annotations |`api/feature/annotations/src/commonMain/kotlin/xyz/dussim/viessmann/api/feature/annotations/`
+|Declaration rules |`api/feature/processor/src/main/kotlin/xyz/dussim/viessmann/api/feature/processor/FeatureSymbolValidator.kt`
+|Base types |`api/feature/common/src/commonMain/kotlin/xyz.dussim.viessmann.feature.api/`
+|Interface generator |`gradle/build-logic/src/main/kotlin/xyz/dussim/buildlogic/internal/FeatureInterfaceGenerator.kt`
+|Example features |`api/feature/benchmark/src/main/kotlin/xyz/dussim/feature/benchmark/stable/`
+|===
