@@ -9,10 +9,13 @@ local lib = import "lib.libsonnet";
   clone: lib.shallowClone,
   steps: [
     lib.gradle("jmh", ["gradle jmh"]),
-    lib.gradle("stableValidationJmh", ["gradle stableValidationJmh"]),
+    lib.gradle("stableSmallValidationJmh", ["gradle stableSmallValidationJmh"]),
+    lib.gradle("stableMediumValidationJmh", ["gradle stableMediumValidationJmh"]),
+    lib.gradle("stableLargeValidationJmh", ["gradle stableLargeValidationJmh"]),
     {
       name: "uploadResults",
       image: "woodpeckerci/plugin-s3:1.5.6",
+      when: { status: ["success", "failure"] },
       settings: {
         endpoint: "https://s3.dussim.xyz",
         bucket: "jmh-results",
@@ -28,9 +31,10 @@ local lib = import "lib.libsonnet";
     {
       name: "visualizerLinks",
       image: lib.buildImage,
+      when: { status: ["success", "failure"] },
       commands: [
         "cd api/feature/benchmark/build/reports",
-        "find . -name results.json -printf '%P\\n' | while read -r file; do echo \"https://jmh.morethan.io/?source=https://s3.dussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\"; done",
+        "find . -name results.json -printf '%P\\n' | while read -r file; do echo \"https://jmh.morethan.io/?source=https://s3.%64ussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\"; done",
       ],
     },
   ],
