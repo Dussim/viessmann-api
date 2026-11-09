@@ -1,5 +1,5 @@
 [versions]
-ksp = "2.3.12"
+ksp = "2.3.13"
 testBalloon = "1.2.0"
 kotlin = "2.4.21"
 ktlint = "1.8.0"
@@ -31,10 +31,10 @@ kotlinx-datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.8.0"
 swagger-parser = "io.swagger.parser.v3:swagger-parser:2.1.42"
 
 [plugins]
-ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.66.0" }
+ben-manes-versions = { id = "com.github.ben-manes.versions", version = "0.67.0" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 testBalloon = { id = "de.infix.testBalloon", version.ref = "testBalloon" }
-dokka = { id = "org.jetbrains.dokka", version = "2.2.0" }
+dokka = { id = "org.jetbrains.dokka", version = "2.3.0" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

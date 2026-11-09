@@ -6,7 +6,7 @@ local secrets = [
 ];
 
 {
-  buildImage:: "dussim/build-env:jdk27_gradle-9.8.2",
+  buildImage:: "dussim/build-env:jdk27_gradle-9.9.0",
 
   shallowClone:: [
     {
