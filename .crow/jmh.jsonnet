@@ -28,12 +28,18 @@ local lib = import "lib.libsonnet";
     },
     {
       name: "visualizerLinks",
-      image: lib.buildImage,
+      image: "curlimages/curl:8.23.0",
       when: { status: ["success", "failure"] },
-      commands: [
-        "cd api/feature/benchmark/build/reports",
-        "find . -name results.json | sed 's|^\\./||' | while read -r file; do echo \"https://jmh.morethan.io/?source=https://s3.%64ussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\"; done",
-      ],
+      commands: ["sh .crow/scripts/jmh-links.sh"],
+    },
+    {
+      name: "updateLatest",
+      image: "curlimages/curl:8.23.0",
+      environment: {
+        S3_ACCESS_KEY: { from_secret: "S3_ACCESS_KEY" },
+        S3_SECRET_KEY: { from_secret: "S3_SECRET_KEY" },
+      },
+      commands: ["sh .crow/scripts/jmh-update-latest.sh"],
     },
   ],
 }
