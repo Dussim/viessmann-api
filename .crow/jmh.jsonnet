@@ -1,16 +1,15 @@
 local lib = import "lib.libsonnet";
 
-local when = [
-  { event: "manual" },
-  { event: "push", branch: "master" },
-];
-
 {
   name: "jmh",
+  when: [
+    { event: "manual" },
+    { event: "push", branch: "master" },
+  ],
   clone: lib.shallowClone,
   steps: [
-    lib.gradle("jmh", ["gradle jmh"], when),
-    lib.gradle("stableValidationJmh", ["gradle stableValidationJmh"], when),
+    lib.gradle("jmh", ["gradle jmh"]),
+    lib.gradle("stableValidationJmh", ["gradle stableValidationJmh"]),
     {
       name: "uploadResults",
       image: "woodpeckerci/plugin-s3:1.5.6",
@@ -25,7 +24,6 @@ local when = [
         access_key: { from_secret: "S3_ACCESS_KEY" },
         secret_key: { from_secret: "S3_SECRET_KEY" },
       },
-      when: when,
     },
     {
       name: "visualizerLinks",
@@ -34,7 +32,6 @@ local when = [
         "cd api/feature/benchmark/build/reports",
         "find . -name results.json -printf '%P\\n' | while read -r file; do echo \"https://jmh.morethan.io/?source=https://s3.dussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\"; done",
       ],
-      when: when,
     },
   ],
 }

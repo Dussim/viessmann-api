@@ -21,7 +21,7 @@ local secrets = [
     },
   ],
 
-  gradle(name, commands, when):: {
+  gradle(name, commands):: {
     name: name,
     image: $.buildImage,
     environment: {
@@ -32,6 +32,5 @@ local secrets = [
       for secret in secrets
     },
     commands: commands,
-    when: when,
   },
 }
