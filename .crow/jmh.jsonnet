@@ -30,7 +30,7 @@ local lib = import "lib.libsonnet";
       name: "visualizerLinks",
       image: "curlimages/curl:8.23.0",
       when: { status: ["success", "failure"] },
-      commands: ["sh .crow/scripts/jmh-links.sh"],
+      commands: ["sh .ci/scripts/jmh-links.sh"],
     },
     {
       name: "updateLatest",
@@ -39,7 +39,7 @@ local lib = import "lib.libsonnet";
         S3_ACCESS_KEY: { from_secret: "S3_ACCESS_KEY" },
         S3_SECRET_KEY: { from_secret: "S3_SECRET_KEY" },
       },
-      commands: ["sh .crow/scripts/jmh-update-latest.sh"],
+      commands: ["sh .ci/scripts/jmh-update-latest.sh"],
     },
   ],
 }
