@@ -32,7 +32,7 @@ local lib = import "lib.libsonnet";
       when: { status: ["success", "failure"] },
       commands: [
         "cd api/feature/benchmark/build/reports",
-        "find . -name results.json -printf '%P\\n' | while read -r file; do echo \"https://jmh.morethan.io/?source=https://s3.%64ussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\"; done",
+        "find . -name results.json | sed 's|^\\./||' | while read -r file; do echo \"https://jmh.morethan.io/?source=https://s3.%64ussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\"; done",
       ],
     },
   ],
