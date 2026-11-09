@@ -14,19 +14,17 @@ local lib = import "lib.libsonnet";
     lib.gradle("stableLargeValidationJmh", ["gradle stableLargeValidationJmh"]),
     {
       name: "uploadResults",
-      image: "woodpeckerci/plugin-s3:1.5.6",
+      // curl instead of woodpeckerci/plugin-s3: the AWS SDK signs Accept-Encoding, which Cloudflare rewrites.
+      image: "curlimages/curl:8.23.0",
       when: { status: ["success", "failure"] },
-      settings: {
-        endpoint: "https://s3.dussim.xyz",
-        bucket: "jmh-results",
-        region: "us-east-1",
-        path_style: true,
-        source: "api/feature/benchmark/build/reports/**/results.json",
-        strip_prefix: "api/feature/benchmark/build/reports/",
-        target: "/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}",
-        access_key: { from_secret: "S3_ACCESS_KEY" },
-        secret_key: { from_secret: "S3_SECRET_KEY" },
+      environment: {
+        S3_ACCESS_KEY: { from_secret: "S3_ACCESS_KEY" },
+        S3_SECRET_KEY: { from_secret: "S3_SECRET_KEY" },
       },
+      commands: [
+        "cd api/feature/benchmark/build/reports",
+        "find . -name results.json | sed 's|^\\./||' | while read -r file; do curl --fail-with-body -sS --aws-sigv4 aws:amz:us-east-1:s3 --user \"$${S3_ACCESS_KEY}:$${S3_SECRET_KEY}\" -H 'x-amz-content-sha256: UNSIGNED-PAYLOAD' -H 'Content-Type: application/json' -T \"$${file}\" \"https://s3.dussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\" || exit 1; echo \"Uploaded $${file}\"; done",
+      ],
     },
     {
       name: "visualizerLinks",
