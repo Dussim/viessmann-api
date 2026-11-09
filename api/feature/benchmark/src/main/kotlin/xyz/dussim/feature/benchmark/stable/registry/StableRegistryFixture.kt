@@ -17,17 +17,21 @@ import xyz.dussim.feature.benchmark.stable.small.definitions.descriptor as small
  *
  * The feature list holds the valid small, medium and large fixtures followed by [INDEXED_FEATURE_COUNT] copies of the
  * valid small fixture renamed to `benchmark.stable.registry.0` … `benchmark.stable.registry.63`. Changing the counts,
- * the looked-up index or the order changes the workload; results are comparable only across identical values.
+ * the looked-up indices or the order changes the workload; results are comparable only across identical values.
  */
 object StableRegistryFixture {
     const val INDEXED_WILDCARD_NAME = "benchmark.stable.registry.{N}"
     const val INDEXED_FEATURE_COUNT = 64
 
-    /** Two-digit index in the middle of the indexed features. */
-    const val LOOKUP_INDEX = 31
+    /** Index inside the range for which indexed descriptors keep their matchers (`0..15`). */
+    const val LOOKUP_INDEX = 7
+
+    /** Index beyond that range: the descriptor builds a new matcher on every lookup. */
+    const val UNCACHED_MATCHER_LOOKUP_INDEX = 31
 
     const val STATIC_FEATURE_NAME = "benchmark.stable.small"
-    const val INDEXED_LOOKUP_FEATURE_NAME = "benchmark.stable.registry.31"
+    const val INDEXED_LOOKUP_FEATURE_NAME = "benchmark.stable.registry.7"
+    const val UNCACHED_MATCHER_LOOKUP_FEATURE_NAME = "benchmark.stable.registry.31"
     const val FIRST_INDEXED_FEATURE_NAME = "benchmark.stable.registry.0"
 
     val staticDescriptor: FeatureDescriptor.Static<StableSmallFeature> get() = StableSmallFeature.smallDescriptor

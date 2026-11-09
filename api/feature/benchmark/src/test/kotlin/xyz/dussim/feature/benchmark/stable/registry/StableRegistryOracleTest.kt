@@ -33,6 +33,8 @@ val StableRegistryOracleTest by testSuite {
         registry[indexedDescriptor, index].feature shouldBe StableRegistryFixture.INDEXED_LOOKUP_FEATURE_NAME
         registry.firstOf(indexedDescriptor, indexedDescriptor.byNameThenStructure(index)).feature shouldBe
             StableRegistryFixture.INDEXED_LOOKUP_FEATURE_NAME
+        registry[indexedDescriptor, StableRegistryFixture.UNCACHED_MATCHER_LOOKUP_INDEX].feature shouldBe
+            StableRegistryFixture.UNCACHED_MATCHER_LOOKUP_FEATURE_NAME
 
         registry.allOf(indexedDescriptor, indexedDescriptor.byWildcardNameThenStructure) shouldHaveSize
             StableRegistryFixture.INDEXED_FEATURE_COUNT

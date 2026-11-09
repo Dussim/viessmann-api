@@ -64,7 +64,8 @@ Fixture parsing and construction run in trial setup and are not measured.
 The oracle tests run first through the `test` task.
 
 The registry suite derives its input from the same manifest-verified fixtures: the valid small, medium and large features plus 64 copies of the valid small feature named `benchmark.stable.registry.0` to `benchmark.stable.registry.63`.
-It measures one lookup per invocation with a warm conversion cache, and looks up index 31.
+Lookups measure one lookup per invocation with a warm conversion cache, at index 7 and at index 31, which lies beyond the 16 indices whose matchers a descriptor keeps.
+The construction benchmarks also convert all 64 indexed features on a new registry to cover first-time lookups.
 `StableRegistryFixture` defines these values; changing them changes the workload.
 
 Compare base and candidate results on the same idle machine.

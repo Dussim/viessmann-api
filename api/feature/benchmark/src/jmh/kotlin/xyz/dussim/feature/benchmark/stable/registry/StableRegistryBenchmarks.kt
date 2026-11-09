@@ -26,8 +26,9 @@ open class StableRegistryState {
     val staticDescriptor = StableRegistryFixture.staticDescriptor
     val indexedDescriptor = StableRegistryFixture.indexedDescriptor
 
-    // A field rather than a constant so the JIT cannot fold the index into the lookup.
+    // Fields rather than constants so the JIT cannot fold the indices into the lookups.
     var index: Int = StableRegistryFixture.LOOKUP_INDEX
+    var uncachedMatcherIndex: Int = StableRegistryFixture.UNCACHED_MATCHER_LOOKUP_INDEX
 
     lateinit var features: List<Feature>
     lateinit var registry: FeatureRegistry
@@ -44,6 +45,7 @@ open class StableRegistryState {
         expectFeature(StableRegistryFixture.FIRST_INDEXED_FEATURE_NAME, registry[indexedDescriptor])
         expectFeature(StableRegistryFixture.INDEXED_LOOKUP_FEATURE_NAME, registry[indexedDescriptor, index])
         expectFeature(StableRegistryFixture.INDEXED_LOOKUP_FEATURE_NAME, registry.firstOf(indexedDescriptor, prebuiltIndexedMatcher))
+        expectFeature(StableRegistryFixture.UNCACHED_MATCHER_LOOKUP_FEATURE_NAME, registry[indexedDescriptor, uncachedMatcherIndex])
     }
 
     private fun expectFeature(
@@ -58,8 +60,9 @@ open class StableRegistryState {
  * Repeated typed lookups on a warm indexed registry: the path a consumer hits every time it reads a feature.
  *
  * The static and indexed features have identical structure, so read the results as differences:
- * - `indexedGet` minus `indexedGetWithPrebuiltMatcher` is the per-call cost of building the indexed matcher
- *   (also measured alone by `indexedMatcher`);
+ * - `indexedGet` minus `indexedGetWithPrebuiltMatcher` is the per-call cost of obtaining the indexed matcher
+ *   (also measured alone by `indexedMatcher`), and `indexedGetBeyondMatcherCache` shows the same lookup for an
+ *   index whose matcher the descriptor does not keep;
  * - `indexedGetWithPrebuiltMatcher` against `staticGet` compares the exact-name and wildcard-name jump tables;
  * - `gc.alloc.rate.norm` from the GC profiler gives the bytes allocated per lookup.
  */
@@ -92,6 +95,15 @@ open class StableRegistryLookupBenchmark {
         blackhole: Blackhole,
     ) {
         blackhole.consume(state.registry[state.indexedDescriptor, state.index])
+    }
+
+    // Index outside the descriptor's matcher cache: pays for building the indexed matcher on every call.
+    @Benchmark
+    fun indexedGetBeyondMatcherCache(
+        state: StableRegistryState,
+        blackhole: Blackhole,
+    ) {
+        blackhole.consume(state.registry[state.indexedDescriptor, state.uncachedMatcherIndex])
     }
 
     @Benchmark
@@ -128,5 +140,18 @@ open class StableRegistryConstructionBenchmark {
         blackhole: Blackhole,
     ) {
         blackhole.consume(FeatureRegistry.indexed(state.features))
+    }
+
+    /**
+     * Cold path: a new registry, then the first typed conversion of all 64 indexed features in one `allOf` call.
+     * Subtract `buildIndexed` and divide by 64 for the cost of one first-time conversion through the registry.
+     */
+    @Benchmark
+    fun buildIndexedThenConvertAllIndexed(
+        state: StableRegistryState,
+        blackhole: Blackhole,
+    ) {
+        val registry = FeatureRegistry.indexed(state.features)
+        blackhole.consume(registry.allOf(state.indexedDescriptor, state.indexedDescriptor.byWildcardNameThenStructure))
     }
 }
