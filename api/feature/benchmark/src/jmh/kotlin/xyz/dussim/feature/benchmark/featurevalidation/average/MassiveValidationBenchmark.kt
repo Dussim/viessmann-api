@@ -15,6 +15,8 @@ import org.openjdk.jmh.infra.Blackhole
 import xyz.dussim.viessmann.api.features.generated.Descriptors
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.feature.api.Feature
+import xyz.dussim.viessmann.feature.api.FeatureDescriptor
+import xyz.dussim.viessmann.feature.api.FeatureRegistry
 import xyz.dussim.viessmann.feature.api.ViessmannFeature
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
 import java.util.concurrent.TimeUnit
@@ -28,6 +30,9 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * writing), so the average-time numbers land in milliseconds. The timing profile
  * (1 warmup + 3 measurement iterations × 2s each, single fork) is intentionally
  * aggressive — the goal is a fast, stable baseline to iterate against.
+ *
+ * The `registry*` benchmarks reuse the same dataset for typed lookups through one warm indexed
+ * `FeatureRegistry` holding every feature; per invocation they perform one lookup per resolvable descriptor.
  *
  * To run just this benchmark:
  *   ./gradlew :api:feature:benchmark:jmh
@@ -47,6 +52,14 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 open class MassiveValidationBenchmark {
     private lateinit var targets: List<ValidationTarget>
     private lateinit var failFastTargets: List<ValidationTarget>
+
+    private lateinit var registry: FeatureRegistry
+    private lateinit var registryDescriptors: List<FeatureDescriptor<Feature>>
+    private lateinit var registryIndexedDescriptors: List<FeatureDescriptor.Indexed<Feature>>
+
+    // Every indexed feature in all_features.json uses index 0. A field rather than a constant so the JIT cannot
+    // fold the index into the lookup.
+    private var registryIndex: Int = 0
 
     @Setup
     fun setup() {
@@ -82,6 +95,35 @@ open class MassiveValidationBenchmark {
                     features = allFeatures,
                 )
             }
+
+        setupRegistry(allFeatures)
+    }
+
+    /**
+     * Keeps only descriptors whose lookup resolves, so the measured loops never throw, and warms the registry's
+     * conversion cache for them. Which descriptors resolve depends only on `all_features.json`.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun setupRegistry(allFeatures: List<Feature>) {
+        registry = FeatureRegistry.indexed(allFeatures)
+
+        val descriptors = Descriptors.all.map { it as FeatureDescriptor<Feature> }
+        registryDescriptors =
+            descriptors.filter { descriptor ->
+                registry.findOf(descriptor, descriptor.byWildcardNameThenStructure) != null
+            }
+
+        registryIndexedDescriptors =
+            descriptors
+                .mapNotNull { it as? FeatureDescriptor.Indexed<Feature> }
+                .filter { descriptor ->
+                    registry.findOf(descriptor, descriptor.byNameThenStructure(registryIndex)) != null
+                }
+
+        check(registryDescriptors.isNotEmpty()) { "No descriptor resolves against all_features.json through the registry" }
+        check(registryIndexedDescriptors.isNotEmpty()) {
+            "No indexed descriptor resolves at index $registryIndex against all_features.json through the registry"
+        }
     }
 
     @OptIn(ExperimentalAtomicApi::class)
@@ -106,6 +148,34 @@ open class MassiveValidationBenchmark {
             for (j in features.indices) {
                 blackhole.consume(validator.validate(features[j]))
             }
+        }
+    }
+
+    /**
+     * Typed lookup of every resolvable descriptor on a warm indexed registry over all features: the wildcard-name
+     * path behind `registry[descriptor]`.
+     */
+    @Benchmark
+    fun registryGetEverything(blackhole: Blackhole) {
+        val registry = this.registry
+        val descriptors = this.registryDescriptors
+        for (i in descriptors.indices) {
+            val descriptor = descriptors[i]
+            blackhole.consume(registry.firstOf(descriptor, descriptor.byWildcardNameThenStructure))
+        }
+    }
+
+    /**
+     * Typed lookup of every resolvable indexed descriptor by index on the same registry: the exact-name path behind
+     * `registry[descriptor, index]`, including building the indexed matcher on every call.
+     */
+    @Benchmark
+    fun registryGetEverythingByIndex(blackhole: Blackhole) {
+        val registry = this.registry
+        val descriptors = this.registryIndexedDescriptors
+        val index = this.registryIndex
+        for (i in descriptors.indices) {
+            blackhole.consume(registry[descriptors[i], index])
         }
     }
 }

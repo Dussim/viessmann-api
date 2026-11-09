@@ -115,7 +115,7 @@ val stableValidationJmh =
     tasks.register<JMHTask>("stableValidationJmh") {
         description = "Runs all versioned stable validation acceptance benchmark suites."
         configureStableValidationJmh(
-            include = "xyz\\.dussim\\.feature\\.benchmark\\.stable\\.(small|medium|large)\\..*Benchmark",
+            include = "xyz\\.dussim\\.feature\\.benchmark\\.stable\\.(small|medium|large|registry)\\..*Benchmark",
         )
         val timestamp =
             DateTimeFormatter
@@ -167,6 +167,20 @@ val stableLargeValidationJmh =
         resultsFile = layout.buildDirectory.file("reports/validation/large/$timestamp/results.json")
     }
 
+val stableRegistryJmh =
+    tasks.register<JMHTask>("stableRegistryJmh") {
+        description = "Runs the stable feature registry lookup and construction benchmark suite."
+        configureStableValidationJmh(
+            include = "xyz\\.dussim\\.feature\\.benchmark\\.stable\\.registry\\..*Benchmark",
+        )
+        val timestamp =
+            DateTimeFormatter
+                .ofPattern("yyyy-MM-dd_HH-mm-ss-SSS'Z'")
+                .withZone(ZoneOffset.UTC)
+                .format(Instant.now())
+        resultsFile = layout.buildDirectory.file("reports/validation/registry/$timestamp/results.json")
+    }
+
 val stableValidationJmhReport =
     tasks.register<JmhReportTask>("stableValidationJmhReport") {
         description = "Creates an HTML report for all stable validation benchmark suites."
@@ -195,8 +209,19 @@ val stableLargeValidationJmhReport =
         jmhReportOutput = layout.dir(stableLargeValidationJmh.flatMap { it.resultsFile }.map { it.asFile.parentFile })
     }
 
+val stableRegistryJmhReport =
+    tasks.register<JmhReportTask>("stableRegistryJmhReport") {
+        description = "Creates an HTML report for the stable feature registry benchmark suite."
+        jmhResultPath = stableRegistryJmh.flatMap { it.resultsFile }
+        jmhReportOutput = layout.dir(stableRegistryJmh.flatMap { it.resultsFile }.map { it.asFile.parentFile })
+    }
+
 stableValidationJmh {
     finalizedBy(stableValidationJmhReport)
+}
+
+stableRegistryJmh {
+    finalizedBy(stableRegistryJmhReport)
 }
 
 stableSmallValidationJmh {

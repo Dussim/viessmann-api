@@ -26,6 +26,9 @@ flowchart LR
 ./gradlew.bat :api:feature:api-feature-benchmark:stableMediumValidationJmh
 ./gradlew.bat :api:feature:api-feature-benchmark:stableLargeValidationJmh
 
+# Stable feature registry suite (also part of stableValidationJmh)
+./gradlew.bat :api:feature:api-feature-benchmark:stableRegistryJmh
+
 # Compile only
 ./gradlew.bat :api:feature:api-feature-benchmark:compileJmhKotlin
 ----
@@ -38,15 +41,17 @@ The `includes` setting in `build.gradle.kts` selects what the `jmh` task runs.
 |===
 |Benchmark |Measures
 
-|`featurevalidation.average.MassiveValidationBenchmark` |Validation over `all_features.json`; throughput per minute
+|`featurevalidation.average.MassiveValidationBenchmark` |Validation and typed registry lookups over `all_features.json`; throughput per minute
 |`featurevalidation.ValidationBenchmark`, `ValidationSmallFeatureBenchmark` |Validation scenarios
 |`featurevalidation.IncorrectFeatureConstructionBenchmark` |Construction from incorrect features
 |`maps` package |`EfficientStringKeyMap` against standard maps
 |`stable.small`, `stable.medium`, `stable.large` |Versioned validation acceptance workload
+|`stable.registry` |Typed lookups on a warm indexed `FeatureRegistry` and its construction
 |===
 
 `MassiveValidationBenchmark` loads `all_features.json` from `src/main/resources`.
 It uses 3 warmup and 5 measurement iterations of 5 seconds each, in one fork.
+Its `registry*` benchmarks look up every descriptor that resolves in one warm indexed registry holding all features, by wildcard name and by index 0.
 
 == Stable workload
 
@@ -58,6 +63,10 @@ All JMH tasks use a fixed 2 GiB heap and the GC profiler.
 Fixture parsing and construction run in trial setup and are not measured.
 The oracle tests run first through the `test` task.
 
+The registry suite derives its input from the same manifest-verified fixtures: the valid small, medium and large features plus 64 copies of the valid small feature named `benchmark.stable.registry.0` to `benchmark.stable.registry.63`.
+It measures one lookup per invocation with a warm conversion cache, and looks up index 31.
+`StableRegistryFixture` defines these values; changing them changes the workload.
+
 Compare base and candidate results on the same idle machine.
 Scores are comparable only when the input dataset and JMH parameters match.
 
@@ -68,7 +77,7 @@ Scores are comparable only when the input dataset and JMH parameters match.
 |Run |Location under `build/reports`
 
 |`jmh` |`jmh/results.json`
-|Stable suites |`validation/<all, small, medium, or large>/<UTC timestamp>/results.json`
+|Stable suites |`validation/<all, small, medium, large, or registry>/<UTC timestamp>/results.json`
 |Stable environment fingerprint |`jmh/environment.json`
 |===
 
