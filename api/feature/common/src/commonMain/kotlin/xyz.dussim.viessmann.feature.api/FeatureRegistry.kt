@@ -1,6 +1,9 @@
 package xyz.dussim.viessmann.feature.api
 
-import kotlin.reflect.KClass
+import xyz.dussim.viessmann.feature.api.FeatureMatcher.Companion.ByNameThenStructureImpl
+import xyz.dussim.viessmann.feature.api.FeatureMatcher.Companion.ByStructureImpl
+import xyz.dussim.viessmann.feature.api.FeatureMatcher.Companion.ByWildcardNameThenStructureImpl
+import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 
 /**
  * A registry of [Feature] instances that provides lookup and typed conversion capabilities.
@@ -132,10 +135,107 @@ private fun allMatching(
         }
     }
 
+private val STRUCTURE_ACCEPTED = Any()
+private val STRUCTURE_REJECTED = Any()
+private val NO_MATCH = Any()
+
+/**
+ * Per-feature memo of a registry, keyed by identity. A feature class maps to the typed conversion of that feature; a
+ * structure rule maps to [STRUCTURE_ACCEPTED] or [STRUCTURE_REJECTED], the outcome of that rule for that feature.
+ * Both rely on features being immutable and on rules and factories being deterministic.
+ *
+ * A feature's map is created on its first write: most features of a response are never looked up.
+ */
+private class ConversionCaches(
+    size: Int,
+) {
+    private val caches = arrayOfNulls<MutableMap<Any, Any>>(size)
+
+    operator fun get(
+        index: Int,
+        key: Any,
+    ): Any? = caches[index]?.get(key)
+
+    operator fun set(
+        index: Int,
+        key: Any,
+        value: Any,
+    ) {
+        val cache = caches[index] ?: IdentityHashMap<Any, Any>().also { caches[index] = it }
+        cache[key] = value
+    }
+}
+
+/**
+ * Decides whether the feature at [index] is a candidate for [matcher].
+ *
+ * Returns [NO_MATCH] when the matcher rejects the feature, `null` when it accepts it and the caller still has to
+ * convert it, or the converted feature when the conversion already happened here.
+ *
+ * Structure matchers created by [FeatureMatcher] are not run on every lookup: the outcome of their rule is memoized
+ * per feature. On the first lookup of a feature through a descriptor that converts in a single pass for that rule,
+ * the conversion itself decides the match, instead of validating first and then checking everything again while
+ * converting. A feature that already is an instance of the feature class still goes through the rule, because
+ * converting it is a pass-through that checks nothing.
+ */
+private fun <F : Feature> matchCandidate(
+    feature: Feature,
+    index: Int,
+    caches: ConversionCaches,
+    matcher: FeatureMatcher?,
+    factory: FeatureFactory<F>,
+): Any? {
+    if (matcher == null) return null
+    val rule: ValidationRule<Feature, *> =
+        when (matcher) {
+            is ByStructureImpl -> {
+                matcher.rule
+            }
+
+            is ByWildcardNameThenStructureImpl -> {
+                if (!matcher.wildcardName.matches(feature)) return NO_MATCH
+                matcher.structure.rule
+            }
+
+            is ByNameThenStructureImpl -> {
+                if (!matcher.name.matches(feature)) return NO_MATCH
+                matcher.structure.rule
+            }
+
+            else -> {
+                return if (matcher.matches(feature)) null else NO_MATCH
+            }
+        }
+
+    val memo = caches[index, rule]
+    if (memo != null) return if (memo === STRUCTURE_ACCEPTED) null else NO_MATCH
+
+    val featureClass = factory.featureClass
+    if (
+        factory is SinglePassDescriptor &&
+        factory.convertsInSinglePassFor(rule) &&
+        caches[index, featureClass] == null &&
+        !featureClass.hasInstance(feature)
+    ) {
+        val converted = factory.getOrNull(feature)
+        if (converted == null) {
+            caches[index, rule] = STRUCTURE_REJECTED
+            return NO_MATCH
+        }
+        caches[index, rule] = STRUCTURE_ACCEPTED
+        caches[index, featureClass] = converted
+        return converted
+    }
+
+    val accepted = !rule.validate(feature).isInvalid
+    caches[index, rule] = if (accepted) STRUCTURE_ACCEPTED else STRUCTURE_REJECTED
+    return if (accepted) null else NO_MATCH
+}
+
 @Suppress("UNCHECKED_CAST")
 private fun <F : Feature> cachedFindOfHelper(
     features: List<Feature>,
-    implementations: List<MutableMap<KClass<out Feature>, Any>>,
+    caches: ConversionCaches,
     range: IntRange,
     matcher: FeatureMatcher?,
     factory: FeatureFactory<F>,
@@ -143,15 +243,16 @@ private fun <F : Feature> cachedFindOfHelper(
     val featureClass = factory.featureClass
     for (i in range) {
         val feature = features[i]
-        if (matcher != null && !matcher.matches(feature)) continue
+        val match = matchCandidate(feature, i, caches, matcher, factory)
+        if (match === NO_MATCH) continue
+        if (match != null) return match as F
 
-        val cache = implementations[i]
-        val cached = cache[featureClass]
+        val cached = caches[i, featureClass]
         if (cached != null) {
             return cached as F
         }
         val converted = factory.getOrNull(feature) ?: return null
-        cache[featureClass] = converted
+        caches[i, featureClass] = converted
         return converted
     }
     return null
@@ -160,7 +261,7 @@ private fun <F : Feature> cachedFindOfHelper(
 @Suppress("UNCHECKED_CAST")
 private fun <F : Feature> cachedFirstOfHelper(
     features: List<Feature>,
-    implementations: List<MutableMap<KClass<out Feature>, Any>>,
+    caches: ConversionCaches,
     range: IntRange,
     matcher: FeatureMatcher?,
     factory: FeatureFactory<F>,
@@ -169,15 +270,16 @@ private fun <F : Feature> cachedFirstOfHelper(
     val featureClass = factory.featureClass
     for (i in range) {
         val feature = features[i]
-        if (matcher != null && !matcher.matches(feature)) continue
+        val match = matchCandidate(feature, i, caches, matcher, factory)
+        if (match === NO_MATCH) continue
+        if (match != null) return match as F
 
-        val cache = implementations[i]
-        val cached = cache[featureClass]
+        val cached = caches[i, featureClass]
         if (cached != null) {
             return cached as F
         }
         val converted = factory.getOrThrow(feature)
-        cache[featureClass] = converted
+        caches[i, featureClass] = converted
         return converted
     }
     throw NoSuchElementException("No feature matching $failureMatcher")
@@ -186,7 +288,7 @@ private fun <F : Feature> cachedFirstOfHelper(
 @Suppress("UNCHECKED_CAST")
 private fun <F : Feature> cachedAllOfHelper(
     features: List<Feature>,
-    implementations: List<MutableMap<KClass<out Feature>, Any>>,
+    caches: ConversionCaches,
     range: IntRange,
     matcher: FeatureMatcher?,
     factory: FeatureFactory<F>,
@@ -195,15 +297,19 @@ private fun <F : Feature> cachedAllOfHelper(
         val featureClass = factory.featureClass
         for (i in range) {
             val feature = features[i]
-            if (matcher != null && !matcher.matches(feature)) continue
+            val match = matchCandidate(feature, i, caches, matcher, factory)
+            if (match === NO_MATCH) continue
+            if (match != null) {
+                add(match as F)
+                continue
+            }
 
-            val cache = implementations[i]
-            val cached = cache[featureClass]
+            val cached = caches[i, featureClass]
             if (cached != null) {
                 add(cached as F)
             } else {
                 val converted = factory.getOrThrow(feature)
-                cache[featureClass] = converted
+                caches[i, featureClass] = converted
                 add(converted)
             }
         }
@@ -272,8 +378,8 @@ private class BasicFeatureRegistry(
  * reducing lookups from O(n) to O(1) for exact name matches and O(k) for wildcard name matches
  * (where k is the number of features sharing the same wildcard name).
  *
- * Also includes per-feature caching of typed conversion results using [IdentityHashMap] keyed
- * by [KClass], similar to [CachingFeatureRegistry].
+ * Also includes per-feature caching of typed conversion results and structure-rule outcomes, keyed
+ * by identity, similar to [CachingFeatureRegistry].
  *
  * Falls back to linear scan for custom/opaque matchers (e.g., those created via [andThen]).
  *
@@ -305,8 +411,8 @@ private class IndexedFeatureRegistry(
             }
         }
 
-    // Per-feature cache for typed conversion results (indexed into sorted list)
-    private val implementations = List(sorted.size) { IdentityHashMap<KClass<out Feature>, Any>() }
+    // Per-feature cache for typed conversion results and structure-rule outcomes (indexed into sorted list)
+    private val conversions = ConversionCaches(sorted.size)
 
     override val size: Int get() = sorted.size
 
@@ -366,7 +472,7 @@ private class IndexedFeatureRegistry(
         val range = if (indexedMatcher != null) candidateRangeForMatcher(indexedMatcher) else sorted.indices
         return cachedAllOfHelper(
             sorted,
-            implementations,
+            conversions,
             range,
             candidateMatcher,
             factory,
@@ -405,7 +511,7 @@ private class IndexedFeatureRegistry(
         val range = if (indexedMatcher != null) candidateRangeForMatcher(indexedMatcher) else sorted.indices
         return cachedFindOfHelper(
             sorted,
-            implementations,
+            conversions,
             range,
             candidateMatcher,
             factory,
@@ -421,7 +527,7 @@ private class IndexedFeatureRegistry(
         val range = if (indexedMatcher != null) candidateRangeForMatcher(indexedMatcher) else sorted.indices
         return cachedFirstOfHelper(
             sorted,
-            implementations,
+            conversions,
             range,
             candidateMatcher,
             factory,
@@ -432,21 +538,21 @@ private class IndexedFeatureRegistry(
 
 /**
  * A [FeatureRegistry] implementation that caches typed conversion results using per-feature
- * [IdentityHashMap] instances keyed by [KClass].
+ * [IdentityHashMap] instances keyed by `KClass`. Structure-rule outcomes are memoized in the same maps.
  *
  * This class is **not thread-safe**. It uses internal mutable caches that are populated lazily
  * on first access. It is designed to be created per API response and used from a single thread
  * or coroutine.
  *
  * Since feature factories return implementations of interfaces, all implementations for the same
- * [KClass] are expected to be equivalent. This is an accepted trade-off for using [KClass] as
+ * `KClass` are expected to be equivalent. This is an accepted trade-off for using `KClass` as
  * the cache key.
  */
 private class CachingFeatureRegistry(
     features: List<Feature>,
 ) : FeatureRegistry {
     private val features: List<Feature> = features.toList()
-    private val implementations = List(this.features.size) { IdentityHashMap<KClass<out Feature>, Any>() }
+    private val conversions = ConversionCaches(this.features.size)
 
     override val size: Int get() = features.size
 
@@ -474,7 +580,7 @@ private class CachingFeatureRegistry(
     ): List<F> =
         cachedAllOfHelper(
             features,
-            implementations,
+            conversions,
             features.indices,
             matcher,
             factory,
@@ -500,7 +606,7 @@ private class CachingFeatureRegistry(
     ): F? =
         cachedFindOfHelper(
             features,
-            implementations,
+            conversions,
             features.indices,
             matcher,
             factory,
@@ -512,7 +618,7 @@ private class CachingFeatureRegistry(
     ): F =
         cachedFirstOfHelper(
             features,
-            implementations,
+            conversions,
             features.indices,
             matcher,
             factory,

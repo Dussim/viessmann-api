@@ -5,6 +5,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import xyz.dussim.viessmann.feature.api.validation.ExpectedActualClass
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
@@ -162,7 +164,154 @@ val FeatureRegistryTest by testSuite {
         matcherCalls shouldBe 1
         factoryCalls shouldBe 1
     }
+
+    test("indexed descriptor reuses matchers for indices 0 to 15 and creates them beyond") {
+        val descriptor = RoomTemperatureFeatureDescriptor
+
+        descriptor.byNameThenStructure(0) shouldBeSameInstanceAs descriptor.byNameThenStructure(0)
+        descriptor.byNameThenStructure(15) shouldBeSameInstanceAs descriptor.byNameThenStructure(15)
+        descriptor.byName(15) shouldBeSameInstanceAs descriptor.byName(15)
+        descriptor.byNameThenStructure(1) shouldNotBeSameInstanceAs descriptor.byNameThenStructure(2)
+        descriptor.byNameThenStructure(16) shouldNotBeSameInstanceAs descriptor.byNameThenStructure(16)
+        descriptor.byName(16) shouldNotBeSameInstanceAs descriptor.byName(16)
+
+        for (index in listOf(0, 1, 15, 16, 120)) {
+            val matching = testFeature("rooms.$index.sensors.temperature")
+            val other = testFeature("rooms.${index + 1}.sensors.temperature")
+
+            descriptor.byName(index).matches(matching) shouldBe true
+            descriptor.byName(index).matches(other) shouldBe false
+            descriptor.byNameThenStructure(index).matches(matching) shouldBe true
+            descriptor.byNameThenStructure(index).matches(other) shouldBe false
+        }
+    }
+
+    for ((kind, createRegistry) in registryFactories()) {
+        test("$kind registry runs a descriptor structure rule once per feature") {
+            var failFastCalls = 0
+            val failFast =
+                ValidationRule<Feature, ValidationError> {
+                    failFastCalls++
+                    Valid()
+                }
+            val descriptor =
+                indexedFeatureDescriptor(
+                    wildcardName = "rooms.{N}.sensors.temperature",
+                    rule = alwaysValid,
+                    failFast = failFast,
+                    factory = ::RoomTemperatureFeature,
+                )
+            val registry = createRegistry(roomTemperatureFeatures())
+
+            val first = registry[descriptor, 2]
+            first.feature shouldBe "rooms.2.sensors.temperature"
+            failFastCalls shouldBe 1
+
+            registry[descriptor, 2] shouldBeSameInstanceAs first
+            registry.firstOf(descriptor, descriptor.byNameThenStructure(2)) shouldBeSameInstanceAs first
+            registry.findOf(descriptor, descriptor.byNameThenStructure(2)) shouldBeSameInstanceAs first
+            failFastCalls shouldBe 1
+
+            registry.allOf(descriptor, descriptor.byWildcardNameThenStructure).map { it.feature } shouldContainExactly
+                listOf("rooms.1.sensors.temperature", "rooms.2.sensors.temperature")
+            failFastCalls shouldBe 2
+            registry[descriptor].feature shouldBe "rooms.1.sensors.temperature"
+            failFastCalls shouldBe 2
+        }
+
+        test("$kind registry remembers a rejecting structure rule without converting") {
+            var failFastCalls = 0
+            var factoryCalls = 0
+            val rejecting =
+                ValidationRule<Feature, ValidationError> {
+                    failFastCalls++
+                    ValidationResult.Invalid(ValidationError.MissingComponent("temperature", ExpectedActualClass.of(0)))
+                }
+            val descriptor =
+                indexedFeatureDescriptor(
+                    wildcardName = "rooms.{N}.sensors.temperature",
+                    rule = rejecting,
+                    failFast = rejecting,
+                    factory = { feature ->
+                        factoryCalls++
+                        RoomTemperatureFeature(feature)
+                    },
+                )
+            val registry = createRegistry(roomTemperatureFeatures())
+
+            registry.findOf(descriptor, descriptor.byNameThenStructure(1)) shouldBe null
+            shouldThrow<NoSuchElementException> { registry[descriptor, 1] }
+            failFastCalls shouldBe 1
+            factoryCalls shouldBe 0
+        }
+
+        test("$kind registry converts through a single-pass descriptor without a separate structure pass") {
+            var ruleCalls = 0
+            var createCalls = 0
+            val rule =
+                ValidationRule<Feature, ValidationError> {
+                    ruleCalls++
+                    Valid()
+                }
+            val descriptor =
+                indexedFeatureDescriptor(
+                    wildcardName = "rooms.{N}.sensors.temperature",
+                    rule = rule,
+                    featureType = "RoomTemperatureFeature",
+                ) { feature ->
+                    createCalls++
+                    if (feature.feature == "rooms.2.sensors.temperature") RoomTemperatureFeature(feature) else null
+                }
+            val registry = createRegistry(roomTemperatureFeatures())
+
+            val converted = registry[descriptor, 2]
+            converted.feature shouldBe "rooms.2.sensors.temperature"
+            registry[descriptor, 2] shouldBeSameInstanceAs converted
+            createCalls shouldBe 1
+
+            registry.findOf(descriptor, descriptor.byNameThenStructure(1)) shouldBe null
+            shouldThrow<NoSuchElementException> { registry[descriptor, 1] }
+            createCalls shouldBe 2
+
+            registry.allOf(descriptor, descriptor.byWildcardNameThenStructure) shouldContainExactly listOf(converted)
+            registry[descriptor] shouldBeSameInstanceAs converted
+            createCalls shouldBe 2
+            ruleCalls shouldBe 0
+        }
+
+        test("$kind registry still validates features that already have the descriptor type") {
+            var ruleCalls = 0
+            var createCalls = 0
+            val rejecting =
+                ValidationRule<Feature, ValidationError> {
+                    ruleCalls++
+                    ValidationResult.Invalid(ValidationError.MissingComponent("temperature", ExpectedActualClass.of(0)))
+                }
+            val descriptor =
+                indexedFeatureDescriptor(
+                    wildcardName = "rooms.{N}.sensors.temperature",
+                    rule = rejecting,
+                    featureType = "RoomTemperatureFeature",
+                ) { feature ->
+                    createCalls++
+                    feature as? RoomTemperatureFeature
+                }
+            val registry = createRegistry(listOf(RoomTemperatureFeature(testFeature("rooms.1.sensors.temperature"))))
+
+            registry.findOf(descriptor, descriptor.byNameThenStructure(1)) shouldBe null
+            shouldThrow<NoSuchElementException> { registry[descriptor] }
+            ruleCalls shouldBe 1
+            createCalls shouldBe 0
+        }
+    }
 }
+
+// A function rather than a property: the suite body above may run before later top-level properties are initialized.
+private fun registryFactories(): List<Pair<String, (List<Feature>) -> FeatureRegistry>> =
+    listOf(
+        "indexed" to { features: List<Feature> -> FeatureRegistry.indexed(features) },
+        "caching" to { features: List<Feature> -> FeatureRegistry.caching(features) },
+    )
 
 private class RoomTemperatureFeature(
     private val delegate: Feature,

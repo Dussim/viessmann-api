@@ -17,9 +17,11 @@ fun Indexed(
         override val byStructure = FeatureMatcher.byStructure(failFast)
         override val byWildcardNameThenStructure = FeatureMatcher.byWildcardNameThenStructure(wildcardName, failFast)
 
-        override fun byName(index: Int): FeatureMatcher = FeatureMatcher.byName(wildcardName.replace("{N}", index.toString()))
+        private val indexedMatchers = IndexedMatcherCache(wildcardName, failFast)
 
-        override fun byNameThenStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenStructure(wildcardName.replace("{N}", index.toString()), failFast)
+        override fun byName(index: Int): FeatureMatcher = indexedMatchers.byName(index)
+
+        override fun byNameThenStructure(index: Int): FeatureMatcher = indexedMatchers.byNameThenStructure(index)
     }
 
 fun Indexed(
@@ -34,10 +36,47 @@ fun Indexed(
         override val byStructure = FeatureMatcher.byStructure(validation)
         override val byWildcardNameThenStructure = FeatureMatcher.byWildcardNameThenStructure(wildcardName, validation)
 
-        override fun byName(index: Int): FeatureMatcher = FeatureMatcher.byName(wildcardName.replace("{N}", index.toString()))
+        private val indexedMatchers = IndexedMatcherCache(wildcardName, validation)
 
-        override fun byNameThenStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenStructure(wildcardName.replace("{N}", index.toString()), validation)
+        override fun byName(index: Int): FeatureMatcher = indexedMatchers.byName(index)
+
+        override fun byNameThenStructure(index: Int): FeatureMatcher = indexedMatchers.byNameThenStructure(index)
     }
+
+private const val CACHED_MATCHER_INDEX_COUNT = 16
+
+/**
+ * Indexed matchers of one descriptor for indices `0..<16`, created on first use. Lookups by index would otherwise
+ * build the indexed name and three matcher objects on every call; a cached matcher also keeps its name's hash code.
+ *
+ * Not synchronized: descriptors are shared between threads, but a race only creates an equivalent duplicate matcher,
+ * and matchers hold nothing but final fields. Indices outside the cached range get a new matcher per call.
+ */
+private class IndexedMatcherCache(
+    private val wildcardName: String,
+    private val structureRule: ValidationRule<Feature, ValidationError>,
+) {
+    private var byName: Array<FeatureMatcher?>? = null
+    private var byNameThenStructure: Array<FeatureMatcher?>? = null
+
+    fun byName(index: Int): FeatureMatcher {
+        if (index !in 0..<CACHED_MATCHER_INDEX_COUNT) return createByName(index)
+        val cache = byName ?: arrayOfNulls<FeatureMatcher>(CACHED_MATCHER_INDEX_COUNT).also { byName = it }
+        return cache[index] ?: createByName(index).also { cache[index] = it }
+    }
+
+    fun byNameThenStructure(index: Int): FeatureMatcher {
+        if (index !in 0..<CACHED_MATCHER_INDEX_COUNT) return createByNameThenStructure(index)
+        val cache = byNameThenStructure ?: arrayOfNulls<FeatureMatcher>(CACHED_MATCHER_INDEX_COUNT).also { byNameThenStructure = it }
+        return cache[index] ?: createByNameThenStructure(index).also { cache[index] = it }
+    }
+
+    private fun indexedName(index: Int): String = wildcardName.replace("{N}", index.toString())
+
+    private fun createByName(index: Int): FeatureMatcher = FeatureMatcher.byName(indexedName(index))
+
+    private fun createByNameThenStructure(index: Int): FeatureMatcher = FeatureMatcher.byNameThenStructure(indexedName(index), structureRule)
+}
 
 fun Static(
     wildcardName: String,
@@ -286,6 +325,16 @@ internal class SinglePassFeatureFactory<F : Feature>(
     override fun getOrThrow(feature: Feature): F = createOrNull(feature) ?: throw FeatureValidationException(featureType, feature, rule)
 }
 
+/**
+ * Implemented by descriptors whose [FeatureFactory.getOrNull] may replace a separate structure check: when
+ * [convertsInSinglePassFor] returns `true` for a structure rule, `getOrNull` returns `null` exactly when that rule
+ * rejects the feature, for every feature that is not already an instance of the descriptor's feature class.
+ */
+@PublishedApi
+internal interface SinglePassDescriptor {
+    fun convertsInSinglePassFor(structureRule: ValidationRule<Feature, *>): Boolean
+}
+
 @PublishedApi
 internal class FeatureDescriptorIndexedImpl<F : Feature>(
     override val featureClass: KClass<F>,
@@ -296,7 +345,8 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
 ) : FeatureDescriptor.Indexed<F>,
     FeatureFactory<F> by factory,
     FeatureMatchers.Indexed by matchers,
-    ValidationRule<Feature, ValidationError> by rule {
+    ValidationRule<Feature, ValidationError> by rule,
+    SinglePassDescriptor {
     private val singlePass = factory as? SinglePassFeatureFactory<F>
 
     override fun getOrNull(feature: Feature): F? {
@@ -304,6 +354,9 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
         if (singlePass != null) return singlePass.getOrNull(feature)
         return getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
     }
+
+    override fun convertsInSinglePassFor(structureRule: ValidationRule<Feature, *>): Boolean =
+        singlePass != null && matchers.failFastStructureValidator === structureRule
 
     override fun toString(): String = "FeatureDescriptor.Indexed[$wildcardName](${featureClass.simpleName})"
 }
@@ -318,7 +371,8 @@ internal class FeatureDescriptorStaticImpl<F : Feature>(
 ) : FeatureDescriptor.Static<F>,
     FeatureFactory<F> by factory,
     FeatureMatchers.Static by matchers,
-    ValidationRule<Feature, ValidationError> by rule {
+    ValidationRule<Feature, ValidationError> by rule,
+    SinglePassDescriptor {
     private val singlePass = factory as? SinglePassFeatureFactory<F>
 
     override fun getOrNull(feature: Feature): F? {
@@ -326,6 +380,9 @@ internal class FeatureDescriptorStaticImpl<F : Feature>(
         if (singlePass != null) return singlePass.getOrNull(feature)
         return getOrNullWithoutValidationException(feature, featureClass, factory, matchers.byStructure)
     }
+
+    override fun convertsInSinglePassFor(structureRule: ValidationRule<Feature, *>): Boolean =
+        singlePass != null && matchers.failFastStructureValidator === structureRule
 
     override fun toString(): String = "FeatureDescriptor.Static[$wildcardName](${featureClass.simpleName})"
 }
