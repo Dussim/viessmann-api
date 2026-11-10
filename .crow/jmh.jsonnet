@@ -1,5 +1,17 @@
 local lib = import "lib.libsonnet";
 
+local s3Secrets = {
+  S3_ACCESS_KEY: { from_secret: "S3_ACCESS_KEY" },
+  S3_SECRET_KEY: { from_secret: "S3_SECRET_KEY" },
+};
+
+// Runs the single-file Java program in the build image, which already has a JDK.
+local results(name, command) = {
+  name: name,
+  image: lib.buildImage,
+  commands: ["java .ci/scripts/JmhResults.java " + command],
+};
+
 {
   name: "jmh",
   when: [
@@ -14,34 +26,16 @@ local lib = import "lib.libsonnet";
     lib.gradle("stableLargeValidationJmh", ["gradle stableLargeValidationJmh"]),
     lib.gradle("stableRegistryJmh", ["gradle stableRegistryJmh"]),
     lib.gradle("stableCycleJmh", ["gradle stableCycleJmh"]),
-    {
-      name: "uploadResults",
-      // curl instead of woodpeckerci/plugin-s3: the AWS SDK signs Accept-Encoding, which Cloudflare rewrites.
-      image: "curlimages/curl:8.23.0",
+    results("uploadResults", "upload") + {
       when: { status: ["success", "failure"] },
-      environment: {
-        S3_ACCESS_KEY: { from_secret: "S3_ACCESS_KEY" },
-        S3_SECRET_KEY: { from_secret: "S3_SECRET_KEY" },
-      },
-      commands: [
-        "cd api/feature/benchmark/build/reports",
-        "find . -name results.json | sed 's|^\\./||' | while read -r file; do curl --fail-with-body -sS --aws-sigv4 aws:amz:us-east-1:s3 --user \"$${S3_ACCESS_KEY}:$${S3_SECRET_KEY}\" -H 'x-amz-content-sha256: UNSIGNED-PAYLOAD' -H 'Content-Type: application/json' -T \"$${file}\" \"https://s3.dussim.xyz/jmh-results/${CI_PIPELINE_NUMBER}-${CI_COMMIT_SHA}/$${file}\" || exit 1; echo \"Uploaded $${file}\"; done",
-      ],
+      environment: s3Secrets,
     },
-    {
-      name: "visualizerLinks",
-      image: "curlimages/curl:8.23.0",
+    results("visualizerLinks", "links") + {
       when: { status: ["success", "failure"] },
-      commands: ["sh .ci/scripts/jmh-links.sh"],
     },
-    {
-      name: "updateLatest",
-      image: "curlimages/curl:8.23.0",
-      environment: {
-        S3_ACCESS_KEY: { from_secret: "S3_ACCESS_KEY" },
-        S3_SECRET_KEY: { from_secret: "S3_SECRET_KEY" },
-      },
-      commands: ["sh .ci/scripts/jmh-update-latest.sh"],
+    // Only runs after every benchmark step passed.
+    results("updateLatest", "update-latest") + {
+      environment: s3Secrets,
     },
   ],
 }
