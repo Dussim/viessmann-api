@@ -13,6 +13,7 @@ local lib = import "lib.libsonnet";
     lib.gradle("stableMediumValidationJmh", ["gradle stableMediumValidationJmh"]),
     lib.gradle("stableLargeValidationJmh", ["gradle stableLargeValidationJmh"]),
     lib.gradle("stableRegistryJmh", ["gradle stableRegistryJmh"]),
+    lib.gradle("stableCycleJmh", ["gradle stableCycleJmh"]),
     {
       name: "uploadResults",
       // curl instead of woodpeckerci/plugin-s3: the AWS SDK signs Accept-Encoding, which Cloudflare rewrites.
