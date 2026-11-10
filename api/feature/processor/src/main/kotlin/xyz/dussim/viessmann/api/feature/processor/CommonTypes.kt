@@ -17,8 +17,8 @@ import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Command
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.FeatureFactory
+import xyz.dussim.viessmann.feature.api.GeneratedFeatureCompanion
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
-import xyz.dussim.viessmann.feature.api.validation.GeneratedValidationRule
 import xyz.dussim.viessmann.feature.api.validation.SingleErrorValidationResultApi
 import xyz.dussim.viessmann.feature.api.validation.Valid
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
@@ -50,7 +50,6 @@ val INDEXED_FEATURE_DESCRIPTOR_FACTORY = MemberName(FEATURE_API_PACKAGE, "indexe
 val VALIDATION_RESULT_TYPE = ValidationResult::class.asTypeName().parameterizedBy(typeNameOf<ValidationError>())
 val FEATURE_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Feature>())
 val COMMAND_VALIDATION_RULE_TYPE = validationRuleType(typeNameOf<Command>())
-val GENERATED_FEATURE_VALIDATION_RULE_TYPE = generatedValidationRuleType(typeNameOf<Feature>())
 
 /**
  * Creates a validation rule type for a given target type.
@@ -63,13 +62,8 @@ fun validationRuleType(targetType: TypeName): TypeName =
             typeNameOf<ValidationError>(),
         )
 
-fun generatedValidationRuleType(targetType: TypeName): TypeName =
-    GeneratedValidationRule::class
-        .asClassName()
-        .parameterizedBy(
-            targetType,
-            typeNameOf<ValidationError>(),
-        )
+/** `GeneratedFeatureCompanion<Impl>`, the supertype of a generated feature implementation's companion. */
+fun generatedFeatureCompanionType(implName: ClassName): TypeName = GeneratedFeatureCompanion::class.asClassName().parameterizedBy(implName)
 
 /**
  * Expressions evaluate to a `ValidationResult` for the generated function's `value` parameter, either through a rule

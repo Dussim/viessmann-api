@@ -1,5 +1,6 @@
 package xyz.dussim.viessmann.feature.api
 
+import xyz.dussim.viessmann.feature.api.validation.GeneratedValidationRule
 import xyz.dussim.viessmann.feature.api.validation.ValidationError
 import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 import kotlin.reflect.KClass
@@ -319,11 +320,84 @@ internal class SinglePassFeatureFactory<F : Feature>(
     private val featureType: String,
     private val rule: ValidationRule<Feature, ValidationError>,
     private val createOrNull: (Feature) -> F?,
-) : FeatureFactory<F> {
+) : SinglePassFactory<F> {
     override fun getOrNull(feature: Feature): F? = createOrNull(feature)
 
     override fun getOrThrow(feature: Feature): F = createOrNull(feature) ?: throw FeatureValidationException(featureType, feature, rule)
 }
+
+/** A factory whose [getOrNull] validates while it constructs; see [SinglePassDescriptor]. */
+@PublishedApi
+internal interface SinglePassFactory<F : Feature> : FeatureFactory<F>
+
+/**
+ * Implemented by the companion of a generated feature implementation: its validation rules plus the single-pass
+ * factory. [createOrNull] returns the implementation exactly when [validateFailFast] (and therefore [validate])
+ * accepts the feature, and `null` otherwise.
+ */
+interface GeneratedFeatureCompanion<out F : Feature> : GeneratedValidationRule<Feature, ValidationError> {
+    fun createOrNull(sourceFeature: Feature): F?
+}
+
+/**
+ * Single-pass factory over a generated companion. One implementation may serve several feature interfaces, so the
+ * check for a feature that already has the target type is made here, against [featureClass], before converting.
+ */
+@PublishedApi
+internal class GeneratedFeatureFactory<F : Feature>(
+    override val featureClass: KClass<F>,
+    private val featureType: String,
+    private val generated: GeneratedFeatureCompanion<F>,
+) : SinglePassFactory<F> {
+    override fun getOrNull(feature: Feature): F? {
+        if (featureClass.hasInstance(feature)) {
+            @Suppress("UNCHECKED_CAST")
+            return feature as F
+        }
+        return generated.createOrNull(feature)
+    }
+
+    override fun getOrThrow(feature: Feature): F = getOrNull(feature) ?: throw FeatureValidationException(featureType, feature, generated)
+}
+
+/** The fail-fast side of a generated companion as a rule. Not inline, so all descriptors share one class for it. */
+@PublishedApi
+internal fun failFastRule(generated: GeneratedFeatureCompanion<*>): ValidationRule<Feature, ValidationError> =
+    ValidationRule { feature -> generated.validateFailFast(feature) }
+
+/**
+ * Creates a static feature descriptor from the companion of a generated implementation, which is both its rule and
+ * its single-pass factory. [hasSeparateFailFast] tells whether the companion's fail-fast validation differs from its
+ * regular validation; when it does not, the companion itself serves as the fail-fast rule.
+ */
+inline fun <reified F : Feature> staticFeatureDescriptor(
+    wildcardName: String,
+    generated: GeneratedFeatureCompanion<F>,
+    hasSeparateFailFast: Boolean,
+    featureType: String,
+): FeatureDescriptor.Static<F> =
+    FeatureDescriptorStaticImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = GeneratedFeatureFactory(F::class, featureType, generated),
+        matchers = if (hasSeparateFailFast) Static(wildcardName, generated, failFastRule(generated)) else Static(wildcardName, generated),
+        rule = generated,
+    )
+
+/** Indexed counterpart of the [staticFeatureDescriptor] for generated companions. */
+inline fun <reified F : Feature> indexedFeatureDescriptor(
+    wildcardName: String,
+    generated: GeneratedFeatureCompanion<F>,
+    hasSeparateFailFast: Boolean,
+    featureType: String,
+): FeatureDescriptor.Indexed<F> =
+    FeatureDescriptorIndexedImpl(
+        featureClass = F::class,
+        wildcardName = wildcardName,
+        factory = GeneratedFeatureFactory(F::class, featureType, generated),
+        matchers = if (hasSeparateFailFast) Indexed(wildcardName, generated, failFastRule(generated)) else Indexed(wildcardName, generated),
+        rule = generated,
+    )
 
 /**
  * Implemented by descriptors whose [FeatureFactory.getOrNull] may replace a separate structure check: when
@@ -347,7 +421,7 @@ internal class FeatureDescriptorIndexedImpl<F : Feature>(
     FeatureMatchers.Indexed by matchers,
     ValidationRule<Feature, ValidationError> by rule,
     SinglePassDescriptor {
-    private val singlePass = factory as? SinglePassFeatureFactory<F>
+    private val singlePass = factory as? SinglePassFactory<F>
 
     override fun getOrNull(feature: Feature): F? {
         val singlePass = singlePass
@@ -373,7 +447,7 @@ internal class FeatureDescriptorStaticImpl<F : Feature>(
     FeatureMatchers.Static by matchers,
     ValidationRule<Feature, ValidationError> by rule,
     SinglePassDescriptor {
-    private val singlePass = factory as? SinglePassFeatureFactory<F>
+    private val singlePass = factory as? SinglePassFactory<F>
 
     override fun getOrNull(feature: Feature): F? {
         val singlePass = singlePass

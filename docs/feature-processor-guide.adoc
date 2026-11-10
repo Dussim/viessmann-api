@@ -146,13 +146,16 @@ val typed = registry[StableSmallFeature.descriptor]
 
 === Validation
 
-Generated companions implement `GeneratedValidationRule`:
+Generated feature companions implement `GeneratedFeatureCompanion`, generated command companions `GeneratedValidationRule`:
 
 [cols="1,3"]
 |===
 |`validate` |Evaluates the rule plan and aggregates errors
 |`validateFailFast` |Evaluates the same plan and returns after the first invalid result
+|`createOrNull` |Converts in one pass, returning `null` exactly when validation would fail
 |===
+
+A descriptor is built from the feature companion alone, which serves as its rule and its factory.
 
 Structure matchers such as `descriptor.byStructure` use the fail-fast path.
 

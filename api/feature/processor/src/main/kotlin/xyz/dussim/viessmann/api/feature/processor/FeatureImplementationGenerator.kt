@@ -16,7 +16,6 @@ import com.squareup.kotlinpoet.typeNameOf
 import xyz.dussim.viessmann.feature.api.Feature
 import xyz.dussim.viessmann.feature.api.ViessmannApiInternalExceptionUsage
 import xyz.dussim.viessmann.feature.api.validation.ValidationResult
-import xyz.dussim.viessmann.feature.api.validation.ValidationRule
 import xyz.dussim.viessmann.feature.api.validation.propertyHash
 
 private val LIST_EMPTY_VALUE = ClassName("xyz.dussim.viessmann.feature.api", "ListEmptyValue")
@@ -61,6 +60,7 @@ internal fun createOrNullFunction(
 ): FunSpec =
     FunSpec
         .builder(CREATE_OR_NULL)
+        .addModifiers(KModifier.OVERRIDE)
         .addParameter(SOURCE_FEATURE, typeNameOf<Feature>())
         .returns(implName.copy(nullable = true))
         .addCode(
@@ -265,7 +265,7 @@ internal fun companionObject(
 ): TypeSpec =
     TypeSpec
         .companionObjectBuilder()
-        .addSuperinterface(GENERATED_FEATURE_VALIDATION_RULE_TYPE)
+        .addSuperinterface(generatedFeatureCompanionType(implName))
         .addFunction(createOrNullFunction(context, implName))
         .addFunction(
             generateValidateFunction(
@@ -373,20 +373,16 @@ fun generateFeatureDescriptorAndExtensions(
             .addModifiers(KModifier.INTERNAL)
             .initializer(
                 buildCodeBlock {
+                    // The implementation's companion is the rule and the single-pass factory at once, so the
+                    // descriptor needs no lambda of its own.
                     add("%M(\n", descriptorFactory)
                     indent()
                     add("wildcardName = %S,\n", context.featureName)
-                    add("rule = %T,\n", implName)
-                    if (validationPlan.requiresSeparateFailFast) {
-                        add("failFast = %T(%T::validateFailFast),\n", ValidationRule::class, implName)
-                    }
+                    add("generated = %T,\n", implName)
+                    add("hasSeparateFailFast = %L,\n", validationPlan.requiresSeparateFailFast)
                     add("featureType = %S,\n", context.superInterface.canonicalName)
                     unindent()
-                    add(") { feature ->\n")
-                    indent()
-                    add("feature as? %T ?: %T.%N(feature)\n", context.superInterface, implName, CREATE_OR_NULL)
-                    unindent()
-                    add("}")
+                    add(")")
                 },
             ).build()
 
