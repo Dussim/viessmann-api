@@ -29,6 +29,9 @@ flowchart LR
 # Stable feature registry suite (also part of stableValidationJmh)
 ./gradlew.bat :api:feature:api-feature-benchmark:stableRegistryJmh
 
+# Stable full-cycle suite (also part of stableValidationJmh)
+./gradlew.bat :api:feature:api-feature-benchmark:stableCycleJmh
+
 # Compile only
 ./gradlew.bat :api:feature:api-feature-benchmark:compileJmhKotlin
 ----
@@ -47,16 +50,19 @@ The `includes` setting in `build.gradle.kts` selects what the `jmh` task runs.
 |`maps` package |`EfficientStringKeyMap` against standard maps
 |`stable.small`, `stable.medium`, `stable.large` |Versioned validation acceptance workload
 |`stable.registry` |Typed lookups on a warm indexed `FeatureRegistry` and its construction
+|`stable.cycle` |Full handling of polled responses: decode, registry construction, typed lookups; microseconds per response
 |===
 
 `MassiveValidationBenchmark` loads `all_features.json` from `src/main/resources`.
 It uses 3 warmup and 5 measurement iterations of 5 seconds each, in one fork.
 Its `registry*` benchmarks look up every descriptor that resolves in one warm indexed registry holding all features, by wildcard name and by index 0.
+`decodeEverything` decodes the whole dataset from text.
 
 == Stable workload
 
 The stable suites use benchmark-owned feature interfaces, so they do not depend on the OpenAPI input.
-Each suite uses three warmup iterations, five measurement iterations, one fork, one thread, one validation per invocation, and nanoseconds per operation.
+Each suite uses three warmup iterations, five measurement iterations, one fork and one thread.
+The validation and registry suites measure one operation per invocation in nanoseconds; the cycle suite measures whole responses in microseconds.
 All JMH tasks use a fixed 2 GiB heap and the GC profiler.
 
 `stable-validation/v1/fixture-manifest.json` is the versioned input contract.
@@ -68,6 +74,26 @@ Lookups measure one lookup per invocation with a warm conversion cache, at index
 The construction benchmarks also convert all 64 indexed features on a new registry to cover first-time lookups.
 `StableRegistryFixture` defines these values; changing them changes the workload.
 
+The cycle suite models one device polled over time, using the benchmark-owned `billion.*` feature definitions.
+Its input is `stable-cycle/v1/templates.json`, pinned by SHA-256, from which `StableCycleFixture` builds one response per step:
+
+[cols="2,4"]
+|===
+|Step |Response
+
+|`base` |1 system, 1 thermostat, 1 program, 4 pumps, 8 sensors, 4 circuits, 30 features no descriptor matches
+|`values-changed` |Same features, other property values
+|`features-added` |2 pumps, 2 sensors, 1 circuit and 5 unmatched features more
+|`features-removed` |Program, 1 pump, 2 sensors, 1 circuit and 5 unmatched features fewer
+|`features-disabled` |Thermostat, 1 circuit and 2 sensors present without properties and commands
+|`features-enabled` |Content of `base` again
+|`structure-changed` |1 circuit and 1 sensor stop matching; program without its optional command and a pump with an extra property still match
+|===
+
+One cycle decodes a response, builds a registry, reads the three static features, reads all pumps, sensors and circuits, and reads circuits and sensors 0 to 3 by index.
+`StableCycleStageBenchmark` measures decode, lookup and the full cycle per step; `StableCyclePollSequenceBenchmark` runs all seven steps in order per invocation.
+Trial setup and the oracle test both fail unless every step resolves exactly its expected features.
+
 Compare base and candidate results on the same idle machine.
 Scores are comparable only when the input dataset and JMH parameters match.
 
@@ -78,7 +104,7 @@ Scores are comparable only when the input dataset and JMH parameters match.
 |Run |Location under `build/reports`
 
 |`jmh` |`jmh/results.json`
-|Stable suites |`validation/<all, small, medium, large, or registry>/<UTC timestamp>/results.json`
+|Stable suites |`validation/<all, small, medium, large, registry, or cycle>/<UTC timestamp>/results.json`
 |Stable environment fingerprint |`jmh/environment.json`
 |===
 

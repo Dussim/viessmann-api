@@ -34,6 +34,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * The `registry*` benchmarks reuse the same dataset for typed lookups through one warm indexed
  * `FeatureRegistry` holding every feature; per invocation they perform one lookup per resolvable descriptor.
  *
+ * `decodeEverything` decodes the whole dataset once per invocation.
+ *
  * To run just this benchmark:
  *   ./gradlew :api:feature:benchmark:jmh
  *
@@ -52,6 +54,9 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 open class MassiveValidationBenchmark {
     private lateinit var targets: List<ValidationTarget>
     private lateinit var failFastTargets: List<ValidationTarget>
+
+    private lateinit var json: Json
+    private lateinit var allFeaturesJson: String
 
     private lateinit var registry: FeatureRegistry
     private lateinit var registryDescriptors: List<FeatureDescriptor<Feature>>
@@ -77,8 +82,11 @@ open class MassiveValidationBenchmark {
                     "all_features.json not found on benchmark classpath. Make sure it is present in resources directory.",
                 )
 
-        val wrapper = json.decodeFromString(ResponseData.serializer(ViessmannFeature.serializer()), resource.readText())
+        this.json = json
+        allFeaturesJson = resource.readText()
+        val wrapper = json.decodeFromString(ResponseData.serializer(ViessmannFeature.serializer()), allFeaturesJson)
         val allFeatures: List<Feature> = wrapper.data
+        check(allFeatures.isNotEmpty()) { "all_features.json contains no features" }
 
         targets =
             Descriptors.all.map { descriptor ->
@@ -149,6 +157,12 @@ open class MassiveValidationBenchmark {
                 blackhole.consume(validator.validate(features[j]))
             }
         }
+    }
+
+    /** Decodes the whole of `all_features.json` from text; reading the resource is not measured. */
+    @Benchmark
+    fun decodeEverything(blackhole: Blackhole) {
+        blackhole.consume(json.decodeFromString(ResponseData.serializer(ViessmannFeature.serializer()), allFeaturesJson))
     }
 
     /**

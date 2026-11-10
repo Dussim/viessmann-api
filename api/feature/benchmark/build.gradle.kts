@@ -115,7 +115,7 @@ val stableValidationJmh =
     tasks.register<JMHTask>("stableValidationJmh") {
         description = "Runs all versioned stable validation acceptance benchmark suites."
         configureStableValidationJmh(
-            include = "xyz\\.dussim\\.feature\\.benchmark\\.stable\\.(small|medium|large|registry)\\..*Benchmark",
+            include = "xyz\\.dussim\\.feature\\.benchmark\\.stable\\.(small|medium|large|registry|cycle)\\..*Benchmark",
         )
         val timestamp =
             DateTimeFormatter
@@ -181,6 +181,20 @@ val stableRegistryJmh =
         resultsFile = layout.buildDirectory.file("reports/validation/registry/$timestamp/results.json")
     }
 
+val stableCycleJmh =
+    tasks.register<JMHTask>("stableCycleJmh") {
+        description = "Runs the stable full-cycle (decode, registry, lookups) benchmark suite."
+        configureStableValidationJmh(
+            include = "xyz\\.dussim\\.feature\\.benchmark\\.stable\\.cycle\\..*Benchmark",
+        )
+        val timestamp =
+            DateTimeFormatter
+                .ofPattern("yyyy-MM-dd_HH-mm-ss-SSS'Z'")
+                .withZone(ZoneOffset.UTC)
+                .format(Instant.now())
+        resultsFile = layout.buildDirectory.file("reports/validation/cycle/$timestamp/results.json")
+    }
+
 val stableValidationJmhReport =
     tasks.register<JmhReportTask>("stableValidationJmhReport") {
         description = "Creates an HTML report for all stable validation benchmark suites."
@@ -216,8 +230,19 @@ val stableRegistryJmhReport =
         jmhReportOutput = layout.dir(stableRegistryJmh.flatMap { it.resultsFile }.map { it.asFile.parentFile })
     }
 
+val stableCycleJmhReport =
+    tasks.register<JmhReportTask>("stableCycleJmhReport") {
+        description = "Creates an HTML report for the stable full-cycle benchmark suite."
+        jmhResultPath = stableCycleJmh.flatMap { it.resultsFile }
+        jmhReportOutput = layout.dir(stableCycleJmh.flatMap { it.resultsFile }.map { it.asFile.parentFile })
+    }
+
 stableValidationJmh {
     finalizedBy(stableValidationJmhReport)
+}
+
+stableCycleJmh {
+    finalizedBy(stableCycleJmhReport)
 }
 
 stableRegistryJmh {
