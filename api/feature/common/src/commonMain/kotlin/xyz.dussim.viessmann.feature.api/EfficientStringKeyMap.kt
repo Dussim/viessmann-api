@@ -21,7 +21,7 @@ internal expect fun String.canonicalKey(): String
 private inline fun sameKey(
     stored: String,
     key: String,
-): Boolean = stored === key || stored.compareTo(key) == 0
+): Boolean = stored === key || stored == key
 
 private const val KIND_EMPTY = 0
 private const val KIND_ONE = 1
@@ -76,6 +76,8 @@ sealed class EfficientStringKeyMap<out T>(
 
     final override fun equals(other: Any?): Boolean = originalMap == other
 
+    final override fun toString(): String = originalMap.toString()
+
     // A final field instead of a per-representation override: call sites that see every representation would
     // otherwise make `size` a megamorphic virtual call.
     final override val size: Int = originalMap.size
@@ -94,7 +96,7 @@ sealed class EfficientStringKeyMap<out T>(
             KIND_THREE -> (this as ThreeElements<T>).lookup(key, precomputedHash)
             KIND_FOUR -> (this as FourElements<T>).lookup(key, precomputedHash)
             KIND_N -> (this as NElements<T>).lookup(key, precomputedHash)
-            else -> (this as PassThrough<T>).lookup(key)
+            else -> originalMap[key]
         }
 }
 
@@ -106,8 +108,8 @@ private data object Empty : EfficientStringKeyMap<Nothing>(emptyMap(), KIND_EMPT
     override fun containsValue(value: Nothing): Boolean = false
 }
 
-private data class OneElement<T>(
-    private val originalMap: Map<String, T>,
+private class OneElement<T>(
+    originalMap: Map<String, T>,
     private val key1: String,
     private val value1: T,
     private val precomputedHash1: Long,
@@ -124,8 +126,8 @@ private data class OneElement<T>(
     override fun isEmpty(): Boolean = false
 }
 
-private data class TwoElements<T>(
-    private val originalMap: Map<String, T>,
+private class TwoElements<T>(
+    originalMap: Map<String, T>,
     private val key1: String,
     private val value1: T,
     private val key2: String,
@@ -146,8 +148,8 @@ private data class TwoElements<T>(
     override fun isEmpty(): Boolean = false
 }
 
-private data class ThreeElements<T>(
-    private val originalMap: Map<String, T>,
+private class ThreeElements<T>(
+    originalMap: Map<String, T>,
     private val key1: String,
     private val value1: T,
     private val key2: String,
@@ -172,8 +174,8 @@ private data class ThreeElements<T>(
     override fun isEmpty(): Boolean = false
 }
 
-private data class FourElements<T>(
-    private val originalMap: Map<String, T>,
+private class FourElements<T>(
+    originalMap: Map<String, T>,
     private val key1: String,
     private val value1: T,
     private val key2: String,
@@ -202,14 +204,12 @@ private data class FourElements<T>(
     override fun isEmpty(): Boolean = false
 }
 
-@Suppress("ArrayInDataClass")
-private data class NElements<T>(
-    private val originalMap: Map<String, T>,
+private class NElements<T>(
+    originalMap: Map<String, T>,
     private val arrayKeys: Array<String>,
     private val arrayValues: Array<Any?>,
     private val arrayHashes: LongArray,
-    private val startIndexJumpTable: IntArray,
-    private val endIndexJumpTable: IntArray,
+    private val startIndexByLength: IntArray,
     private val lengthBitset: Long,
 ) : EfficientStringKeyMap<T>(originalMap, KIND_N) {
     fun lookup(
@@ -217,12 +217,12 @@ private data class NElements<T>(
         precomputedHash: Long,
     ): T? {
         // Stored keys are shorter than 64 (longer maps use PassThrough), so a lookup key of 64+ characters can never
-        // be present. Without this check `1L shl length` wraps around and the jump tables are indexed out of range.
+        // be present. Without this check `1L shl length` wraps around and the jump table is indexed out of range.
         val length = extractLow(precomputedHash)
         if (length >= Long.SIZE_BITS) return null
         if (lengthBitset and (1L shl length) == 0L) return null
-        var current = startIndexJumpTable[length]
-        val end = endIndexJumpTable[length]
+        var current = startIndexByLength[length]
+        val end = startIndexByLength[length + 1]
         do {
             if (precomputedHash == arrayHashes[current] && sameKey(arrayKeys[current], key)) {
                 @Suppress("UNCHECKED_CAST")
@@ -240,10 +240,8 @@ private data class NElements<T>(
 }
 
 private class PassThrough<T>(
-    private val originalMap: Map<String, T>,
-) : EfficientStringKeyMap<T>(originalMap, KIND_PASS_THROUGH) {
-    fun lookup(key: String): T? = originalMap[key]
-}
+    originalMap: Map<String, T>,
+) : EfficientStringKeyMap<T>(originalMap, KIND_PASS_THROUGH)
 
 data object ParametersSerializer : EfficientStringKeyMap.Serializer<Parameter>(Parameter.serializer())
 
@@ -295,21 +293,12 @@ private fun <T> NElements(originalMap: Map<String, T>): NElements<T> {
     val arrayKeys = Array(sortedEntries.size) { sortedEntries[it].key.canonicalKey() }
     val arrayValues = Array<Any?>(sortedEntries.size) { sortedEntries[it].value }
     val arrayHashes = LongArray(sortedEntries.size) { propertyHash(arrayKeys[it].hashCode(), arrayKeys[it].length) }
-    val startIndexJumpTable =
-        IntArray(arrayKeys.maxOf { it.length } + 1) {
-            arrayKeys.indexOfFirst { key -> key.length == it }
-        }
-    val endIndexJumpTable =
-        IntArray(startIndexJumpTable.size) {
-            val jump = startIndexJumpTable[it]
-            if (jump == -1) {
-                -1
-            } else {
-                val length = arrayKeys[jump].length
-                val index = arrayKeys.indexOfFirst { key -> key.length > length }
-                if (index == -1) arrayKeys.size else index
-            }
-        }
+    // startIndexByLength[length] is the index of the first key of that length. Keys are sorted by length, so the
+    // keys of one length end where the next length starts: count keys per length, then accumulate.
+    val maxLength = arrayKeys.last().length
+    val startIndexByLength = IntArray(maxLength + 2)
+    for (key in arrayKeys) startIndexByLength[key.length + 1]++
+    for (length in 1..maxLength + 1) startIndexByLength[length] += startIndexByLength[length - 1]
     val lengthBitset = arrayKeys.fold(0L) { acc, key -> acc or (1L shl key.length) }
-    return NElements(originalMap, arrayKeys, arrayValues, arrayHashes, startIndexJumpTable, endIndexJumpTable, lengthBitset)
+    return NElements(originalMap, arrayKeys, arrayValues, arrayHashes, startIndexByLength, lengthBitset)
 }
