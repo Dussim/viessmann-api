@@ -58,6 +58,19 @@ open class StableCycleStepState {
     }
 }
 
+/** The base response of the stable cycle, as text and already decoded. */
+@State(Scope.Benchmark)
+open class StableCycleBaseState {
+    lateinit var response: String
+    lateinit var features: List<Feature>
+
+    @Setup
+    fun setup() {
+        response = StableCycleFixture.responses().getValue(StableCycleStep.BASE)
+        features = verifiedFeatures(StableCycleStep.BASE, response)
+    }
+}
+
 /** Every response of the stable cycle, in step order. */
 @State(Scope.Benchmark)
 open class StableCycleSequenceState {
@@ -76,12 +89,14 @@ open class StableCycleSequenceState {
 }
 
 /**
- * The stages of handling one response, per kind of response:
+ * Handling one response:
+ * - `fullCycle`: response text to features, then a new registry and the typed lookups of one cycle, as a consumer
+ *   runs them for every polled response; measured per kind of response;
  * - `decode`: response text to features;
- * - `lookup`: already decoded features to a new registry and the typed lookups of one cycle;
- * - `fullCycle`: both, as a consumer runs them for every polled response.
+ * - `lookup`: already decoded features to a new registry and the typed lookups of one cycle.
  *
- * `fullCycle` should be close to `decode` plus `lookup`; the split shows where the time goes.
+ * `decode` and `lookup` split `fullCycle` to show where the time goes. They run on the base response only: the
+ * split barely differs between kinds of response, and measuring it for each tripled the suite's run time.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -92,7 +107,7 @@ open class StableCycleSequenceState {
 open class StableCycleStageBenchmark {
     @Benchmark
     fun decode(
-        state: StableCycleStepState,
+        state: StableCycleBaseState,
         blackhole: Blackhole,
     ) {
         blackhole.consume(StableCycleFixture.decode(state.response))
@@ -100,7 +115,7 @@ open class StableCycleStageBenchmark {
 
     @Benchmark
     fun lookup(
-        state: StableCycleStepState,
+        state: StableCycleBaseState,
         blackhole: Blackhole,
     ) {
         blackhole.consume(StableCycleFixture.consume(state.features))

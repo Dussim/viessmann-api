@@ -15,8 +15,6 @@ import org.openjdk.jmh.infra.Blackhole
 import xyz.dussim.viessmann.api.features.generated.Descriptors
 import xyz.dussim.viessmann.api.models.ResponseData
 import xyz.dussim.viessmann.feature.api.Feature
-import xyz.dussim.viessmann.feature.api.FeatureDescriptor
-import xyz.dussim.viessmann.feature.api.FeatureRegistry
 import xyz.dussim.viessmann.feature.api.ViessmannFeature
 import xyz.dussim.viessmann.feature.api.validation.ValidationError.NumberOfParametersMismatch
 import java.util.concurrent.TimeUnit
@@ -27,12 +25,11 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  *
  * Per invocation the benchmark body performs
  * `benchmarkDescriptors.size * allFeatures.size` validations (≈ 92 000 at time of
- * writing), so the average-time numbers land in milliseconds. The timing profile
- * (1 warmup + 3 measurement iterations × 2s each, single fork) is intentionally
- * aggressive — the goal is a fast, stable baseline to iterate against.
+ * writing), so throughput is reported per minute.
  *
- * The `registry*` benchmarks reuse the same dataset for typed lookups through one warm indexed
- * `FeatureRegistry` holding every feature; per invocation they perform one lookup per resolvable descriptor.
+ * Every iteration takes 3 seconds (3 warmup and 5 measurement iterations, single fork). It was 5 seconds until
+ * November 2026; the shorter iterations cut the CI run, and scores from before the change are not comparable
+ * with scores after it.
  *
  * `decodeEverything` decodes the whole dataset once per invocation.
  *
@@ -47,8 +44,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MINUTES)
-@Warmup(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 5, timeUnit = TimeUnit.SECONDS)
+@Warmup(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 3, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1)
 @Suppress("unused")
 open class MassiveValidationBenchmark {
@@ -57,14 +54,6 @@ open class MassiveValidationBenchmark {
 
     private lateinit var json: Json
     private lateinit var allFeaturesJson: String
-
-    private lateinit var registry: FeatureRegistry
-    private lateinit var registryDescriptors: List<FeatureDescriptor<Feature>>
-    private lateinit var registryIndexedDescriptors: List<FeatureDescriptor.Indexed<Feature>>
-
-    // Every indexed feature in all_features.json uses index 0. A field rather than a constant so the JIT cannot
-    // fold the index into the lookup.
-    private var registryIndex: Int = 0
 
     @Setup
     fun setup() {
@@ -103,35 +92,6 @@ open class MassiveValidationBenchmark {
                     features = allFeatures,
                 )
             }
-
-        setupRegistry(allFeatures)
-    }
-
-    /**
-     * Keeps only descriptors whose lookup resolves, so the measured loops never throw, and warms the registry's
-     * conversion cache for them. Which descriptors resolve depends only on `all_features.json`.
-     */
-    @Suppress("UNCHECKED_CAST")
-    private fun setupRegistry(allFeatures: List<Feature>) {
-        registry = FeatureRegistry.indexed(allFeatures)
-
-        val descriptors = Descriptors.all.map { it as FeatureDescriptor<Feature> }
-        registryDescriptors =
-            descriptors.filter { descriptor ->
-                registry.findOf(descriptor, descriptor.byWildcardNameThenStructure) != null
-            }
-
-        registryIndexedDescriptors =
-            descriptors
-                .mapNotNull { it as? FeatureDescriptor.Indexed<Feature> }
-                .filter { descriptor ->
-                    registry.findOf(descriptor, descriptor.byNameThenStructure(registryIndex)) != null
-                }
-
-        check(registryDescriptors.isNotEmpty()) { "No descriptor resolves against all_features.json through the registry" }
-        check(registryIndexedDescriptors.isNotEmpty()) {
-            "No indexed descriptor resolves at index $registryIndex against all_features.json through the registry"
-        }
     }
 
     @OptIn(ExperimentalAtomicApi::class)
@@ -163,33 +123,5 @@ open class MassiveValidationBenchmark {
     @Benchmark
     fun decodeEverything(blackhole: Blackhole) {
         blackhole.consume(json.decodeFromString(ResponseData.serializer(ViessmannFeature.serializer()), allFeaturesJson))
-    }
-
-    /**
-     * Typed lookup of every resolvable descriptor on a warm indexed registry over all features: the wildcard-name
-     * path behind `registry[descriptor]`.
-     */
-    @Benchmark
-    fun registryGetEverything(blackhole: Blackhole) {
-        val registry = this.registry
-        val descriptors = this.registryDescriptors
-        for (i in descriptors.indices) {
-            val descriptor = descriptors[i]
-            blackhole.consume(registry.firstOf(descriptor, descriptor.byWildcardNameThenStructure))
-        }
-    }
-
-    /**
-     * Typed lookup of every resolvable indexed descriptor by index on the same registry: the exact-name path behind
-     * `registry[descriptor, index]`, including building the indexed matcher on every call.
-     */
-    @Benchmark
-    fun registryGetEverythingByIndex(blackhole: Blackhole) {
-        val registry = this.registry
-        val descriptors = this.registryIndexedDescriptors
-        val index = this.registryIndex
-        for (i in descriptors.indices) {
-            blackhole.consume(registry[descriptors[i], index])
-        }
     }
 }

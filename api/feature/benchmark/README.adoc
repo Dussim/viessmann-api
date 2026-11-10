@@ -44,7 +44,7 @@ The `includes` setting in `build.gradle.kts` selects what the `jmh` task runs.
 |===
 |Benchmark |Measures
 
-|`featurevalidation.average.MassiveValidationBenchmark` |Validation and typed registry lookups over `all_features.json`; throughput per minute
+|`featurevalidation.average.MassiveValidationBenchmark` |Validation and decoding of `all_features.json`; throughput per minute
 |`featurevalidation.ValidationBenchmark`, `ValidationSmallFeatureBenchmark` |Validation scenarios
 |`featurevalidation.IncorrectFeatureConstructionBenchmark` |Construction from incorrect features
 |`maps` package |`EfficientStringKeyMap` against standard maps
@@ -54,9 +54,10 @@ The `includes` setting in `build.gradle.kts` selects what the `jmh` task runs.
 |===
 
 `MassiveValidationBenchmark` loads `all_features.json` from `src/main/resources`.
-It uses 3 warmup and 5 measurement iterations of 5 seconds each, in one fork.
-Its `registry*` benchmarks look up every descriptor that resolves in one warm indexed registry holding all features, by wildcard name and by index 0.
+It uses 3 warmup and 5 measurement iterations of 3 seconds each, in one fork.
+Iterations took 5 seconds until November 2026; they were shortened to cut the CI run, so scores from before the change are not comparable with scores after it.
 `decodeEverything` decodes the whole dataset from text.
+Registry lookups are measured by the stable registry suite only.
 
 == Stable workload
 
@@ -91,7 +92,7 @@ Its input is `stable-cycle/v1/templates.json`, pinned by SHA-256, from which `St
 |===
 
 One cycle decodes a response, builds a registry, reads the three static features, reads all pumps, sensors and circuits, and reads circuits and sensors 0 to 3 by index.
-`StableCycleStageBenchmark` measures decode, lookup and the full cycle per step; `StableCyclePollSequenceBenchmark` runs all seven steps in order per invocation.
+`StableCycleStageBenchmark` measures the full cycle per step, and decode and lookup separately for the base response; `StableCyclePollSequenceBenchmark` runs all seven steps in order per invocation.
 Trial setup and the oracle test both fail unless every step resolves exactly its expected features.
 
 Compare base and candidate results on the same idle machine.
